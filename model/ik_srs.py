@@ -1,192 +1,294 @@
 import numpy as np
 from numpy import cos, sin
-import matplotlib.pyplot as plt
+from enum import Enum
+
+"""
+paper frame index: 0 ~ 6 + 7
+code  frame index: 1 ~ 6 + Tool
+Here for example, after q4 rotation, Frame 4 -> Frame 4 * Rz(q4) * Tz(d4) * Rx(alpha 4) * Tx(a4) ->
+update Frame5
+Frame {i} means when q1 != 0, ...., q{i-1}!=0, but q{i} = 0, the position of the Frame
+"""
 
 
-class RobotIK:
+class FrameId(Enum):
+    """
+    关节编号枚举类
+    """
+    kFrame1 = 0
+    kFrame2 = 1
+    kFrame3 = 2
+    kFrame4 = 3
+    kFrame5 = 4
+    kFrame6 = 5
+    kFrame7 = 6
+    kTool = 7
+
+    def next(self):
+        """
+        获取下一个枚举值
+        """
+        next_value = self.value + 1
+        # 检查下一个值是否在有效范围内
+        if next_value <= FrameId.kFrame7.value:
+            return FrameId(next_value)
+        else:
+            return None
+
+
+class RobotSRS:
+    """
+    机器人逆运动学解析解计算器
+
+    用于计算7自由度机械臂的逆运动学解析解，支持冗余自由度的臂角优化
+    """
+
     def __init__(self, d_bs=0.3415, d_se=0.394, d_ew=0.366, d_wt=0.2503):
+        """
+        初始化机器人参数
+
+        Parameters:
+            d_bs (float): 基座到肩部的距离
+            d_se (float): 肩部到肘部的距离
+            d_ew (float): 肘部到腕部的距离
+            d_wt (float): 腕部到末端执行器的距离
+        """
         self.d_bs = d_bs
         self.d_se = d_se
         self.d_ew = d_ew
         self.d_wt = d_wt
-        self.len_0_bs = np.array([0, 0, d_bs])
-        self.len_3_se = np.array([0, -d_se, 0])
-        self.len_4_ew = np.array([0, 0, d_ew])
-        self.len_7_wt = np.array([0, 0, d_wt])
-        self.alpha = np.array([-1, 1, -1, 1, -1, 1, 0]) * np.pi / 2
+        self.l_bs = np.array([0, 0, d_bs])
+        self.l_se = np.array([0, -d_se, 0])
+        self.l_ew = np.array([0, 0, d_ew])
+        self.l_wt = np.array([0, 0, d_wt])
+        self.dh_alpha = np.array([-1, 1, -1, 1, -1, 1, 0]) * np.pi / 2
 
+    @staticmethod
+    def cross(v):
+        """
+        计算向量的反对称矩阵
 
-    def skew_vector(self, v):
+        Parameters:
+            v (np.array): 3维向量
+
+        Returns:
+            np.array: 3x3反对称矩阵
+        """
         return np.array([[0, -v[2], v[1]],
-                         [v[2], 0, -v[0]],
-                         [-v[1], v[0], 0]])
+                        [v[2], 0, -v[0]],
+                        [-v[1], v[0], 0]])
 
-    def rotation_axis(self, theta, index_joint):
-        ca = cos(self.alpha[index_joint - 1])
-        sa = sin(self.alpha[index_joint - 1])
-        return np.array([[cos(theta), -sin(theta) * ca, sin(theta) * sa],
-                         [sin(theta), cos(theta) * ca, -cos(theta) * sa],
-                         [0, sa, ca]])
-
-    def init_shoulder_joint(self, x, y):
-        alpha = np.arctan2(x[2], x[0])
-        beta = np.arctan2(y[1], y[0])
-        amplitude1 = np.sqrt(x[0]**2 + x[2]**2)
-        amplitude2 = np.sqrt(y[0]**2 + y[1]**2)
-        theta_02 = np.arcsin(-y[2] / amplitude1) + alpha
-        theta_01 = np.arcsin(-x[1] / amplitude2) + beta
-
-        if np.cos(theta_01 - alpha) * np.cos(theta_02 - beta) < 0:
-            theta_02 = np.pi - theta_02
-
-        return theta_01, theta_02
-
-    def extract_r_x_from_matrix(self, mat):
-        """从4x4矩阵中提取旋转部分和位移部分"""
-        r = mat[:3, :3]
-        x = mat[:3, 3]
-        return r, x
-
-    def inverse(self, mat, phi):
-        """从4x4矩阵中提取r和x,并计算逆运动学"""
-        r, x = self.extract_r_x_from_matrix(mat)
-        phi = np.radians(phi)
-        x_0_sw = x - self.len_0_bs - r @ self.len_7_wt
-        cos_theta_4 = (np.linalg.norm(x_0_sw)**2 - self.d_se**2 - self.d_ew**2) / (2 * self.d_se * self.d_ew)
-        theta_4 = np.arccos(cos_theta_4)
-        u_0_sw = x_0_sw / np.linalg.norm(x_0_sw)
-
-        x_for_calculation = self.rotation_axis(0, 3) @ (self.len_3_se + self.rotation_axis(theta_4, 4) @ self.len_4_ew)
-        y_for_calculation = x_0_sw
-        theta_1_ref, theta_2_ref = self.init_shoulder_joint(x_for_calculation, y_for_calculation)
-        r_03_ref = self.rotation_axis(theta_1_ref, 1) @ self.rotation_axis(theta_2_ref, 2) @ self.rotation_axis(0, 3)
-
-        cross_matrix_sw = self.skew_vector(u_0_sw)
-        A_s = cross_matrix_sw @ r_03_ref
-        B_s = -cross_matrix_sw @ cross_matrix_sw @ r_03_ref
-        C_s = np.array(np.matrix(u_0_sw).T @ np.matrix(u_0_sw)) @ r_03_ref
-        r_03 = A_s * sin(phi) + B_s * cos(phi) + C_s
-
-        theta_1 = np.arctan2(-r_03[1, 1], -r_03[0, 1])
-        theta_2 = np.arccos(-r_03[2, 1])
-        theta_3 = np.arctan2(r_03[2, 2], -r_03[2, 0])
-
-        A_w = self.rotation_axis(theta_4, 4).T @ A_s.T @ r
-        B_w = self.rotation_axis(theta_4, 4).T @ B_s.T @ r
-        C_w = self.rotation_axis(theta_4, 4).T @ C_s.T @ r
-        r_47 = A_w * sin(phi) + B_w * cos(phi) + C_w
-
-        theta_5 = np.arctan2(r_47[1, 2], r_47[0, 2])
-        theta_6 = np.arccos(r_47[2, 2])
-        theta_7 = np.arctan2(r_47[2, 1], -r_47[2, 0])
-
-        return np.array([theta_1, theta_2, theta_3, theta_4, theta_5, theta_6, theta_7])
-
-
-    def forward(self, ang):
-        Joint1 = self.mdh_mat(ang[0], self.d_bs, 0, 0)
-        Joint2 = self.mdh_mat(ang[1], 0, 0, -np.pi / 2)
-        Joint3 = self.mdh_mat(ang[2], self.d_se, 0, np.pi / 2)
-        Joint4 = self.mdh_mat(ang[3], 0, 0, -np.pi / 2)
-        Joint5 = self.mdh_mat(ang[4], self.d_ew, 0, np.pi / 2)
-        Joint6 = self.mdh_mat(ang[5], 0, 0, -np.pi / 2)
-        Joint7 = self.mdh_mat(ang[6], self.d_wt, 0, np.pi / 2)
-        return Joint1 @ Joint2 @ Joint3 @ Joint4 @ Joint5 @ Joint6 @ Joint7
-
-    def mdh_mat(self, theta, d, a, alpha):
-        return np.array([
-            [cos(theta), -sin(theta), 0, a],
-            [cos(alpha) * sin(theta), cos(alpha) * cos(theta), -sin(alpha), -d * sin(alpha)],
-            [sin(alpha) * sin(theta), sin(alpha) * cos(theta), cos(alpha), d * cos(alpha)],
-            [0, 0, 0, 1]
-        ])
-
-    def show_error(self, result, mat):
-        r_07_d, x_07_d = self.extract_r_x_from_matrix(mat)  # 从矩阵中提取旋转和位移部分
-        error_rotation = result[:3, :3] @ np.linalg.inv(r_07_d) - np.eye(3)
-        error_translation = result[:3, 3] - x_07_d
-        print('error of r: ', np.linalg.norm(error_rotation))
-        print('error of x: ', np.linalg.norm(error_translation))
-
-    def compute_ref_vec(self, mat):
-        sol = self.inverse(mat, 0)
-        np.set_printoptions(precision=3, suppress=True)
-        # print(sol)
-        # 正向运动学计算关键点位置
-        T01 = self.mdh_mat(sol[0], self.d_bs, 0, 0)
-        T12 = self.mdh_mat(sol[1], 0, 0, -np.pi/2)
-        T23 = self.mdh_mat(sol[2], self.d_se, 0, np.pi/2)
-        T34 = self.mdh_mat(sol[3], 0, 0, -np.pi/2)
-        T45 = self.mdh_mat(sol[4], self.d_ew, 0, np.pi/2)
-        
-        # 计算关键点坐标系
-        T03 = T01 @ T12 @ T23  # 到肘关节的变换矩阵
-        T04 = T03 @ T34 @ T45
-
-        p1 = T01[:3, 3]
-        p3 = T03[:3, 3]
-        p4 = T04[:3, 3]        
-        
-        # 计算法向量
-        vec1 = p3 - p1
-        vec2 = p4 - p3
-        # 计算夹角
-        plane_norm = np.cross(vec1, vec2)       
-        return plane_norm / np.linalg.norm(plane_norm)
-
-    def compute_arm_phi(self, joint_angles):
+    def rot(self, theta: float, idx: FrameId):
+        # TODO: rot from id1 to id2
         """
-        根据关节角计算当前臂角φ
-        参数:
-            joint_angles: 7维关节角数组 (弧度制)
-        返回:
-            phi: 当前臂角 (角度制)
+        计算相邻两个关节之间的旋转矩阵
+
+        Parameters:
+            theta (float): 旋转角度
+            idx (FrameId): 关节索引 (1-7)
+
+        Returns:
+            np.array: 3x3旋转矩阵
         """
-        # 正向运动学计算关键点位置
-        T01 = self.mdh_mat(joint_angles[0], self.d_bs, 0, 0)
-        T12 = self.mdh_mat(joint_angles[1], 0, 0, -np.pi/2)
-        T23 = self.mdh_mat(joint_angles[2], self.d_se, 0, np.pi/2)
-        T34 = self.mdh_mat(joint_angles[3], 0, 0, -np.pi/2)
-        T45 = self.mdh_mat(joint_angles[4], self.d_ew, 0, np.pi/2)
-        
-        # 计算关键点坐标系
-        T03 = T01 @ T12 @ T23  # 到肘关节的变换矩阵
-        T04 = T03 @ T34 @ T45
 
-        p1 = T01[:3, 3]
-        p3 = T03[:3, 3]
-        p4 = T04[:3, 3]        
-        
-        # 计算法向量
-        vec1 = p3 - p1
-        vec2 = p4 - p3
-        # 计算夹角
-        plane_norm = np.cross(vec1, vec2)
-        plane_norm = plane_norm / np.linalg.norm(plane_norm)
-        pos = self.forward(joint_angles)       
-        ref_norm = self.compute_ref_vec(pos)
-        # ref_norm = np.array([0, 1, 0])
-        # print(ref_norm)
+        alpha = self.dh_alpha[idx.value]
+        ca = cos(alpha)
+        sa = sin(alpha)
+        ct = cos(theta)
+        st = sin(theta)
+        # print(ca, sa, ct, st)
+        # * rotation part: Rz(theta) * Rx(alpha)
+        return np.array([[ct, -st * ca,  st * sa],
+                         [st,  ct * ca, -ct * sa],
+                         [0.,       sa,       ca]])
 
-        cos_angle = np.inner(plane_norm, ref_norm)
-        angle = np.arccos(cos_angle)
+    def rot_seq(self, q: np.ndarray, start_id: FrameId, end_id: FrameId):
+        """
+        计算相邻两个关节之间的旋转矩阵
 
-        common_norm = np.cross(plane_norm, ref_norm)
-        # print(common_norm / np.linalg.norm(common_norm))
+        Parameters:
+            theta (float): 旋转角度向量
+            idx (FrameId): 关节索引 (1-7)
 
-        # print(plane_norm)
-        return np.degrees(angle)
+        Returns:
+            np.array: 3x3旋转矩阵
+        """
+        mat = np.eye(3)
+        if start_id.value >= end_id.value:
+            return mat
+
+        loop_id = start_id
+        while loop_id.value < end_id.value:
+            theta = q[loop_id.value]
+            mat = mat @ self.rot(theta, loop_id)
+            loop_id = loop_id.next()
+            if loop_id == None:
+                break
+        return mat
+
+    def init_shoulder_joint(self, rhs, lhs):
+        """
+        初始化肩部关节角度
+
+        Parameters:
+            rhs (np.array): x向量
+            y (np.array): y向量
+
+        Returns:
+            tuple: (q01, q02) 关节角度
+        """
+        # * The following can be derived from R1.T * lhs = R2 * rhs
+        # * as for multiple solution, i.e. arcsin(q) has two choices, the choice can be arbitrary
+
+        alpha = np.arctan2(rhs[2], rhs[0])
+        beta = np.arctan2(lhs[1], lhs[0])
+        amplitude1 = np.sqrt(rhs[0]**2 + rhs[2]**2)
+        amplitude2 = np.sqrt(lhs[0]**2 + lhs[1]**2)
+        q02 = np.arcsin(-lhs[2] / amplitude1) + alpha
+        q01 = np.arcsin(-rhs[1] / amplitude2) + beta
+
+        return q01, q02
+
+    def ik(self, mat, phi):
+        """
+        计算逆运动学解析解
+
+        Parameters:
+            mat (np.array): 4x4目标位姿矩阵
+            phi (float): 臂角参数(单位: 度)
+
+        Returns:
+            np.array: 7个关节角度
+        """
+        phi = np.deg2rad(phi)
+
+        R_1t = mat[:3, :3]
+        p_1t = mat[:3, 3]
+
+        # * get q4 acoording to geometric relationship
+        # actually use R_17, but R_17 == R_1t
+        p_sw = p_1t - self.l_bs - R_1t @ self.l_wt
+        cos_q4 = (np.sum(np.square(p_sw)) - self.d_se **
+                  2 - self.d_ew**2) / (2 * self.d_se * self.d_ew)
+        if abs(cos_q4) > 1.0:
+            return None, False
+        q4 = np.arccos(cos_q4)
+        u_sw = p_sw / np.linalg.norm(p_sw)
+
+        # * reference plane related calculation: defined by q3 = 0
+        # * equation: lhs = R1(q1) * R2(q2) * rhs
+        rhs = self.rot(
+            0, FrameId.kFrame3) @ (self.l_se + self.rot(q4, FrameId.kFrame4) @ self.l_ew)
+        lhs = p_sw
+        q1_ref, q2_ref = self.init_shoulder_joint(
+            rhs, lhs)
+        R_14_ref = self.rot_seq([q1_ref, q2_ref, 0],
+                                FrameId.kFrame1, FrameId.kFrame4)
+
+        # * once reference plane is obtained, q1~q3 is directly computed
+        cross_sw = self.cross(u_sw)
+        A_s = cross_sw @ R_14_ref
+        B_s = -cross_sw @ cross_sw @ R_14_ref
+        C_s = np.outer(u_sw, u_sw) @ R_14_ref
+        R_14 = A_s * sin(phi) + B_s * cos(phi) + C_s
+
+        if abs(R_14[2, 1]) > 1.0:
+            return None, False
+
+        q1 = np.arctan2(-R_14[1, 1], -R_14[0, 1])
+        q2 = np.arccos(-R_14[2, 1])
+        q3 = np.arctan2(R_14[2, 2], -R_14[2, 0])
+
+        # * also for q5 ~ q7
+        R_t1 = R_1t.T
+        R_45 = self.rot(q4, FrameId.kFrame4)
+        R_t5 = R_t1 @ R_14 @ R_45
+
+        if abs(R_t5[2, 2]) > 1.0:
+            return None, False
+
+        q5 = np.arctan2(R_t5[2, 1], R_t5[2, 0])
+        q6 = np.arccos(R_t5[2, 2])
+        q7 = np.arctan2(R_t5[1, 2], -R_t5[0, 2])
+
+        return np.array([q1, q2, q3, q4, q5, q6, q7]), True
+
+    def fk(self, q):
+        """
+        fk kinematics
+        symbols: [s] for shoulder, [e] for elbow, [w] for wrist, [t] for tool
+        """
+        Rs = self.rot_seq(q, FrameId.kFrame1, FrameId.kFrame4)
+        ps = self.l_bs
+
+        pe = ps + Rs @ self.l_se
+        Re = Rs @ self.rot_seq(q, FrameId.kFrame4, FrameId.kFrame5)
+
+        pw = pe + Re @ self.l_ew
+        Rw = Re @ self.rot_seq(q, FrameId.kFrame5, FrameId.kFrame7)
+
+        pt = pw + Rw @ self.l_wt
+        Rt = Rw @ self.rot_seq(q, FrameId.kFrame7, FrameId.kTool)
+
+        res = np.r_[np.c_[Rt, pt.reshape(3, 1)], [[0, 0, 0, 1]]]
+        return res
+
+    def compute_arm_phi(self, q):
+        mat = self.fk(q)
+
+        # * get rotation axis
+        R_1t = mat[:3, :3]
+        p_1t = mat[:3, 3]
+
+        p_sw = p_1t - self.l_bs - R_1t @ self.l_wt
+        u_sw = p_sw / np.linalg.norm(p_sw)
+
+        q_ref, success = self.ik(mat, 0)
+        if not success:
+            return None
+
+        ps = self.l_bs
+        Rs = self.rot_seq(q_ref, FrameId.kFrame1, FrameId.kFrame4)
+        pe = ps + Rs @ self.l_se
+        Re = Rs @ self.rot_seq(q_ref, FrameId.kFrame4, FrameId.kFrame5)
+        pw = pe + Re @ self.l_ew
+        ref_plane_vec = np.cross(pw - ps, pe - ps)
+        ref_plane_vec_length = np.linalg.norm(ref_plane_vec)
+        if (ref_plane_vec_length < 1e-5):
+            # case: singularity
+            return 0.0
+        ref_plane_vec /= ref_plane_vec_length
+
+        Rs = self.rot_seq(q, FrameId.kFrame1, FrameId.kFrame4)
+        pe = ps + Rs @ self.l_se
+        Re = Rs @ self.rot_seq(q, FrameId.kFrame4, FrameId.kFrame5)
+        pw = pe + Re @ self.l_ew
+        plane_norm = np.cross(pw - ps, pe - ps)
+        plane_norm_length = np.linalg.norm(plane_norm)
+        if (plane_norm_length < 1e-5):
+            raise ValueError('Singularity but not handled')
+        plane_norm /= plane_norm_length
+
+        # * common norm to get sign of phi
+        cross_vec = np.cross(ref_plane_vec, plane_norm)
+        sign = np.sign(np.inner(cross_vec, u_sw))
+        # * inner to get cos(phi)
+        cos_phi = np.inner(ref_plane_vec, plane_norm)
+        phi = np.arccos(np.clip(cos_phi, -1.0, 1.0))
+        return np.rad2deg(phi) * sign
 
 
 if __name__ == '__main__':
-    robot = RobotIK()
+    import matplotlib.pyplot as plt
+    robot = RobotSRS()
     # q = np.array([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7])
     q = np.random.rand(7) * np.pi
-    pos = robot.forward(q)
+    pos = robot.fk(q)
 
     # 使用4x4矩阵作为输入
     mat = pos
-    r_07_d, x_07_d = robot.extract_r_x_from_matrix(mat)
+    r_07_d = mat[:3, :3]
+    x_07_d = mat[:3, 3]
 
     print(f"x = {x_07_d}")
 
@@ -194,25 +296,28 @@ if __name__ == '__main__':
     joints = []
     est_phi_set = []
 
-    for phi in range(-180, 180, 5):
-        try:
-            angle = robot.inverse(mat, phi)
-            result = robot.forward(angle)
-            joints.append(angle)
-            phi_set.append(phi)
-            est_phi = robot.compute_arm_phi(angle)
-            est_phi_set.append(est_phi)
-        except Exception as e:
+    for phi in range(-180, 180, 1):
+        angle, success = robot.ik(mat, phi)
+        if not success:
             print(f'degree {phi} is not solvable')
+            continue
+        result = robot.fk(angle)
+        joints.append(angle)
+        phi_set.append(phi)
+        est_phi = robot.compute_arm_phi(angle)
+        est_phi_set.append(est_phi)
 
     joints = np.array(joints)
     for i in range(7):
         for j in range(len(phi_set) - 1):
             diff = joints[j + 1, i] - joints[j, i]
-            if diff > 1.8 * np.pi:
-                joints[j + 1, i] -= 2 * np.pi
-            elif diff < -1.8 * np.pi:
-                joints[j + 1, i] += 2 * np.pi
+            # rmk: here hardcode 1.5 pi is for catch q jump 2*pi
+            if diff > 1.0 * np.pi:
+                remove_ct = round(diff / (1.99 * np.pi))
+                joints[j + 1, i] -= 2 * np.pi * remove_ct
+            elif diff < -1.0 * np.pi:
+                remove_ct = round(-diff / (1.99 * np.pi))
+                joints[j + 1, i] += 2 * np.pi * remove_ct
 
     # 臂角计算
     for i in range(7):
@@ -220,9 +325,10 @@ if __name__ == '__main__':
     plt.xlabel("phi-angle(free dof)")
     plt.ylabel("joint-angle(multiple solution)")
     plt.legend()
+    plt.grid()
     plt.show()
 
     plt.plot(phi_set, est_phi_set, label='est_phi')
     plt.legend()
+    plt.grid()
     plt.show()
-
