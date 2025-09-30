@@ -3,6 +3,13 @@ from numpy import cos, sin
 from enum import Enum
 
 """
+M. Shimizu, H. Kakuya, W. -K. Yoon, K. Kitagaki and K. Kosuge,
+"Analytical Inverse Kinematic Computation for 7-DOF Redundant Manipulators
+With Joint Limits and Its Application to Redundancy Resolution,"
+in IEEE Transactions on Robotics, vol. 24, no. 5, pp. 1131-1142, Oct. 2008,
+doi: 10.1109/TRO.2008.2003266.
+
+
 paper frame index: 0 ~ 6 + 7
 code  frame index: 1 ~ 6 + Tool
 Here for example, after q4 rotation, Frame 4 -> Frame 4 * Rz(q4) * Tz(d4) * Rx(alpha 4) * Tx(a4) ->
@@ -200,6 +207,7 @@ class RobotSRS:
         q3 = np.arctan2(R_14[2, 2], -R_14[2, 0])
 
         # * also for q5 ~ q7
+        # * 这里为了简化计算合并了一些计算并采用了论文中矩阵的转置
         R_t1 = R_1t.T
         R_45 = self.rot(q4, FrameId.kFrame4)
         R_t5 = R_t1 @ R_14 @ R_45
@@ -213,10 +221,57 @@ class RobotSRS:
 
         return np.array([q1, q2, q3, q4, q5, q6, q7]), True
 
-    def fk(self, q):
+    def get_coeffs_theta(self, mat):
         """
-        fk kinematics
-        symbols: [s] for shoulder, [e] for elbow, [w] for wrist, [t] for tool
+        给定末端位姿后计算theta相关的三角有理函数系数
+
+        Parameters:
+            mat (np.array): 4x4目标位姿矩阵
+
+        Returns:
+            dict: theta相关的三角有理函数系数
+        """
+
+        R_1t = mat[:3, :3]
+        p_1t = mat[:3, 3]
+
+        # * get q4 acoording to geometric relationship
+        # actually use R_17, but R_17 == R_1t
+        p_sw = p_1t - self.l_bs - R_1t @ self.l_wt
+        cos_q4 = (np.sum(np.square(p_sw)) - self.d_se **
+                  2 - self.d_ew**2) / (2 * self.d_se * self.d_ew)
+        if abs(cos_q4) > 1.0:
+            return None
+        q4 = np.arccos(cos_q4)
+        u_sw = p_sw / np.linalg.norm(p_sw)
+
+        # * reference plane related calculation: defined by q3 = 0
+        # * equation: lhs = R1(q1) * R2(q2) * rhs
+        rhs = self.rot(
+            0, FrameId.kFrame3) @ (self.l_se + self.rot(q4, FrameId.kFrame4) @ self.l_ew)
+        lhs = p_sw
+        q1_ref, q2_ref = self.init_shoulder_joint(
+            rhs, lhs)
+        R_14_ref = self.rot_seq([q1_ref, q2_ref, 0],
+                                FrameId.kFrame1, FrameId.kFrame4)
+
+        # * once reference plane is obtained, q1~q3 infomation is complete
+        cross_sw = self.cross(u_sw)
+        A_s = cross_sw @ R_14_ref
+        B_s = -cross_sw @ cross_sw @ R_14_ref
+        C_s = np.outer(u_sw, u_sw) @ R_14_ref
+
+        # * also for q5 ~ q7
+        R_54 = self.rot(q4, FrameId.kFrame4).T
+        A_w = R_54 @ A_s.T @ R_1t
+        B_w = R_54 @ B_s.T @ R_1t
+        C_w = R_54 @ C_s.T @ R_1t
+
+        return [A_s, B_s, C_s, A_w, B_w, C_w]
+
+    def _fk_keypoints(self, q):
+        """
+        fk of each keypoint
         """
         Rs = self.rot_seq(q, FrameId.kFrame1, FrameId.kFrame4)
         ps = self.l_bs
@@ -229,7 +284,18 @@ class RobotSRS:
 
         pt = pw + Rw @ self.l_wt
         Rt = Rw @ self.rot_seq(q, FrameId.kFrame7, FrameId.kTool)
+        return ps, pe, pw, pt, Rt
 
+    def fk_detail(self, q):
+        ps, pe, pw, pt, _ = self._fk_keypoints(q)
+        return ps, pe, pw, pt
+
+    def fk(self, q):
+        """
+        fk kinematics
+        symbols: [s] for shoulder, [e] for elbow, [w] for wrist, [t] for tool
+        """
+        _, _, _, pt, Rt = self._fk_keypoints(q)
         res = np.r_[np.c_[Rt, pt.reshape(3, 1)], [[0, 0, 0, 1]]]
         return res
 
