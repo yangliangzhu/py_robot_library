@@ -266,6 +266,7 @@ class RobotSRS:
         A_w = R_54 @ A_s.T @ R_1t
         B_w = R_54 @ B_s.T @ R_1t
         C_w = R_54 @ C_s.T @ R_1t
+        # TODO: 请注意这里使用的是论文中矩阵的转置而非原矩阵
 
         return [A_s, B_s, C_s, A_w, B_w, C_w]
 
