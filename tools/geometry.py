@@ -40,6 +40,40 @@ def nervRpy(p, rad=False):
     return result
 
 
+def rot2rpy(rot):
+    """
+    将旋转矩阵转换为RPY欧拉角 (Roll, Pitch, Yaw)
+    旋转顺序: ZYX (先绕Z轴旋转yaw，再绕Y轴旋转pitch，最后绕X轴旋转roll)
+    """
+    # 提取旋转矩阵元素
+    r11, r12, r13 = rot[0, :]
+    r21, r22, r23 = rot[1, :]
+    r31, r32, r33 = rot[2, :]
+
+    # 计算欧拉角
+    # 处理奇异情况（万向锁）
+    if abs(r31) < 0.9999999:
+        # 正常情况
+        y = np.arctan2(r21, r11)  # yaw (绕Z轴)
+        p = np.arctan2(-r31, np.sqrt(r32**2 + r33**2))  # pitch (绕Y轴)
+        r = np.arctan2(r32, r33)  # roll (绕X轴)
+    else:
+        # 奇异情况（万向锁）
+        y = 0  # 可以任意设置yaw角
+        if r31 < 0:  # pitch = +90度
+            p = np.pi / 2
+            r = np.arctan2(r12, r13)
+        else:  # pitch = -90度
+            p = -np.pi / 2
+            r = np.arctan2(-r12, -r13)
+
+    return np.array([r, p, y])
+
+
+def rpy2rot(rpy):
+    return rot_z(rpy[2]) @ rot_y(rpy[1]) @ rot_x(rpy[0])
+
+
 def rot2quat(rot):
     """
     Convert a rotation matrix to quaternion.

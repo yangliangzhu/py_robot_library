@@ -143,5 +143,24 @@ rokae_sr5_config = {
     "lower": rokae_sr5_lower,
 }
 
+# * example: NervER3 version
+dh_nerv_er3_mdh = Dh([
+    [341.5, 0, 0.],
+    [0.0, -pi/2, 0.],
+    [444.0, pi/2, 0.],
+    [0.0, -pi/2, 0.],
+    [416.0, pi/2, 0.],
+    [97.0, -pi/2, 0.],  # 0.037 + 0.06
+    [114.8, pi/2, 0.],
+])
+dh_nerv_er3_mdh.millimeter_to_meter()
+nerv_er3_config = {
+    "type": "mdh_param",
+    "param": dh_nerv_er3_mdh,
+    "upper": rokae_er3_upper_expand * 3,
+    "lower": rokae_er3_lower_expand * 3,
+}
+
+
 if __name__ == '__main__':
     print(sr5_mat_list)
