@@ -10,6 +10,7 @@ class ModelFactory():
         "sr5_v2": lambda type, ik_type: ModelFactory.create_sr5_v2(type, ik_type),
         "er3_plus": lambda type, ik_type: ModelFactory.create_er3_plus(type, ik_type),
         "nerv_er3": lambda type, ik_type: ModelFactory.create_nerv_er3(type, ik_type),
+        "aubo_c5": lambda type, ik_type: ModelFactory.create_aubo_c5(type, ik_type),
     }
     type_supported = ["casadi", "numpy"]
 
@@ -96,6 +97,19 @@ class ModelFactory():
     @staticmethod
     def create_nerv_er3(type, ik_type):
         config = nerv_er3_config
+        if type == 'casadi':
+            robot = RobotModelCasadi()
+        elif type == 'numpy':
+            robot = RobotModelNumpy()
+        else:
+            print('Model type not found')
+            return
+        robot.build('dh', ik_type, config)
+        return robot
+
+    @staticmethod
+    def create_aubo_c5(type, ik_type):
+        config = aubo_c5_config
         if type == 'casadi':
             robot = RobotModelCasadi()
         elif type == 'numpy':

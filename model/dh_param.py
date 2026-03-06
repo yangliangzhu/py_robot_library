@@ -39,12 +39,13 @@ def Tz(p):
     return res
 
 class Dh():
-    def __init__(self, dh_list, type='mdh', ordermap=['d', 'alpha', 'a']):
+    def __init__(self, dh_list, type='mdh', ordermap=['d', 'alpha', 'a', 'theta']):
         self.dh_list = dh_list
         self.order_map = ordermap
         self.alpha_idx = ordermap.index('alpha')
         self.a_idx = ordermap.index('a')
         self.d_idx = ordermap.index('d')
+        self.theta_idx = ordermap.index('theta')
         self.type = type
 
     def millimeter_to_meter(self):
@@ -60,7 +61,7 @@ def mdh_to_matrix_list(dh_params: Dh):
     Ms = []
     for dh in dh_params.dh_list:
         trans = Tx(dh[dh_params.a_idx]) @ Rx(dh[dh_params.alpha_idx]) \
-                @ Tz(dh[dh_params.d_idx])
+                @ Tz(dh[dh_params.d_idx]) @ Rz(dh[dh_params.theta_idx])
         Ms.append(trans)
     return Ms
 
@@ -68,8 +69,8 @@ def sdh_to_matrix_list(dh_params):
     ''' M = Rz(theta)*Tz(d)*Rx(alpha)*Tx(a)'''
     Ms = []
     for dh in dh_params.dh_list:
-        trans = Tz(dh[dh_params.d_idx]) @ Rx(dh[dh_params.alpha_idx]) \
-                @ Tx(dh[dh_params.a_idx])
+        trans = Rz(dh[dh_params.theta_idx]) @ Tz(dh[dh_params.d_idx]) \
+                @ Rx(dh[dh_params.alpha_idx]) @ Tx(dh[dh_params.a_idx])
         Ms.append(trans)
     return Ms
 

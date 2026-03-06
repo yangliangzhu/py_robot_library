@@ -2,17 +2,23 @@ import numpy as np
 from numpy import pi
 from .dh_param import *
 from copy import deepcopy
+
+# DH参数顺序: [d, alpha, a, theta]
+# - d: 连杆偏距 (link offset)
+# - alpha: 连杆扭角 (link twist)
+# - a: 连杆长度 (link length)
+# - theta: 关节角度 (joint angle), 通常为0
 # todo 移动到model文件夹下
 
 # * example: franka panda, mdh
 dh_franka_mdh = Dh([
-    [333, 0, 0.],
-    [0., -pi/2, 0.],
-    [316, pi/2, 0.],
-    [0., pi/2, 82.5],
-    [384, -pi/2, -82.5],
-    [0., pi/2, 0.],
-    [0., pi/2, 88]
+    [333, 0, 0., 0.],
+    [0., -pi/2, 0., 0.],
+    [316, pi/2, 0., 0.],
+    [0., pi/2, 82.5, 0.],
+    [384, -pi/2, -82.5, 0.],
+    [0., pi/2, 0., 0.],
+    [0., pi/2, 88, 0.]
 ])
 dh_franka_mdh.millimeter_to_meter()
 franka_upper = np.radians([175, 135, 140, 175, 175, 175, 175])
@@ -27,13 +33,13 @@ franka_config = {
 
 # * example: rokae xMateER3, sdh
 dh_rokae_er3_sdh = Dh([
-    [341.5, -pi/2, 0.],
-    [0.0, pi/2, 0.],
-    [394.0, -pi/2, 0.],
-    [0.0, pi/2, 0.],
-    [366.0, -pi/2, 0.],
-    [0.0, pi/2, 0.],
-    [250.3, 0., 0.],
+    [341.5, -pi/2, 0., 0.],
+    [0.0, pi/2, 0., 0.],
+    [394.0, -pi/2, 0., 0.],
+    [0.0, pi/2, 0., 0.],
+    [366.0, -pi/2, 0., 0.],
+    [0.0, pi/2, 0., 0.],
+    [250.3, 0., 0., 0.],
 ], type='sdh')
 dh_rokae_er3_sdh.millimeter_to_meter()
 rokae_er3_upper = np.radians([165, 115, 165, 115, 165, 115, 355])
@@ -47,13 +53,13 @@ rokae_er3_config_sdh = {
 
 # * example: rokae xMateER3, mdh
 dh_rokae_er3_mdh = Dh([
-    [341.5, 0, 0.],
-    [0.0, -pi/2, 0.],
-    [394.0, pi/2, 0.],
-    [0.0, -pi/2, 0.],
-    [366.0, pi/2, 0.],
-    [0.0, -pi/2, 0.],
-    [250.3, pi/2, 0.],
+    [341.5, 0, 0., 0.],
+    [0.0, -pi/2, 0., 0.],
+    [394.0, pi/2, 0., 0.],
+    [0.0, -pi/2, 0., 0.],
+    [366.0, pi/2, 0., 0.],
+    [0.0, -pi/2, 0., 0.],
+    [250.3, pi/2, 0., 0.],
 ])
 dh_rokae_er3_mdh.millimeter_to_meter()
 rokae_er3_config = {
@@ -75,13 +81,13 @@ rokae_er3_config_expand = {
 
 # * example: xMateER3 Plus version
 dh_rokae_er3_mdh_plus = Dh([
-    [341.5, 0, 0.],
-    [0.0, -pi/2, 0.],
-    [444.0, pi/2, 0.],
-    [0.0, -pi/2, 0.],
-    [416.0, pi/2, 0.],
-    [0.0, -pi/2, 0.],
-    [250.3, pi/2, 0.],
+    [341.5, 0, 0., 0.],
+    [0.0, -pi/2, 0., 0.],
+    [444.0, pi/2, 0., 0.],
+    [0.0, -pi/2, 0., 0.],
+    [416.0, pi/2, 0., 0.],
+    [0.0, -pi/2, 0., 0.],
+    [250.3, pi/2, 0., 0.],
 ])
 dh_rokae_er3_mdh_plus.millimeter_to_meter()
 rokae_er3_config_plus = {
@@ -89,24 +95,6 @@ rokae_er3_config_plus = {
     "param": dh_rokae_er3_mdh_plus,
     "upper": rokae_er3_upper_expand,
     "lower": rokae_er3_lower_expand,
-}
-
-# * example: NervER3 version
-dh_nerv_er3_mdh = Dh([
-    [341.5, 0, 0.],
-    [0.0, -pi/2, 0.],
-    [444.0, pi/2, 0.],
-    [0.0, -pi/2, 0.],
-    [416.0, pi/2, 0.],
-    [97.0, -pi/2, 0.],  # 0.037 + 0.06
-    [114.8, pi/2, 0.],
-])
-dh_nerv_er3_mdh.millimeter_to_meter()
-nerv_er3_config = {
-    "type": "mdh_param",
-    "param": dh_nerv_er3_mdh,
-    "upper": rokae_er3_upper_expand * 3,
-    "lower": rokae_er3_lower_expand * 3,
 }
 
 # * rokae xMateSR5
@@ -145,13 +133,13 @@ rokae_sr5_config = {
 
 # * example: NervER3 version
 dh_nerv_er3_mdh = Dh([
-    [341.5, 0, 0.],
-    [0.0, -pi/2, 0.],
-    [444.0, pi/2, 0.],
-    [0.0, -pi/2, 0.],
-    [416.0, pi/2, 0.],
-    [97.0, -pi/2, 0.],  # 0.037 + 0.06
-    [114.8, pi/2, 0.],
+    [341.5, 0, 0., 0.],
+    [0.0, -pi/2, 0., 0.],
+    [444.0, pi/2, 0., 0.],
+    [0.0, -pi/2, 0., 0.],
+    [416.0, pi/2, 0., 0.],
+    [97.0, -pi/2, 0., 0.],  # 0.037 + 0.06
+    [114.8, pi/2, 0., 0.],
 ])
 dh_nerv_er3_mdh.millimeter_to_meter()
 nerv_er3_config = {
@@ -159,6 +147,25 @@ nerv_er3_config = {
     "param": dh_nerv_er3_mdh,
     "upper": rokae_er3_upper_expand * 3,
     "lower": rokae_er3_lower_expand * 3,
+}
+
+# * Aubo C5 (单位: mm, DH参数从m转换而来需乘以1000)
+dh_aubo_c5 = Dh([
+    [122, 0.0, 0.0, np.pi],               # d, alpha, a, theta
+    [121.5, -np.pi/2, 0.0, -np.pi/2],
+    [0.0, np.pi, 408, 0.0],
+    [0.0, np.pi, 376, -np.pi/2],
+    [102.5, -np.pi/2, 0.0, 0.0],
+    [94, np.pi/2, 0.0, 0.0]
+])
+dh_aubo_c5.millimeter_to_meter()
+aubo_c5_upper = np.radians([360, 360, 360, 360, 360, 360])
+aubo_c5_lower = np.radians([-360, -360, -360, -360, -360, -360])
+aubo_c5_config = {
+    "type": "mdh_param",
+    "param": dh_aubo_c5,
+    "upper": aubo_c5_upper,
+    "lower": aubo_c5_lower,
 }
 
 
