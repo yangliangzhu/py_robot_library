@@ -7,9 +7,13 @@ setup(
     author_email="your.email@example.com",
     description="A Python library for robot models and tools",
     packages=find_packages(),
+    package_data={
+        "model": ["configs/*.yaml"],
+    },
     install_requires=[
         "numpy",
         "casadi",
+        "pyyaml",
     ],
     python_requires=">=3.6",
 )

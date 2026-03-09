@@ -5,15 +5,7 @@ import numpy as np
 import sys
 
 from model.robot_model_numpy import RobotModelNumpy
-from model.configs import (
-    franka_config,
-    rokae_er3_config,
-    rokae_er3_config_sdh,
-    rokae_er3_config_plus,
-    nerv_er3_config,
-    rokae_sr5_config,
-    aubo_c5_config,
-)
+from model.configs.loader import load_robot_config
 from model.ik_type import IkType
 
 
@@ -67,13 +59,13 @@ def validate_config(name, config, param_type, data_dir="test_data"):
 
 def main():
     configs = [
-        ("franka_mdh", franka_config, "mdh"),
-        ("rokae_er3_mdh", rokae_er3_config, "mdh"),
-        ("rokae_er3_sdh", rokae_er3_config_sdh, "sdh"),
-        ("rokae_er3_plus_mdh", rokae_er3_config_plus, "mdh"),
-        ("nerv_er3_mdh", nerv_er3_config, "mdh"),
-        ("rokae_sr5_mat", rokae_sr5_config, "mat"),
-        ("aubo_c5_mdh", aubo_c5_config, "mdh"),
+        ("franka_mdh", load_robot_config("franka"), "mdh"),
+        ("rokae_er3_mdh", load_robot_config("rokae_er3"), "mdh"),
+        ("rokae_er3_sdh", load_robot_config("rokae_er3_sdh"), "sdh"),
+        ("rokae_er3_plus_mdh", load_robot_config("rokae_er3_plus"), "mdh"),
+        ("nerv_er3_mdh", load_robot_config("nerv_er3"), "mdh"),
+        ("rokae_sr5_mat", load_robot_config("rokae_sr5"), "mat"),
+        ("aubo_c5_mdh", load_robot_config("aubo_c5"), "mdh"),
     ]
     
     all_passed = True

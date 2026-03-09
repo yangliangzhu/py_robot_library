@@ -1,4 +1,6 @@
-from .common import *
+from .common import RobotModelCasadi, RobotModelNumpy, IkType
+from .configs.loader import load_robot_config
+import numpy as np
 
 
 class ModelFactory():
@@ -26,7 +28,7 @@ class ModelFactory():
 
     @staticmethod
     def create_sr5(type, ik_type):
-        config = rokae_sr5_config
+        config = load_robot_config("rokae_sr5")
         if type == 'casadi':
             robot = RobotModelCasadi()
         elif type == 'numpy':
@@ -39,7 +41,7 @@ class ModelFactory():
 
     @staticmethod
     def create_sr5_v2(type, ik_type):
-        config = rokae_sr5_config
+        config = load_robot_config("rokae_sr5")
         if type == 'casadi':
             robot = RobotModelCasadi()
         elif type == 'numpy':
@@ -57,7 +59,7 @@ class ModelFactory():
 
     @staticmethod
     def create_er3(type, ik_type):
-        config = rokae_er3_config
+        config = load_robot_config("rokae_er3")
         if type == 'casadi':
             robot = RobotModelCasadi()
         elif type == 'numpy':
@@ -70,7 +72,7 @@ class ModelFactory():
 
     @staticmethod
     def create_er3_v2(type, ik_type):
-        config = rokae_er3_config_expand
+        config = load_robot_config("rokae_er3_expand")
         if type == 'casadi':
             robot = RobotModelCasadi()
         elif type == 'numpy':
@@ -83,7 +85,7 @@ class ModelFactory():
 
     @staticmethod
     def create_er3_plus(type, ik_type):
-        config = rokae_er3_config_plus
+        config = load_robot_config("rokae_er3_plus")
         if type == 'casadi':
             robot = RobotModelCasadi()
         elif type == 'numpy':
@@ -96,7 +98,7 @@ class ModelFactory():
 
     @staticmethod
     def create_nerv_er3(type, ik_type):
-        config = nerv_er3_config
+        config = load_robot_config("nerv_er3")
         if type == 'casadi':
             robot = RobotModelCasadi()
         elif type == 'numpy':
@@ -109,7 +111,7 @@ class ModelFactory():
 
     @staticmethod
     def create_aubo_c5(type, ik_type):
-        config = aubo_c5_config
+        config = load_robot_config("aubo_c5")
         if type == 'casadi':
             robot = RobotModelCasadi()
         elif type == 'numpy':
