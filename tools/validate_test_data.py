@@ -12,6 +12,7 @@ from model.configs import (
     rokae_er3_config_plus,
     nerv_er3_config,
     rokae_sr5_config,
+    aubo_c5_config,
 )
 from model.ik_type import IkType
 
@@ -72,6 +73,7 @@ def main():
         ("rokae_er3_plus_mdh", rokae_er3_config_plus, "mdh"),
         ("nerv_er3_mdh", nerv_er3_config, "mdh"),
         ("rokae_sr5_mat", rokae_sr5_config, "mat"),
+        ("aubo_c5_mdh", aubo_c5_config, "mdh"),
     ]
     
     all_passed = True
