@@ -1,7 +1,19 @@
+"""Rigid-body motion helpers.
+
+Screw-theoretic utilities in the style of Murray, Li and Sastry,
+*A Mathematical Introduction to Robotic Manipulation* (1994): SO(3)/SE(3)
+exponentials and logarithms, adjoint and ``ad`` operators, and forward and
+inverse dynamics for an open chain.
+
+These are low-level, convention-heavy helpers. The library's own robot models do
+not depend on them; they are provided as building blocks for custom analyses.
+"""
+
 import numpy as np
-'''
-general functions
-'''
+
+# ---------------------------------------------------------------------------
+# general functions
+# ---------------------------------------------------------------------------
 
 
 def near_zero(z):
@@ -208,9 +220,9 @@ def test_if_SE3(mat):
     return abs(distance_to_SE3(mat)) < 1e-3
 
 
-''' 
-kinematics
-'''
+# ---------------------------------------------------------------------------
+# kinematics
+# ---------------------------------------------------------------------------
 
 
 def fk_in_space(mat, s_list, q_list):
@@ -311,13 +323,25 @@ def ik_in_space(s_list, M, T, q_list0, eomg=0.01, ev=0.001):
     return (q_list, not err)
 
 
-''' 
-dynamics
-'''
+# ---------------------------------------------------------------------------
+# dynamics
+# ---------------------------------------------------------------------------
 
 
-def inverse_dynamics(q, dq, ddq, g, f_tip, M_list, G_list, s_list):
-    # 逆向动力学,质心坐标系
+def inverse_dynamics_com(q, dq, ddq, g, f_tip, M_list, G_list, s_list):
+    """Inverse dynamics with the body frames at the link centres of mass.
+
+    Args:
+        q, dq, ddq: Joint positions, velocities and accelerations.
+        g: Gravitational acceleration vector.
+        f_tip: Wrench applied at the tool tip.
+        M_list: Screw axes expressed at the centres of mass, one per joint.
+        G_list: Spatial inertia matrices, one per link.
+        s_list: Screw axes expressed at the link centres of mass.
+
+    Returns:
+        The joint torques, length ``len(q)``.
+    """
     n = len(q)
     Mi = np.eye(4)
     Ai = np.zeros((6, n))
@@ -350,7 +374,21 @@ def inverse_dynamics(q, dq, ddq, g, f_tip, M_list, G_list, s_list):
 
 
 def inverse_dynamics(q, dq, ddq, g, f_tip, M_list, G_list):
-    # 逆向动力学, 原点坐标系
+    """Inverse dynamics with the body frames at the link origins.
+
+    Same formulation as :func:`inverse_dynamics_com`, but every screw axis is
+    the constant joint axis expressed at the link origin.
+
+    Args:
+        q, dq, ddq: Joint positions, velocities and accelerations.
+        g: Gravitational acceleration vector.
+        f_tip: Wrench applied at the tool tip.
+        M_list: Link transforms.
+        G_list: Spatial inertia matrices, one per link.
+
+    Returns:
+        The joint torques, length ``len(q)``.
+    """
     n = len(q)
     Mi = np.eye(4)
     Ai = np.array([0, 0, 1, 0, 0, 0])

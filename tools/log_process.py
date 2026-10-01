@@ -1,6 +1,7 @@
 import re
-import numpy as np
 from datetime import datetime, timedelta
+
+import numpy as np
 
 
 def extract_data(data_path):
@@ -9,7 +10,7 @@ def extract_data(data_path):
     datas = [[], [], [], []]
     ts = [[], [], [], []]
 
-    with open(data_path, 'r') as file:
+    with open(data_path) as file:
         type = 0
         for line in file:
             line_strip = line.strip()
@@ -24,7 +25,6 @@ def extract_data(data_path):
                 timedelta(milliseconds=float(millisecond))
 
             message = line.split(']')[1].replace(" ", "")
-            key = message.split('=')[0]
             values = message.split('=')[1].split(',')
             ts[type].append(absolute_utc.timestamp())
             datas[type].append([float(x) for x in values])

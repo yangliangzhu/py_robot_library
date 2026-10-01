@@ -1,223 +1,211 @@
-# AGENTS.md - Agentic Coding Guidelines
+# AGENTS.md — Agent Coding Guidelines for py_robot_library
 
 ## Project Overview
 
-This is a Python library for robot models and tools, including:
-- DH parameter handling
-- Forward/inverse kinematics (FK/IK)
-- Robot model implementations (numpy and CasADi)
-- Geometry utilities (rotations, quaternions, transforms)
+Python robotics kinematics library: Denavit-Hartenberg parameters, forward and
+inverse kinematics, Jacobian/Hessian, manipulability analysis and geometry
+utilities, with interchangeable NumPy and CasADi backends.
 
-**Dependencies**: numpy, casadi, scipy
+Dependencies: NumPy, CasADi, PyYAML. Python >= 3.9.
 
----
+The C++ counterpart is `robot-model-cpp`; the two implement the same algorithms
+and are cross-checked against each other. Keep their conventions aligned.
 
-## Build / Test Commands
-
-### Running the Project
-```bash
-# Install in development mode
-pip install -e .
-
-# Install all dependencies
-pip install numpy casadi scipy
-```
-
-### Testing
-There is **no formal test framework** configured. To run a single test or module:
+## Quick Start
 
 ```bash
-# Run a specific Python file directly
-python model/robot_model_numpy.py
+# Install (editable installs need pip >= 23)
+python -m pip install --upgrade pip
+pip install -e ".[dev]"
 
-# Run specific module with pytest (if tests added)
-pytest tests/                    # Run all tests
-pytest tests/test_file.py        # Run specific test file
-pytest tests/test_file.py::test_function  # Run single test function
-```
+# Test
+pytest                       # whole suite
+pytest tests/test_ik.py      # one file
+pytest -k manip              # by name
+pytest -x                    # stop at the first failure
 
-### Linting & Formatting
-No linting or formatting tools are configured. If you add them, use:
-
-```bash
-# Black (formatting)
-black .
-
-# Ruff (linting)
+# Lint
 ruff check .
 ruff check --fix .
-
-# MyPy (type checking)
-mypy .
 ```
 
----
+There is no `python` executable on some systems in this workspace; use `python3`.
 
-## Code Style Guidelines
-
-### Naming Conventions
+## Code Style
 
 | Element | Convention | Example |
 |---------|------------|---------|
-| Classes | PascalCase | `RobotModelNumpy`, `IkStandard` |
-| Functions | snake_case | `rot_x()`, `fk()`, `jacobian()` |
-| Variables | snake_case | `num_dof`, `target_pose` |
-| Constants | UPPER_SNAKE | `MAX_ITER`, `EPS` |
-| Enum values | UPPER_SNAKE | `IK_STANDARD`, `IK_NULL` |
+| Classes | `PascalCase` | `RobotModelNumpy`, `IkStandard` |
+| Functions/methods | `snake_case` | `rot_x`, `derivative_manip` |
+| Variables | `snake_case` | `num_dof`, `target_pose` |
+| Constants | `UPPER_SNAKE` | `DEFAULT_VIRTUAL_LINK` |
+| Private helpers | leading underscore | `_damped_pinv` |
+| Enum members | `UPPER_SNAKE` | `IkType.IK_STANDARD` |
+| Modules | `snake_case` | `robot_model_numpy.py` |
+
+### Formatting Rules
+
+- **Line length**: 100 (ruff, `pyproject.toml`)
+- **Indent**: 4 spaces
+- **Ruff rules**: `E`, `F`, `W`, `I`, `UP`, `B`; `E501` is ignored because the
+  DH and robot parameter tables are unreadable when wrapped
 
 ### Imports
 
-**Standard format** (one per line):
-```python
-import numpy as np
-import casadi as ca
-from scipy.differentiate import jacobian
+Every module starts with `from __future__ import annotations`, so the modern
+`X | None` and `list[int]` syntax is available on Python 3.9.
 
-from .module_name import ClassName
-from .module_name import function_name, CONSTANT
+Order groups with a blank line between them, one import per line, no wildcards:
+
+```python
+from __future__ import annotations
+
+import os
+from typing import TYPE_CHECKING
+
+import numpy as np
+
+from .dh_param import Dh, get_matrix_list
 ```
 
-**Avoid wildcard imports** (`from .module import *`). Use explicit imports.
-
-**Order** (grouped, separated by blank line):
-1. Standard library
-2. Third-party packages (numpy, casadi, scipy)
-3. Local application imports
+The single exception is `model/common.py`, which exists to forward the historical
+flat namespace and is marked with `# noqa: F401,F403`.
 
 ### Type Hints
 
-**Currently not used** in this codebase. If adding:
-```python
-# Good
-def jacobian(self, q: np.ndarray) -> np.ndarray:
-    ...
+Annotate public signatures. The type cannot express units or shapes, so put those
+in the docstring:
 
-def set_bounds(self, lower_bounds: np.ndarray, upper_bounds: np.ndarray) -> None:
-    ...
+```python
+def manip(self, q: np.ndarray) -> float:
+    """Return the Yoshikawa manipulability measure at ``q``.
+
+    Args:
+        q: Joint positions in radians, length ``num_dof``.
+    """
 ```
 
 ### Documentation
 
-Use docstrings for all public classes and functions. Two styles observed:
+English, Google style, imperative summary line ending with a period. Fill in
+`Args:`, `Returns:` and `Raises:` where they apply.
 
-**Google style** (preferred for complex functions):
 ```python
-def quat2rot(q):
-    """
-    Convert a quaternion to rotation matrix.
+def jacobian(self, q: np.ndarray) -> np.ndarray:
+    """Compute the 6xn geometric Jacobian.
 
-    Parameters:
-        q (numpy.ndarray): quaternion [w, x, y, z]
+    Args:
+        q: Joint positions in radians, length ``num_dof``.
 
     Returns:
-        numpy.ndarray: 3x3 rotation matrix
+        A ``(6, num_dof)`` Jacobian: the first three rows map joint velocities
+        to linear velocity, the last three to angular velocity.
     """
 ```
 
-**Simple style** (acceptable for short functions):
-```python
-def rot_z(theta):
-    """Return rotation matrix around Z axis."""
-```
-
-Include Chinese comments where helpful for domain terminology.
+Document units, array shapes, and whether an argument is mutated — these are the
+details that are easiest to get wrong in kinematics code.
 
 ### Error Handling
 
-Use specific exception types:
+Raise a specific exception with a message saying what was wrong and what was
+expected. Never print and return `None` from a library function.
+
 ```python
-# For unsupported features
-raise NotImplementedError("param type not supported")
-
-# For invalid values
-raise ValueError("soft upper must be >= soft lower")
-
-# For dimension mismatches
-raise ValueError("Input must be a 3x3 rotation matrix")
+raise ValueError(f"param_type must be 'mat' or one of {dh_types}, got {param_type!r}")
 ```
 
-### Code Organization
+| Situation | Exception |
+|-----------|-----------|
+| Bad value | `ValueError` |
+| Wrong type | `TypeError` |
+| Unknown lookup key | `KeyError` |
+| Unsupported variant | `NotImplementedError` |
+| Method called out of order | `RuntimeError` |
 
-**Class structure**:
-```python
-class RobotModelNumpy():
-    """Brief description of the class."""
+Never name a parameter `type`; it shadows the builtin. Use `param_type`,
+`dh_type`, `backend` or `solver_type`.
 
-    def __init__(self):
-        # Initialize instance variables
-        self.virtual_link = 0.15
+## Architecture
 
-    # Group methods by functionality with comment headers
-    ########################## configure robot ########################################
-
-    def build(self, ...):
-        ...
-
-    ########################## kinematics #############################################
-
-    def fk(self, q):
-        """Forward kinematics."""
-        ...
+```
+Ms = [base, link_1, ..., link_n, tool]
 ```
 
-**Main guard**:
+Every model reduces to that ordered transform list. `RobotModelBase` builds it
+from a robot configuration, tracks joint limits and manages the tool transform.
+Subclasses implement only what differs:
+
+- `RobotModelNumpy` evaluates dense arrays per call and reads `Ms` directly.
+- `RobotModelCasadi` compiles FK/Jacobian/Hessian once and must override
+  `_on_tool_changed()` to recompile when the tool moves.
+
+Adding a behaviour to both backends means adding it to `RobotModelBase`, not
+duplicating it.
+
+### Backend parity
+
+Anything that both backends expose must agree. The test suite is parametrised
+over `numpy` and `casadi` for exactly this reason. Shapes matter as much as
+values: `hessian()` returns `(6, num_dof, num_dof)` on both, and `manip()`
+returns `sqrt(det(J @ J.T))` on both.
+
+### Lazy imports
+
+`model/__init__.py` resolves its exports through PEP 562 `__getattr__`, so
+importing `model.ik_srs` or `model.dh_param` does not import CasADi. Keep new
+exports in `_LAZY_EXPORTS` (and in `__all__`) rather than adding eager imports.
+
+## Testing
+
+- Framework: pytest, configured in `pyproject.toml` (`testpaths = ["tests"]`).
+- Fixtures live in `tests/conftest.py`: `backend` parametrises over both
+  backends, `rng` is seeded for reproducibility, `make_robot` builds and caches
+  models, and `sample_positions` draws joint positions inside the limits.
+- Verify the Jacobian and gradients against numerical derivatives rather than
+  stored constants, so the tests check the implementation and not today's output.
+
 ```python
-if __name__ == '__main__':
-    # Test code or demo
-    pass
+@pytest.mark.parametrize("name,dof", ROBOTS)
+def test_matches_finite_difference(self, backend, make_robot, rng, name, dof):
+    robot = make_robot(name, backend)
+    q = sample_positions(robot, rng)
+    assert np.allclose(robot.jacobian(q), _numeric_jacobian(robot, q), atol=1e-4)
 ```
 
-### Mathematical Conventions
-
-- **Units**: Angles in radians by default
-- **Matrices**: 4x4 homogeneous transforms, 3x3 rotation matrices
-- **Vectors**: Column vectors, numpy arrays
-- **Tolerance**: Use `np.allclose()` for floating-point comparisons with appropriate `atol`/`rtol`
-
-### Code Patterns
-
-**Factory method pattern** (observed):
-```python
-def ik_factory_method(self, solver_type):
-    if solver_type == IkType.IK_STANDARD:
-        self.ik_solver = IkStandard(self, solver_type)
-    elif solver_type == IkType.IK_NORMAL:
-        ...
-```
-
-**Callable classes** (for IK solvers):
-```python
-class IkStandard:
-    def __call__(self, angle, target):
-        """Solve IK - can be called as function."""
-        ...
-```
-
----
+- IK is iterative and seeded. Generate the target with `fk(q)` and seed nearby;
+  never assert convergence from an arbitrary seed.
+- `IK_NORMAL` and `IK_NULL_NORMAL` relax the tool yaw by design. Assert on the
+  position and on the residual they actually minimise, not on the full pose.
+- Regression fixes get a test named after the bug, with a comment saying what
+  used to happen.
 
 ## Common Tasks
 
-### Adding a New Robot Model
-1. Create `model/robot_model_<backend>.py`
-2. Inherit from base class or implement required interface
-3. Implement: `fk()`, `jacobian()`, `ik()`
-4. Add to `model_factory.py` if applicable
+**Add a robot**: add `model/configs/<name>.yaml`, register it in
+`ModelFactory._ROBOTS`, and add it to `KNOWN_ROBOTS` in
+`tests/test_model_factory.py` (the suite enforces the last step).
 
-### Adding a New IK Solver
-1. Create new class in `model/ik_solver.py`
-2. Implement `__call__(self, angle, target)` returning `(solution, success)`
-3. Add enum value to `model/ik_type.py`
-4. Register in `ik_factory_method()`
+**Add an IK solver**: subclass `_IkSolverBase` in `model/ik_solver.py`,
+implement `__call__(angle, target) -> tuple[np.ndarray, bool]`, override
+`configure()` if it does not use the standard `IkType` mapping, raise
+`NotImplementedError` for variants it does not support, add the `IkType` value,
+and register it in `_SOLVER_REGISTRY`.
 
-### Adding Geometry Utilities
-1. Add to `tools/geometry.py`
-2. Follow existing patterns for rotation matrices, quaternions, etc.
+**Add a geometry helper**: add it to `tools/geometry.py` and export it in
+`__all__`.
 
----
+**Change the public API**: update `model/__init__.py` (`_LAZY_EXPORTS` and
+`__all__`), the README, and `CHANGELOG.md`.
 
-## Architecture Notes
+## Mathematical Conventions
 
-- **Two backends**: numpy (fast prototyping) and CasADi (symbolic/optimization)
-- **IK solvers**: Multiple strategies (standard, null space, QP-based)
-- **Separation**: Model definition (DH/matrices) from solvers
-- **Config-driven**: Robot parameters passed via config dictionaries
+- Angles are radians unless a function documents otherwise.
+- Rotation matrices are 3x3; homogeneous transforms are 4x4.
+- Quaternions are `[w, x, y, z]`.
+- RPY is `[roll, pitch, yaw]` for the ZYX composition
+  `R = Rz(yaw) @ Ry(pitch) @ Rx(roll)`.
+- Joint limits are stored in radians regardless of the config file's units.
+- Distances are metres; `nervCartToAffine` converts its millimetre input.
+- Compare floats with `np.allclose` and an explicit tolerance chosen for the
+  method (1e-12 for exact algebra, 1e-4 for finite differences).

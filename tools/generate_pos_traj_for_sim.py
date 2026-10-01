@@ -1,7 +1,8 @@
-import numpy as np
 from enum import Enum
 
-from tools.geometry import *
+import numpy as np
+
+from tools.geometry import nervCartToAffine
 
 
 class ToolType(Enum):

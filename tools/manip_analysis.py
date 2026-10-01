@@ -1,10 +1,9 @@
-''' 
-for debug new ik
-'''
-from tools.geometry import *
-import numpy as np
+"""Debug helper for the IK solvers."""
 import matplotlib.pyplot as plt
+import numpy as np
+
 from model.model_factory import ModelFactory
+from tools.geometry import nervRpy
 
 # plt.style.use('seaborn-v0_8')
 
@@ -25,7 +24,7 @@ def view_manip(data):
     for i in range(data_num):
         manips.append(model.manip(q_cmd[i, :dof]))
 
-    plt.plot(t_qc, np.log10(manips), alpha=0.7, label=f'log10(manip)')
+    plt.plot(t_qc, np.log10(manips), alpha=0.7, label='log10(manip)')
     plt.legend()
     plt.show()
 
@@ -58,9 +57,9 @@ def view_norm_degrees(data):
         angles_cmd.append(np.arcsin(sin_angle_cmd))
 
     plt.plot(t_pa, np.degrees(angles_act),
-             alpha=0.7, label=f'Norm Vector Angle Act')
+             alpha=0.7, label='Norm Vector Angle Act')
     plt.plot(t_pc, np.degrees(angles_cmd),
-             alpha=0.7, label=f'Norm Vector Angle Cmd')
+             alpha=0.7, label='Norm Vector Angle Cmd')
 
     plt.legend()
     plt.show()

@@ -1,27 +1,41 @@
-import numpy as np
-from numpy import cos, sin
-from enum import Enum
+"""Analytical inverse kinematics for an S-R-S 7-DOF redundant manipulator.
 
-"""
-M. Shimizu, H. Kakuya, W. -K. Yoon, K. Kitagaki and K. Kosuge,
-"Analytical Inverse Kinematic Computation for 7-DOF Redundant Manipulators
-With Joint Limits and Its Application to Redundancy Resolution,"
-in IEEE Transactions on Robotics, vol. 24, no. 5, pp. 1131-1142, Oct. 2008,
+Implements the closed-form inverse kinematics of:
+
+M. Shimizu, H. Kakuya, W.-K. Yoon, K. Kitagaki and K. Kosuge, "Analytical
+Inverse Kinematic Computation for 7-DOF Redundant Manipulators With Joint
+Limits and Its Application to Redundancy Resolution," in *IEEE Transactions
+on Robotics*, vol. 24, no. 5, pp. 1131-1142, Oct. 2008,
 doi: 10.1109/TRO.2008.2003266.
 
+The arm is a shoulder-roll-shoulder (spherical-roll-spherical) chain, so the
+seven joint angles follow in closed form once the self-motion of the redundant
+degree of freedom is fixed by the arm angle ``phi``. The frame chain is built
+from the modified (Craig) DH parameters stored in :attr:`RobotSRS.dh_alpha`,
+and :class:`FrameId` names the links along it.
 
-paper frame index: 0 ~ 6 + 7
-code  frame index: 1 ~ 6 + Tool
-Here for example, after q4 rotation, Frame 4 -> Frame 4 * Rz(q4) * Tz(d4) * Rx(alpha 4) * Tx(a4) ->
-update Frame5
-Frame {i} means when q1 != 0, ...., q{i-1}!=0, but q{i} = 0, the position of the Frame
+Frame indexing convention: the paper numbers frames ``0 ~ 6`` plus frame ``7``,
+whereas this code numbers them ``1 ~ 6`` plus ``Tool``. The two are offset by
+one, i.e. paper frame ``i`` is :attr:`FrameId.kFrame{i}` for ``i = 1..6``,
+paper frame ``7`` is :attr:`FrameId.kTool`, and paper frame ``0`` (the robot
+base) has no counterpart here. For example, after a ``q4`` rotation,
+``Frame 4 -> Frame 4 * Rz(q4) * Tz(d4) * Rx(alpha 4) * Tx(a4)`` updates
+``Frame5``. "Frame {i}" means the configuration in which ``q1 != 0, ...,
+q{i-1} != 0`` but ``q{i} = 0``, i.e. the pose reached when the joints up to and
+including ``q{i-1}`` have been applied while ``q{i}`` itself has not.
 """
+
+from __future__ import annotations
+
+from enum import Enum
+
+import numpy as np
+from numpy import cos, sin
 
 
 class FrameId(Enum):
-    """
-    关节编号枚举类
-    """
+    """Enumerate the frames along the S-R-S arm chain."""
+
     kFrame1 = 0
     kFrame2 = 1
     kFrame3 = 2
@@ -32,11 +46,13 @@ class FrameId(Enum):
     kTool = 7
 
     def next(self):
-        """
-        获取下一个枚举值
+        """Return the next frame index in the chain.
+
+        Returns:
+            The following :class:`FrameId`, or None if this is the last one.
         """
         next_value = self.value + 1
-        # 检查下一个值是否在有效范围内
+        # * check whether the next value is still inside the valid range
         if next_value <= FrameId.kFrame7.value:
             return FrameId(next_value)
         else:
@@ -44,21 +60,20 @@ class FrameId(Enum):
 
 
 class RobotSRS:
-    """
-    机器人逆运动学解析解计算器
+    """Analytical inverse-kinematics solver for a 7-DOF S-R-S arm.
 
-    用于计算7自由度机械臂的逆运动学解析解，支持冗余自由度的臂角优化
+    Solves the inverse kinematics of a 7-DOF manipulator in closed form and
+    supports redundancy resolution through the arm angle.
     """
 
     def __init__(self, d_bs=0.3415, d_se=0.394, d_ew=0.366, d_wt=0.2503):
-        """
-        初始化机器人参数
+        """Initialise the robot geometry.
 
-        Parameters:
-            d_bs (float): 基座到肩部的距离
-            d_se (float): 肩部到肘部的距离
-            d_ew (float): 肘部到腕部的距离
-            d_wt (float): 腕部到末端执行器的距离
+        Args:
+            d_bs: Base-to-shoulder distance.
+            d_se: Shoulder-to-elbow distance.
+            d_ew: Elbow-to-wrist distance.
+            d_wt: Wrist-to-tool distance.
         """
         self.d_bs = d_bs
         self.d_se = d_se
@@ -72,14 +87,13 @@ class RobotSRS:
 
     @staticmethod
     def cross(v):
-        """
-        计算向量的反对称矩阵
+        """Compute the skew-symmetric (cross-product) matrix of a vector.
 
-        Parameters:
-            v (np.array): 3维向量
+        Args:
+            v: 3-dimensional vector.
 
         Returns:
-            np.array: 3x3反对称矩阵
+            3x3 skew-symmetric matrix.
         """
         return np.array([[0, -v[2], v[1]],
                         [v[2], 0, -v[0]],
@@ -87,15 +101,14 @@ class RobotSRS:
 
     def rot(self, theta: float, idx: FrameId):
         # TODO: rot from id1 to id2
-        """
-        计算相邻两个关节之间的旋转矩阵
+        """Compute the rotation matrix contributed by a single joint.
 
-        Parameters:
-            theta (float): 旋转角度
-            idx (FrameId): 关节索引 (1-7)
+        Args:
+            theta: Joint rotation angle.
+            idx: Joint frame index (1-7).
 
         Returns:
-            np.array: 3x3旋转矩阵
+            3x3 rotation matrix.
         """
 
         alpha = self.dh_alpha[idx.value]
@@ -110,15 +123,15 @@ class RobotSRS:
                          [0.,       sa,       ca]])
 
     def rot_seq(self, q: np.ndarray, start_id: FrameId, end_id: FrameId):
-        """
-        计算相邻两个关节之间的旋转矩阵
+        """Compute the rotation matrix spanning a sequence of joints.
 
-        Parameters:
-            theta (float): 旋转角度向量
-            idx (FrameId): 关节索引 (1-7)
+        Args:
+            q: Joint angle vector.
+            start_id: Frame index the sequence starts from.
+            end_id: Frame index the sequence ends at (exclusive).
 
         Returns:
-            np.array: 3x3旋转矩阵
+            3x3 rotation matrix.
         """
         mat = np.eye(3)
         if start_id.value >= end_id.value:
@@ -129,20 +142,19 @@ class RobotSRS:
             theta = q[loop_id.value]
             mat = mat @ self.rot(theta, loop_id)
             loop_id = loop_id.next()
-            if loop_id == None:
+            if loop_id is None:
                 break
         return mat
 
     def init_shoulder_joint(self, rhs, lhs):
-        """
-        初始化肩部关节角度
+        """Compute the shoulder joint angles of the reference plane.
 
-        Parameters:
-            rhs (np.array): x向量
-            y (np.array): y向量
+        Args:
+            rhs: Right-hand side vector of the shoulder equation.
+            lhs: Left-hand side vector of the shoulder equation.
 
         Returns:
-            tuple: (q01, q02) 关节角度
+            Tuple ``(q01, q02)`` of joint angles.
         """
         # * The following can be derived from R1.T * lhs = R2 * rhs
         # * as for multiple solution, i.e. arcsin(q) has two choices, the choice can be arbitrary
@@ -157,15 +169,15 @@ class RobotSRS:
         return q01, q02
 
     def ik(self, mat, phi):
-        """
-        计算逆运动学解析解
+        """Compute the analytical inverse-kinematics solution.
 
-        Parameters:
-            mat (np.array): 4x4目标位姿矩阵
-            phi (float): 臂角参数(单位: 度)
+        Args:
+            mat: 4x4 target pose matrix.
+            phi: Arm angle parameter in degrees.
 
         Returns:
-            np.array: 7个关节角度
+            Tuple of the 7 joint angles and a success flag; the angles are None
+            when the target pose is out of reach.
         """
         phi = np.deg2rad(phi)
 
@@ -207,7 +219,8 @@ class RobotSRS:
         q3 = np.arctan2(R_14[2, 2], -R_14[2, 0])
 
         # * also for q5 ~ q7
-        # * 这里为了简化计算合并了一些计算并采用了论文中矩阵的转置
+        # * some terms are merged here to simplify the computation, and the
+        # * transpose of the matrices in the paper is used
         R_t1 = R_1t.T
         R_45 = self.rot(q4, FrameId.kFrame4)
         R_t5 = R_t1 @ R_14 @ R_45
@@ -222,14 +235,17 @@ class RobotSRS:
         return np.array([q1, q2, q3, q4, q5, q6, q7]), True
 
     def get_coeffs_theta(self, mat):
-        """
-        给定末端位姿后计算theta相关的三角有理函数系数
+        """Compute the coefficients of the theta trigonometric rational functions.
 
-        Parameters:
-            mat (np.array): 4x4目标位姿矩阵
+        The coefficients describe the arm angle as a function of the given end
+        effector pose.
+
+        Args:
+            mat: 4x4 target pose matrix.
 
         Returns:
-            dict: theta相关的三角有理函数系数
+            List of the six coefficient matrices ``[A_s, B_s, C_s, A_w, B_w,
+            C_w]``, or None when the target pose is out of reach.
         """
 
         R_1t = mat[:3, :3]
@@ -266,13 +282,20 @@ class RobotSRS:
         A_w = R_54 @ A_s.T @ R_1t
         B_w = R_54 @ B_s.T @ R_1t
         C_w = R_54 @ C_s.T @ R_1t
-        # TODO: 请注意这里使用的是论文中矩阵的转置而非原矩阵
+        # TODO: note that transposes of the matrices in the paper are used
+        # here rather than the matrices themselves
 
         return [A_s, B_s, C_s, A_w, B_w, C_w]
 
     def _fk_keypoints(self, q):
-        """
-        fk of each keypoint
+        """Compute the forward kinematics of every key point.
+
+        Args:
+            q: Joint angle vector.
+
+        Returns:
+            Tuple ``(ps, pe, pw, pt, Rt)`` of the shoulder, elbow, wrist and
+            tool positions together with the tool rotation matrix.
         """
         Rs = self.rot_seq(q, FrameId.kFrame1, FrameId.kFrame4)
         ps = self.l_bs
@@ -288,19 +311,42 @@ class RobotSRS:
         return ps, pe, pw, pt, Rt
 
     def fk_detail(self, q):
+        """Return the positions of the shoulder, elbow, wrist and tool.
+
+        Args:
+            q: Joint angle vector.
+
+        Returns:
+            Tuple ``(ps, pe, pw, pt)`` of key point positions.
+        """
         ps, pe, pw, pt, _ = self._fk_keypoints(q)
         return ps, pe, pw, pt
 
     def fk(self, q):
-        """
-        fk kinematics
-        symbols: [s] for shoulder, [e] for elbow, [w] for wrist, [t] for tool
+        """Compute the forward kinematics of the tool frame.
+
+        Args:
+            q: Joint angle vector.
+
+        Returns:
+            4x4 homogeneous transformation matrix of the tool frame.
+
+        Symbols: ``[s]`` for shoulder, ``[e]`` for elbow, ``[w]`` for wrist,
+        ``[t]`` for tool.
         """
         _, _, _, pt, Rt = self._fk_keypoints(q)
         res = np.r_[np.c_[Rt, pt.reshape(3, 1)], [[0, 0, 0, 1]]]
         return res
 
     def compute_arm_phi(self, q):
+        """Compute the arm angle ``phi`` of a joint configuration.
+
+        Args:
+            q: Joint angle vector.
+
+        Returns:
+            Arm angle in degrees, or None when the pose cannot be solved.
+        """
         mat = self.fk(q)
 
         # * get rotation axis
@@ -352,7 +398,7 @@ if __name__ == '__main__':
     q = np.random.rand(7) * np.pi
     pos = robot.fk(q)
 
-    # 使用4x4矩阵作为输入
+    # use a 4x4 matrix as the input
     mat = pos
     r_07_d = mat[:3, :3]
     x_07_d = mat[:3, 3]
@@ -386,7 +432,7 @@ if __name__ == '__main__':
                 remove_ct = round(-diff / (1.99 * np.pi))
                 joints[j + 1, i] += 2 * np.pi * remove_ct
 
-    # 臂角计算
+    # arm angle computation
     for i in range(7):
         plt.plot(phi_set, np.degrees(joints[:, i]), label=f'joint {i + 1}')
     plt.xlabel("phi-angle(free dof)")
