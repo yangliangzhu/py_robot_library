@@ -89,6 +89,51 @@ def is_regular(model, q: np.ndarray, tol: float = 1e-6) -> bool:
 # --------------------------------------------------------------------------- #
 
 
+def torus_distance(first: np.ndarray, second: np.ndarray) -> float:
+    """Distance between two configurations **on the torus**: every revolute joint is 2 pi periodic.
+
+    This is the right notion of "the same solution".  ``circular_joints`` (below) only marks the
+    joints whose *limits* span a full turn, which is a fact about the physical box, not about the
+    kinematics: FK depends on every revolute joint through its cosine and sine, so a configuration and
+    the same configuration shifted by 2 pi in any joint are the same pose solution.  A census can
+    return representatives that differ by hundreds of multiples of 2 pi (measured: 2 pi x
+    [158, -30, -1, 125, 101, 6] between two representatives of *one* solution), which inflates counts
+    unless they are compared this way.
+    """
+    delta = np.asarray(first, dtype=float) - np.asarray(second, dtype=float)
+    return float(np.linalg.norm((delta + np.pi) % (2.0 * np.pi) - np.pi))
+
+
+def canonical_representative(q: np.ndarray) -> np.ndarray:
+    """The representative of a configuration with every joint wrapped into ``(-pi, pi]``."""
+    values = np.asarray(q, dtype=float)
+    return (values + np.pi) % (2.0 * np.pi) - np.pi
+
+
+def within_limits(model, q: np.ndarray) -> bool:
+    """Whether a configuration lies inside the joint limits (a physical filter, not an identity)."""
+    values = np.asarray(q, dtype=float)
+    return bool(np.all(values >= np.asarray(model.lower_bounds)) and
+                np.all(values <= np.asarray(model.upper_bounds)))
+
+
+def physically_admissible(model, q: np.ndarray) -> bool:
+    """Whether some torus-equivalent representative of ``q`` lies inside the joint limits.
+
+    A solution whose only representatives are outside the box is mathematically a solution of the pose
+    equation and physically unreachable; the two questions have to be asked separately.
+    """
+    if within_limits(model, q):
+        return True
+    for shift in np.ndindex(*([3] * len(q))):
+        candidate = canonical_representative(
+            np.asarray(q, dtype=float) + (np.array(shift, dtype=float) - 1.0) * 2.0 * np.pi
+        )
+        if within_limits(model, candidate):
+            return True
+    return False
+
+
 def circular_joints(model, tol: float = 1e-9) -> np.ndarray:
     """Which joints are continuous rotation, as opposed to limited intervals.
 
