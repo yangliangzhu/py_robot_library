@@ -403,13 +403,15 @@ def main() -> int:
     print(f"{args.robot}: {len(solutions)} solutions at the base pose "
           f"(clearance above {args.sigma_floor:g})\n")
 
-    loops = [
-        ("position circle xy", position_loop(target, args.radius, first=0, second=1)),
-        ("position circle xz", position_loop(target, args.radius, first=0, second=2)),
-        ("orientation sweep z", orientation_loop(target, args.amplitude, axis=2)),
-        ("orientation sweep x", orientation_loop(target, args.amplitude, axis=0)),
-        ("orientation full turn z", orientation_loop(target, 0.0, axis=2, full_turn=True)),
-    ]
+    loops = []
+    for radius in (0.002, 0.005, 0.02, 0.05, 0.1):
+        loops.append((f"position xy r={radius}", position_loop(target, radius, first=0, second=1)))
+        loops.append((f"position xz r={radius}", position_loop(target, radius, first=0, second=2)))
+    for amplitude in (0.02, 0.05, 0.2, 0.4, 0.8):
+        loops.append((f"orientation z a={amplitude}", orientation_loop(target, amplitude, axis=2)))
+        loops.append((f"orientation x a={amplitude}", orientation_loop(target, amplitude, axis=0)))
+    loops.append(("orientation full turn z", orientation_loop(target, 0.0, axis=2, full_turn=True)))
+    loops.append(("orientation full turn x", orientation_loop(target, 0.0, axis=0, full_turn=True)))
     results = []
     for name, poses in loops:
         result = loop_permutation(
@@ -421,6 +423,26 @@ def main() -> int:
               f"map {result.partial if survived else '{}'} | min clearance {result.min_sigma:.2e}")
         if result.failures:
             print(f"      did not follow: {result.reason}")
+
+    # kimi's prediction (day01-kimi.md section 2): a loop whose lift never leaves
+    # Q \ f^{-1}(Delta) stays inside one uniqueness domain, which holds at most one solution per pose,
+    # so it must return the *identity*; a non-trivial permutation therefore requires some sheet to die
+    # at a fold.  The tally below is the test: loops with no deaths must be identity, and the claim is
+    # falsified by a single survival-only loop whose map is not the identity.
+    clean = [r for r in results if not r.failures and r.partial]
+    with_deaths = [r for r in results if r.failures and r.partial]
+    non_identity = [
+        r for r in clean
+        if any(image != index for index, image in r.partial.items())
+    ]
+    print(f"\ntally: {len(results)} loops | all-survivors {len(clean)} (non-identity among them: "
+          f"{len(non_identity)}) | some sheets died {len(with_deaths)} | "
+          f"prediction 'no deaths => identity': "
+          f"{'HELD' if not non_identity else 'FALSIFIED by ' + str([r.name for r in non_identity])}")
+    for result in with_deaths:
+        moved = [index for index, image in result.partial.items() if image != index]
+        print(f"  (deaths present) {result.name}: survivors {len(result.partial)}, "
+              f"of which moved {moved}")
 
     good = [result.permutation for result in results if result.partial]
     if good:
