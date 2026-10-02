@@ -404,6 +404,38 @@ budget artefact can no longer masquerade as a manifold fact.
   generous self-motion arcs and by cross-component routes, so "which solution" and "which branch" are
   much weaker notions than on a 6-DOF arm.
 
+### 3.16 The endgame: the multiple root is computed, and it splits like a square root
+
+`python3 -m study.exp21_endgame --pose-seed 0`.  Instead of walking around the discriminant, solve
+for it: at a fold the pose is right *and* the Jacobian is singular, which is a square system in
+``(q, s)`` -- six pose equations plus ``det J = 0``, seven unknowns -- solved by Newton from the
+stall.
+
+* **The folds are found exactly**: the three stalls refine to ``s* = 0.718354``, ``0.961848``,
+  ``0.799244`` with augmented residuals ``3.2e-11``, ``9.0e-13``, ``6.5e-11``.  The multiple root is
+  now a computed object, not an observation.
+* **How the branches split away from it**, measured on a geometric sequence of gaps
+  (``s* - 10^-k``, each re-solved from the previous configuration -- an adaptive tracker's own step
+  halving hides the exponent):
+
+  | fold | distances to ``q*`` at gaps 1e-2 .. 1e-6 | fitted exponent |
+  |---|---|---|
+  | 0.718354 | 0.197, 0.0669, 0.0223, 0.0097, 0.0072 | 0.44 |
+  | 0.961848 | 0.115, 0.0377, 0.0137, 0.0082, 0.0074 | 0.39 |
+  | 0.799244 | 0.191, 0.0678, 0.0229, 0.0107, 0.0085 | 0.42 |
+
+  The decay per decade is a factor **2.8-3.1** over the unsaturated points, i.e. a power law with
+  exponent **~0.45-0.48**: ``q(s) = q* + c (s* - s)^(1/2)``.  That is the **square-root splitting of
+  a double root -- two branches per fold** -- and it is far from ``1/4`` or ``1/3``, which is what a
+  fourfold or threefold root would give.
+* Two honest caveats, both measured: the last sampled decade saturates (the re-solve cannot resolve
+  the branch closer than ~7e-3 rad, so those points are dropped by the fit), and the fitted exponent
+  sits systematically ~8% below 1/2 -- consistent with ``q*`` being the nearest singular point rather
+  than this branch's exact coalescence, whose linear offset flattens the slope.
+* **Corollary to test next**: since every fold splits *two* branches, the observed jump of the fibre
+  size from 8 to 16 cannot be one high-order root producing eight branches -- it must be **four
+  separate folds**.  Counting the distinct folds along the path would settle it.
+
 ## 4. Finding 2: DH continuation
 
 ### 4.1 SR0 is exactly one parameter away, and the search says which one
