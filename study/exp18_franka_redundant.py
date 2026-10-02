@@ -34,6 +34,11 @@ from study.census import census, make_lm_solver
 from study.chamber import resolve_pair
 
 
+def within_limits(model, q: np.ndarray) -> bool:
+    """Whether a configuration respects the model's joint limits."""
+    return bool(np.all(q >= np.asarray(model.lower_bounds)) and np.all(q <= np.asarray(model.upper_bounds)))
+
+
 def null_direction(model, q: np.ndarray) -> np.ndarray | None:
     """The unit null-space direction of the pose Jacobian at ``q`` (``None`` if not redundant)."""
     jacobian = np.asarray(model.jacobian(q), dtype=float)
@@ -92,6 +97,7 @@ class Component:
     min_sigma: float = float("inf")
     end_reason: str = ""
     worst_pose_error: float = 0.0
+    total_length: float = 0.0
 
 
 def trace_component(
@@ -111,13 +117,17 @@ def trace_component(
                 break
             moved, pose_error = correct_pose(model, q + sense * step * direction, target)
             probe = step
-            while iks.sigma_min(model, moved) < delta and probe > 1e-4:
+            while (iks.sigma_min(model, moved) < delta or not within_limits(model, moved)) and probe > 1e-4:
                 probe *= 0.5
                 moved, pose_error = correct_pose(model, q + sense * probe * direction, target)
             component.worst_pose_error = max(component.worst_pose_error, pose_error)
+            if not within_limits(model, moved):
+                component.end_reason = "joint limit"
+                break
             if iks.sigma_min(model, moved) < delta or pose_error > 1e-9:
                 component.end_reason = (
-                    f"boundary: clearance {iks.sigma_min(model, q):.2e}, pose error {pose_error:.1e}"
+                    f"singular boundary: clearance {iks.sigma_min(model, q):.2e}, "
+                    f"pose error {pose_error:.1e}"
                 )
                 break
             travelled += float(np.linalg.norm(moved - q))
@@ -129,6 +139,7 @@ def trace_component(
                 component.end_reason = component.end_reason or "closed"
                 break
         component.length = max(component.length, travelled)
+        component.total_length += travelled
     return component
 
 
@@ -176,9 +187,10 @@ def main() -> int:
         components.append((component, members))
     print(f"self-motion components: {len(components)} "
           f"(sizes {[len(members) for _c, members in components]})")
-    for number, (component, members) in enumerate(components):
+    for number, (component, members) in enumerate(components[:12]):
         print(f"  component {number}: {len(members)} solutions, "
-              f"{len(component.points)} traced points, length {component.length:.2f} rad, "
+              f"{len(component.points)} traced points, length one way {component.length:.2f} rad, "
+              f"both ways {component.total_length:.2f} rad, "
               f"closed {component.closed}, min clearance "
               f"{component.min_sigma if component.min_sigma < np.inf else float('nan'):.2e}, "
               f"worst pose drift {component.worst_pose_error:.1e}, "

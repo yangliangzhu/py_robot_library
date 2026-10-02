@@ -384,6 +384,26 @@ along such a path proves that sign is not an invariant of the chamber.
   The right coordinates for the redundant case are the chamber plus the position along the
   self-motion manifold -- the labels are not those coordinates.
 
+### 3.15 The redundant fibre's components, with the limits handled: a lower bound of 13
+
+`python3 -m study.exp18_franka_redundant --seeds 150`, now with the two corrections 3.12 was missing:
+the trace stops at **joint limits** (`within_limits`) and every component reports *why* it ended, so a
+budget artefact can no longer masquerade as a manifold fact.
+
+* 26 solutions, **13 components** at a 0.02 rad membership tolerance, sizes
+  ``[5, 6, 1, 1, 1, 1, 1, 3, 2, 1, 2, 1, 1]``.
+* The end reasons are now informative: some components are **short arcs terminating at a joint limit**
+  (0.54 and 0.78 rad), one **closes on itself** after 2.57 rad, and the rest are long arcs (30-60 rad)
+  that either end at a limit or run out of the step budget ("end" empty).
+* So **13 is a lower bound, not a count**: three components are unresolved by budget and could merge
+  with others if traced further.  What is solid: the clearance along every traced path stays above
+  ``7.1e-02`` and the pose drift below ``6.8e-13``, so all of these really are self-motion paths with
+  room to spare, and the fibre is *large* -- tens of radians of travel per component.
+* Together with 3.14 (labels change inside a chamber) and 3.12 (35% of random solution pairs are
+  witnessed same-chamber), the redundant picture is: one pose has many solutions joined by long,
+  generous self-motion arcs and by cross-component routes, so "which solution" and "which branch" are
+  much weaker notions than on a 6-DOF arm.
+
 ## 4. Finding 2: DH continuation
 
 ### 4.1 SR0 is exactly one parameter away, and the search says which one
