@@ -365,6 +365,25 @@ through random admissible waypoints) -- and then the equivalence classes by tran
   rates of 1.3: the near-miss false positives are not an artefact of a threshold choice, they are
   routes that come close to the singular set without reaching it.
 
+### 3.14 The classical labels do not survive redundancy either -- measured along self-motion
+
+`python3 -m study.exp20_labels_redundant --robot franka --seeds 150`.  On a redundant arm the test is
+sharper than 3.9's: follow a **self-motion** path (pose constant) that **keeps clearance**, so every
+configuration on it is in one chamber *by construction*, and watch the three textbook signs.  Any flip
+along such a path proves that sign is not an invariant of the chamber.
+
+* 26 solutions at the pose, only **4 distinct label triples**; the elbow sign was ``+1`` for all of
+  them.
+* **4 of 6 tested solutions change their label triple along the path**: e.g.
+  ``(1, 1, -1) -> (1, 1, 1)`` after **12.00 rad** of travel with ``min clearance 9.48e-02`` and pose
+  drift ``6.0e-15``; another ``(-1, 1, 1) -> (-1, 1, -1)`` at clearance ``7.09e-02``.
+* So on this arm the labels are not even chamber invariants -- they change *inside* a single chamber.
+  3.9 had them merely half as fine as the branches; redundancy makes it strictly worse, and any
+  classifier built on the shoulder/elbow/wrist triple is unsound here in the strongest sense.
+* What the 12 rad of travel with a healthy margin also shows: a single chamber of this arm is *large*.
+  The right coordinates for the redundant case are the chamber plus the position along the
+  self-motion manifold -- the labels are not those coordinates.
+
 ## 4. Finding 2: DH continuation
 
 ### 4.1 SR0 is exactly one parameter away, and the search says which one
