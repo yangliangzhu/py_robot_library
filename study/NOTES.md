@@ -764,6 +764,19 @@ at its ends), then the same carry-forward and deduplication.
   interval whose *ends* differ, so an interval with one birth and one death inside (net zero) would be
   missed.  Tightening that needs the fold spectrum of 3.18 rather than counts.
 
+### 3.28.1 The adaptive scan's comparison basis, stated to avoid a misleading table
+
+The reproduction archive of the final commit makes the nuance visible: with the *cheapest saturating*
+uniform budget (``grid 5 x 80``, which exp29 identified) the uniform scan takes **10.3 s** against the
+adaptive scan's **13.7 s** on the same pose -- the adaptive version pays for its extra refined samples.
+Its advantage is against the *default* uniform budget (``grid 9 x 300``, 43 s), which exp29 showed buys
+nothing over 5 x 80.  So the honest statement is:
+
+* the adaptive scan is **not** faster than a well-chosen uniform budget; it is faster than the
+  *default* one, and it decides where to spend without a calibration run;
+* picking the uniform budget by hand (5 x 80 for this arm, 10 s) is the cheapest option measured
+  anywhere in this study, at the price of not adapting to a pose with more events.
+
 ### 3.29 The fold trigger is sound but not economical -- measured, and the count trigger wins
 
 exp31 replaces exp30's count trigger by the fold spectrum (3.18), which closes the "one birth and one
