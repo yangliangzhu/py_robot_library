@@ -717,6 +717,32 @@ Its self-check on two poses (different poses from exp28's stream, which is why t
   complete in every experiment of this study), the homotopy when a sub-second answer on an
   unobstructed path is enough, and the census when a fast, partial set is acceptable.
 
+### 3.27 How cheap can the complete mode be?  A budget sweep of the scan
+
+`python3 -m study.exp29_scan_budget --pose-seeds 0` sweeps the scan's two knobs (grid points along the
+path, seeds per grid point) on a hard pose:
+
+| grid x seeds | solutions | time | misses of the richest budget |
+|---|---|---|---|
+| 3 x 60 | 6 | 5.1 s | 2 of 8 |
+| **5 x 80** | **8** | **10.1 s** | **0 of 8** |
+| 5 x 200 | 8 | 17.4 s | 0 of 8 |
+| 9 x 120 | 8 | 22.3 s | 0 of 8 |
+| 9 x 300 (the module's default) | 8 | 43.1 s | 0 of 8 |
+| 15 x 200 | 8 | 51.9 s | 0 of 8 |
+
+* **Five grid points with 80 seeds each reach everything the richest budget reaches, in 10 s instead
+  of 43** -- a factor of four for free on this pose, and 15 x 200 buys nothing at all.
+* The failure mode of too small a budget is graceful and visible: 3 x 60 finds 6 of 8 and takes 5 s, so
+  a caller can start cheap and escalate when the count disagrees with a second method.
+* The caveat matters and is measured elsewhere in this study: a budget that saturates on one pose is
+  not a guarantee across poses (exp28 had a pose whose *union* over methods reached 12 while any single
+  method found 8), so the calibration says "start at 5 x 80, and treat a disagreement with the census
+  as the signal to escalate", not "5 x 80 is complete".
+* Adding this as the documented default in :mod:`study.complete_ik` would cut the complete mode's cost
+  fourfold; the module keeps the larger default for now, because the sweep is one pose and the point of
+  the complete mode is completeness rather than speed.
+
 ## 4. Finding 2: DH continuation
 
 ### 4.1 SR0 is exactly one parameter away, and the search says which one
