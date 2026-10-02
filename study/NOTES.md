@@ -743,6 +743,27 @@ path, seeds per grid point) on a hard pose:
   fourfold; the module keeps the larger default for now, because the sweep is one pose and the point of
   the complete mode is completeness rather than speed.
 
+### 3.28 Spending the scan's budget where the events are
+
+`python3 -m study.exp30_adaptive_scan --pose-seeds 0 7` replaces the uniform grid by a two-pass one: a
+coarse grid with a small census, then **two extra samples in every interval whose solution counts
+differ** (the trigger is sound because a birth or death inside an interval shows up as different counts
+at its ends), then the same carry-forward and deduplication.
+
+| pose | coarse counts | adaptive | uniform | agreement |
+|---|---|---|---|---|
+| seed 0 | ``[4, 4, 4, 4, 8]`` | **8 solutions, 13.5 s** | 8 solutions, 42.8 s | 0 missed either way |
+| seed 7 | ``[8, 8, 8, 8, 7]`` | **8 solutions, 9.7 s** | 8 solutions, 32.9 s | 0 missed either way |
+
+* **Identical solution sets at a third of the cost** (3.2x and 3.4x), which is the point: exp29's
+  calibration said most of the uniform budget is wasted, and targeting the intervals that change
+  recovers it without losing anything on these poses.
+* The coarse counts are themselves informative: pose 0's fibre grows from 4 to 8 across the path
+  (births, as in 3.10), and the trigger fired exactly on the last interval of the grid.
+* Caveat, unchanged from 3.27: two poses do not make a guarantee; the trigger can only refine an
+  interval whose *ends* differ, so an interval with one birth and one death inside (net zero) would be
+  missed.  Tightening that needs the fold spectrum of 3.18 rather than counts.
+
 ## 4. Finding 2: DH continuation
 
 ### 4.1 SR0 is exactly one parameter away, and the search says which one
