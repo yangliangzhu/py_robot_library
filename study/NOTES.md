@@ -198,7 +198,63 @@ The certificates compose into a cheap first stage and an expensive second one:
    So the branch count is strictly smaller than the solution count — 12 solutions do not mean 12
    branches — but this walk alone cannot finish the partition. That is exp03's job.
 
-## 4. Next
+## 4. Finding 2: DH continuation
+
+### 4.1 SR0 is exactly one parameter away, and the search says which one
+
+`python3 -m study.exp10_sr0_geometry` measures the pairwise geometry of the joint axes
+(`study/arm_geometry.py`) rather than reading solvability off three different DH notations.
+
+* **SR5**: axes 1-2, 1-4, 4-5, 5-6 intersect; axes 2 and 3 are parallel (0.403 m apart); and the
+  wrist's third pair, **4-6, is skew by 0.136 m** -- the last three axes do *not* meet, so Pieper
+  does not apply. That distance is the measured form of "there is no closed form".
+* **Exhaustive single-parameter relaxation** over all 6 links x 3 translation components: exactly
+  one closes the wrist -- **link 5's y offset, +0.136 m -> 0**, after which 4-5, 5-6 *and* 4-6 all
+  intersect. That is `SR0`, and the homotopy in §4.2 travels exactly 0.136 m.
+* The same fingerprint identifies the ER3 (7-DOF) as a textbook S-R-S arm: {1,2,3} pairwise
+  intersecting (spherical shoulder), {5,6,7} pairwise intersecting (spherical wrist) -- a check
+  that the instrument reports the structure it should.
+
+### 4.2 The first-order formula is O(step^2), and the corrector is what makes it usable
+
+`python3 -m study.exp11_dh_continuation --steps 6`, SR5, well-conditioned solution
+(`sigma_min = 0.114`), moving along the SR0 direction (`link 5 y`):
+
+| step (m) | first order | +1 Newton | +3 Newton | exact IK (same solution) | error ratio per decade |
+|---|---|---|---|---|---|
+| 0.1 | 1.72e-02 | 2.93e-03 | 1.08e-11 | did not converge | - |
+| 0.01 | 1.71e-04 | 1.81e-07 | 1.55e-14 | 3.08e-08 | 100.5 |
+| 0.001 | 1.71e-06 | 7.52e-12 | 1.42e-16 | 1.24e-06 | 100.1 |
+| 1e-04 | 1.71e-08 | 4.70e-15 | 4.70e-15 | 1.25e-08 | 100.0 |
+| 1e-05 | 1.71e-10 | 1.28e-16 | 1.28e-16 | 1.69e-10 | 100.0 |
+
+* The step-to-step error ratio is **100.0-100.5 per decade of step size**: the first-order
+  prediction is second order, which is the quantitative form of the claim.
+* **One Newton step takes the residual to ~0.2 * step^3** (1.71e-04 -> 1.81e-07 at 0.01 m); three
+  steps reach machine precision.  A continuation should therefore always correct, and the
+  predictor alone is only good for small steps: at 0.1 m it is 1.7 cm off.
+* The continuation lands on the **same solution** a full IK solve finds on the perturbed arm:
+  `|q_continued - q_exact|` is 4e-08 to 1e-10 for steps up to 0.01 m.  At 0.1 m the library IK
+  fails to converge from the original seed, which is the argument for stepping incrementally
+  rather than jumping.
+* **Near the singular set the formula is defined but unusable**, as suspected: at
+  `sigma_min = 2.96e-03` the same 0.01 m step produces `|dq| = 2.20 rad` and a 0.70 m residual,
+  and three Newton steps still leave 2.0e-02 m.  The continuation needs a step controller that
+  watches `sigma_min`, and the neighbourhood of a singularity is where solutions are created,
+  destroyed or exchanged -- i.e. where the interesting part of the homotopy happens.
+
+### 4.3 Next
+
+1. A closed-form solver for SR0 (Pieper: spherical wrist, plus the parallel 2-3 pair for the
+   position sub-problem), validated against the numerical census on SR0 -- that is the seed the
+   homotopy starts from.
+2. An incremental homotopy SR0 -> SR5 following all eight SR0 solutions, with a step controller
+   on `sigma_min` and branch switching where the path meets the discriminant; then count how many
+   of SR5's solutions (up to 16) it reaches, against the multi-start census as reference.
+3. Use the same tracker to walk loops in the *workspace* and get a complete census (the gap in
+   section 3.1), which closes Finding 1 too.
+
+## 5. Next
 
 1. **exp02 — chamber census on SR5.** For each pose: all solutions (multi-start, `solve_lm`),
    then every pair scanned with the refined-minimum test. Report: how often a pair's shortest
