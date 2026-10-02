@@ -309,6 +309,35 @@ So the method is complete in the practical sense that matters -- it covers a tho
 exceeds it -- at scan cost, and the reason it had to become a scan is exactly 3.10: births happen to
 pairs no tracked branch is following.
 
+### 3.12 The redundant case: franka's fibre, self-motion, and how often distinct means different
+
+`python3 -m study.exp18_franka_redundant --seeds 200` plus the pair walk below.  On a 6-DOF arm the
+two things people mean by "branch" coincide, so the distinction never comes up: solutions of one pose
+are on one sheet exactly when a path between them avoids ``Sigma``.  On a 7-DOF arm they come apart,
+and the measurements are:
+
+* **The fibre is a continuum.**  One pose (200 seeds): **36 solutions**, clearances ``0.089-0.205``
+  (`study/census.py` clusters them, but "count" means "clusters found", not "isolated solutions").
+* **Self-motion paths between solutions are real and roomy.**  Integrating the Jacobian's null-space
+  direction *with a pose correction after every step* keeps ``FK(q) = T`` to ``1e-15`` while
+  travelling tens of radians of joint space, and the clearance along those traces stays above
+  ``6.5e-2``.  So solutions along such a trace are in **one chamber, connected with a healthy
+  margin, without the pose ever changing** -- the empirical criterion's premise survives (its
+  covering argument is dimension-free), but the practical question changes completely: at a redundant
+  pose most "different solutions" are not different branches at all.
+* **The methodology matters**: without the pose correction the trace *drifts*, and a first version of
+  this experiment reported 27 "components" of length 30 rad that never closed.  Measured drift is now
+  reported per component (``worst pose drift`` ~ ``1e-15``) -- the third time in this study that an
+  unverified step produced a confident, wrong number.
+* **Component counting is not yet structural.**  Traces ran the full step budget (600 steps x 0.05 rad
+  per direction) without closing except one (605 points, closed), so the returned 15 "components" are
+  a budget artifact, not a manifold measurement.  Recorded as open; the fix is loop closure or
+  arc-length clustering rather than more steps.
+* **Distinct solutions are much more often same-chamber here.**  Witnessed clearance walk
+  (`study/chamber.py`, ``delta = 5e-3``) over 20 random pairs: **franka 7/20 connected**, SR5 control
+  in the same run **1/20**.  Small samples, clear direction -- and it is the same phenomenon as the
+  fourteen same-chamber pairs of 1.4, only much more frequent.
+
 ## 4. Finding 2: DH continuation
 
 ### 4.1 SR0 is exactly one parameter away, and the search says which one
