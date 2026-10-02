@@ -494,6 +494,32 @@ refined by the augmented Newton, deduplicated at ``1e-4`` in ``s``):
   branches) worked where the statistical one (a 150-seed census, exp22) did not.  Structure beats
   sampling for locating events, exactly as the branch certificates beat the dip heuristic.
 
+### 3.19 The "two solutions per fold" law: direction confirmed, magnitude unresolved by this count
+
+`python3 -m study.exp24_fold_law --poses 3 --seeds 400` tests
+``fibre(s + eps) - fibre(s - eps) = +-2 x (folds in the window)`` over several poses, with folds found
+deterministically (near-singular configurations on the tracked branches, refined by the augmented
+Newton) and the fibre size measured by a 400-seed census.
+
+| pose | folds | groups | measurement | predicted |
+|---|---|---|---|---|
+| 0 | 8 | 0.6551 (4 folds) | 8 -> 18, delta +10 (birth) | 8 |
+| 0 | | 0.7184 (1) | 17 -> 14, delta -3 (death) | 2 |
+| 0 | | 0.7992 (1) | 17 -> 12, delta -5 (death) | 2 |
+| 0 | | 0.9618 (2) | 16 -> 10, delta -6 (death) | 4 |
+| 1, 2 | 0 | - | no near-singular configuration on any tracked branch | - |
+
+* **The direction is right**: the fourfold group *adds* solutions (birth) and every single/double
+  group *removes* them (death), which is the mechanism exp21 measured; the two poses with no folds
+  also have no events.
+* **The magnitude is not resolvable with this instrument.**  The census-based count carries the +-2
+  spread measured in 3.17/3.8 (under-counting and twins), which is exactly the size of the signal
+  (2 per fold): deltas of 10, 3, 5 and 6 against predictions 8, 2, 2 and 4 are all the prediction plus
+  up to one unit of count noise per endpoint.
+* So the law needs a **deterministic** fibre count -- continuity-based, tracking every solution from
+  one ``s`` to the next (the scan of exp17, or a tracker seeded densely) -- rather than a statistical
+  one.  Recorded as the next instrument, in line with 3.17: the same mistake twice would be a habit.
+
 ## 4. Finding 2: DH continuation
 
 ### 4.1 SR0 is exactly one parameter away, and the search says which one
