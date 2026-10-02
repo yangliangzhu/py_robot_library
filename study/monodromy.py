@@ -227,6 +227,12 @@ def loop_permutation(
             result.failures[index] = "ended away from every solution"
             continue
         result.partial[index] = nearest
+    images = list(result.partial.values())
+    if len(set(images)) != len(images):
+        # two tracks landed on the same solution: a permutation cannot do that, so something is wrong
+        # with the tracker rather than with the geometry (kimi measured this under the old algorithm)
+        result.reason = (result.reason + "; " if result.reason else "") + "not injective"
+        result.partial = {}
     result.permutation = tuple(result.partial.get(index, -1) for index in range(len(solutions)))
     result.ok = len(result.partial) == len(solutions)
     result.min_sigma = min(
@@ -269,30 +275,76 @@ def orbits(permutations: list[tuple[int, ...]], size: int) -> list[list[int]]:
     return [sorted(group) for group in groups.values()]
 
 
+def _compose(first: tuple[int, ...], second: tuple[int, ...]) -> tuple[int, ...]:
+    """Composition ``first . second`` (apply ``second``, then ``first``)."""
+    return tuple(first[second[index]] for index in range(len(first)))
+
+
+def _inverse(permutation: tuple[int, ...]) -> tuple[int, ...]:
+    """Inverse of a permutation given as images."""
+    out = [0] * len(permutation)
+    for index, image in enumerate(permutation):
+        out[image] = index
+    return tuple(out)
+
+
 def non_solvable_certificate(
     permutations: list[tuple[int, ...]], orbit: list[int]
 ) -> tuple[tuple[int, ...], tuple[int, ...]] | None:
-    """Find a 5-cycle and a double transposition inside one orbit, which generate ``A5``.
+    """Find a 5-cycle and a double transposition that **provably** generate a non-solvable group.
 
-    ``A5`` is simple and non-solvable, and a subgroup of a solvable group is solvable, so exhibiting
-    ``A5`` inside the monodromy group proves the group -- and therefore the Galois group of the IK
-    equation -- is not solvable, hence no solution in radicals.  The cycle types are read off the
-    permutations restricted to the orbit, so nothing has to be enumerated.
+    A 5-cycle alone gives a solvable group, so the second permutation has to escape the normaliser of
+    the first; otherwise the pair generates a dihedral group of order 10, which is solvable, and the
+    certificate would be a false proof.  kimi produced exactly that counterexample
+    (``<(1 2 3 4 5), (1 4)(2 3)> = D5``, order 10, solvable), which is why the test below is
+
+        tau . sigma . tau^-1  is **not** a power of sigma.
+
+    Under that condition the generated group contains a 5-cycle and is not contained in the
+    normaliser of ``<sigma>`` (of order 20 in ``S5``), and the only subgroups of ``S5`` containing a
+    5-cycle are ``C5``, ``D5``, the order-20 normaliser, ``A5`` and ``S5`` -- so the group is ``A5``
+    or ``S5``, hence not solvable.
 
     Returns:
-        The two permutations, or ``None`` when this orbit shows no such certificate.
+        ``(sigma, tau)`` when the certificate holds, else ``None``.
     """
-    five_cycle = double_transposition = None
+    offsets = {point: index for index, point in enumerate(orbit)}
+    five_cycles: list[tuple[int, ...]] = []
+    double_transpositions: list[tuple[int, ...]] = []
     for permutation in permutations:
-        restricted = tuple(orbit.index(permutation[point]) for point in orbit)
-        cycles = _cycle_lengths(restricted)
-        if len(orbit) == 5 and sorted(cycles, reverse=True) == [5]:
-            five_cycle = restricted
-        if sorted(cycles, reverse=True) == [2, 2] + [1] * (len(orbit) - 4):
-            double_transposition = restricted
-    if five_cycle is not None and double_transposition is not None:
-        return five_cycle, double_transposition
+        if any(image < 0 for image in permutation):
+            continue
+        restricted = tuple(offsets[permutation[point]] for point in orbit)
+        lengths = sorted(_cycle_lengths(restricted), reverse=True)
+        if len(orbit) == 5 and lengths == [5]:
+            five_cycles.append(restricted)
+        if lengths == [2, 2] + [1] * (len(orbit) - 4):
+            double_transpositions.append(restricted)
+    for sigma in five_cycles:
+        powers = set()
+        current = tuple(range(len(orbit)))
+        for _ in range(len(orbit)):
+            powers.add(current)
+            current = _compose(sigma, current)
+        for tau in double_transpositions:
+            # tau sigma tau^-1, with the inverse of *tau*: using sigma's inverse instead is invisible
+            # whenever tau is an involution, which is exactly why the first version of this test
+            # certified kimi's solvable counterexample
+            conjugated = _compose(_compose(tau, sigma), _inverse(tau))
+            if conjugated not in powers:
+                return sigma, tau
     return None
+
+
+def _self_test() -> str:
+    """Check the certificate against kimi's counterexample and against a genuine one."""
+    orbit = [0, 1, 2, 3, 4]
+    sigma = (1, 2, 3, 4, 0)  # the 5-cycle 0->1->2->3->4->0, in image notation
+    bad = (3, 2, 1, 0, 4)  # (1 4)(2 3), the pair kimi showed generates D5 (solvable)
+    good = (1, 0, 3, 2, 4)  # (1 2)(3 4), which escapes the normaliser
+    assert non_solvable_certificate([sigma, bad], orbit) is None, "D5 must be rejected"
+    assert non_solvable_certificate([sigma, good], orbit) is not None, "A5 must be certified"
+    return "certificate self-test passed: D5 rejected, A5 certified"
 
 
 def _cycle_lengths(permutation: tuple[int, ...]) -> list[int]:
@@ -328,6 +380,7 @@ def main() -> int:
     target, _ = iks.random_reachable_target(model, rng)
     fiber = census(model, target, solver=make_lm_solver(model), seeds=args.seeds, rng=rng)
     solutions = [q for q in fiber.solutions if iks.sigma_min(model, q) > args.sigma_floor]
+    print(_self_test())
     print(f"{args.robot}: {len(solutions)} solutions at the base pose "
           f"(clearance above {args.sigma_floor:g})\n")
 
