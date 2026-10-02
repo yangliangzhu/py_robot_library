@@ -262,6 +262,32 @@ So the answer to "is there a cheap branch test" is:
 4. for the arms where an analytic fibre exists (SR0 here), the closed-form branches are the
    labels, and the homotopy of section 4 carries them to the arm that has no closed form.
 
+### 3.10 (Finding 2) The lost solutions come from multiple roots splitting -- measured
+
+`python3 -m study.exp16_root_splitting --census-seeds 350 --grid 21`.  One pose, the straight path
+``link 5 y: 0 -> 0.136 m``, sweeping the fibre size of the *intermediate* arm and looking at what the
+stalls actually are:
+
+* **Every stall is a double root.**  The stalled configuration coincides with another real solution
+  of the same intermediate arm, at distances ``1.5e-6``, ``4.0e-5`` and ``9.4e-5`` rad.  The tracked
+  branch does not "run out of iterations" -- it runs into a *coalescing pair*.
+* **The fibre size is not monotone, and it changes at the stall points**: 8 solutions up to
+  ``s = 0.65``, then **16** at ``s = 0.70``, 14 at 0.75, 12 at 0.80, 15 at 0.95 and **10** at
+  ``s = 1``.  Across each stall the count *drops* (17 -> 14, 18 -> 12, 18 -> 10 over ``+/-0.02``):
+  those are **death events where a pair annihilates**.  Between ``0.65`` and ``0.70`` the count
+  *doubles*: **birth events**, which no tracked branch visits because they happen to other pairs.
+* The lost solutions are exactly that: of the real arm's 12, the five tracks cover five, and the
+  **seven lost ones all have healthy clearance (0.009-0.065) and sit 0.7-4.9 rad away from every
+  reached solution** -- they are different branches, not numerical ghosts, and they were born at
+  events the path never visited.
+* So the mechanism is the one the "multiple root" intuition predicts: at the discriminant the fibre's
+  real count jumps, a tracker that follows a single branch sees only its own death (when it is the
+  one dying) and never the births; §4.5's reseeding fired only at *stalls*, i.e. only at deaths,
+  which is why a residue survived.
+
+The completion this points at: **scan the path for events by fibre size, not by stalls, and reseed at
+every event** (births included).  That is the next experiment.
+
 ## 4. Finding 2: DH continuation
 
 ### 4.1 SR0 is exactly one parameter away, and the search says which one
