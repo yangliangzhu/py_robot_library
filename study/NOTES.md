@@ -270,11 +270,43 @@ issue, and it is now visible.
   watches `sigma_min`, and the neighbourhood of a singularity is where solutions are created,
   destroyed or exchanged -- i.e. where the interesting part of the homotopy happens.
 
-### 4.3 Next
+### 4.3 The SR0 solver: deterministic, complete, and validated
 
-1. A closed-form solver for SR0 (Pieper: spherical wrist, plus the parallel 2-3 pair for the
-   position sub-problem), validated against the numerical census on SR0 -- that is the seed the
-   homotopy starts from.
+`study/sr0.py` solves SR0 without a random seed, using only structure measured from the model:
+
+* the shoulder centre is the intersection of axes 1 and 2, constant at ``(0, 0, 0.328)``;
+* the target pose gives the wrist centre, which sits at a fixed point of the flange,
+  ``(0, 0, -0.1035)`` -- measured, not assumed;
+* **q1**: the whole chain rotates about the base z axis through the shoulder, so rotating the
+  wrist centre *back* by a candidate ``q1`` gives that branch's planar target; the two candidates
+  are the azimuth and the azimuth plus pi.  Using ``(+radius, height)`` for both was the first
+  bug: in the second branch the planar target's radial coordinate is *negative*, and every
+  candidate then missed by up to 0.9 m;
+* **q3**: measured property -- the wrist centre's distance from the shoulder depends on ``q3``
+  alone -- so a scalar root-find over one turn is complete, and ``q2`` follows in closed form from
+  the direction ``psi(q3)`` read off the model;
+* the second bug was the *sign* of ``q2``'s in-plane rotation: axis 2's sense is a URDF property,
+  and assuming the wrong one rejected every candidate silently.  It is now measured
+  (``turn_sign = -1`` for this arm) with one forward-kinematics call;
+* **the wrist**: measured ``n4 . n6 = cos(q5)`` exactly, so ``q5 = +-acos(n4 . n6)``, and a
+  deterministic two-variable Newton finishes ``(q4, q6)``; every candidate is verified against the
+  forward kinematics before it is returned.
+
+Validation (`python3 -m study.exp12_sr0_solver --poses 5 --seeds 400 --match 1e-3`):
+
+* **8 solutions at every pose**, worst pose residual ``8.0e-10``, ``72 ms`` per solve;
+* against the multi-start numerical census: **0 solutions missed in either direction**;
+* the census's count was *larger* than 8 at one pose (15), and all 15 matched the analytic 8
+  within ``1e-3`` rad -- the numerical twins of §3.8 again.  A spherical-wrist 6R cannot have 15
+  solutions, so this is a property of the census, not of the arm; the analytic solver is the
+  reference here, and the census needs a conditioning-aware dedupe before it can be trusted to
+  count.
+
+### 4.4 Next
+
+1. ~~A closed-form solver for SR0~~ -- done above (deterministic and complete; the ``(q4, q6)``
+   finish is a two-variable Newton rather than a closed form, and every solution is verified
+   against the FK before it is returned).
 2. An incremental homotopy SR0 -> SR5 following all eight SR0 solutions, with a step controller
    on `sigma_min` and branch switching where the path meets the discriminant; then count how many
    of SR5's solutions (up to 16) it reaches, against the multi-start census as reference.
