@@ -665,6 +665,34 @@ proposed) broke the windows that were previously exact:
   the numbers mean -- and here the instrument's limit is a conditioning property, not a tuning
   parameter.
 
+### 3.25 Four ways to solve the same pose: what to use, and what not to
+
+`python3 -m study.exp28_solver_comparison --poses 3` compares the library's own solver, the multi-start
+census, the SR0 homotopy on the straight path, and the SR0 scan -- no privileged reference, each judged
+by what it misses of the union and what it costs.
+
+| pose | library (20 seeds) | census (300 seeds) | homotopy (8 SR0 seeds) | scan (9x200) | union |
+|---|---|---|---|---|---|
+| 0 | **0** (0.1 s) | 8 (1.9 s) | 8 (0.7 s) | 8 (25 s) | 12 |
+| 1 | **0** (0.1 s) | 8 (2.0 s) | **0** (0.4 s) | 8 (32 s) | 8 |
+| 2 | **1** (0.1 s) | 8 (1.9 s) | 8 (0.5 s) | 8 (29 s) | 8 |
+
+* **The library's `IkStandard` finds nothing usable from random seeds on this arm** -- one solution in
+  three poses at twenty seeds each, which matches the baseline of 0.0-0.2% random-seed convergence
+  measured earlier.  For the SR5, "call the IK solver" is not a working strategy; it needs a seed
+  within about 0.05 rad (which is what the earlier basin measurements showed).
+* **The multi-start census is the best value**: 24 solutions over the three poses in ~2 s each, i.e.
+  complete on two poses and 8 of 12 on the third.
+* **The SR0 homotopy ties it at a quarter of the cost** (0.5-0.7 s, 16 solutions) when the straight
+  path carries its branches; it returns nothing when every branch stalls (pose 1), which is the
+  discriminant case of 3.10 -- so it is a fast path, not a guarantee.
+* **The scan buys completeness at 15x the census's cost** and, in this sample, found nothing the
+  census missed -- its advantage appeared in 3.11/3.17 on poses where the census under-counted, i.e.
+  it is insurance for the hard poses rather than the default.
+* Practical ordering for this arm: census (~2 s) as the workhorse; SR0 homotopy (~0.5 s) when speed
+  matters and the path is unobstructed; the scan when completeness is the point; and never the plain
+  library solver from a random seed.
+
 ## 4. Finding 2: DH continuation
 
 ### 4.1 SR0 is exactly one parameter away, and the search says which one
