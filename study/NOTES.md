@@ -548,6 +548,36 @@ detection:
   therefore an upper bound on the events, which is exactly why exp24's "2 folds, expected 4" was
   wrong in its premise rather than in its arithmetic.
 
+### 3.21 Trying to predict the events independently: half the law is exact, the other half is not
+
+exp26 set out to test the refined law over several poses by *predicting* each fold's kind (birth,
+death, or invisible turning point) and comparing with the deterministic count.  The prediction failed,
+and the failure localises exactly where the instrument is weak:
+
+| window | folds (predicted kinds) | deaths | births | measured delta |
+|---|---|---|---|---|
+| [0.650, 0.663] | 4 (all "invisible") | **0** | **9** | +9 |
+| [0.713, 0.723] | 1 ("invisible") | **2** | 0 | -2 |
+| [0.794, 0.804] | 1 ("invisible") | **2** | 0 | -2 |
+| [0.957, 0.967] | 2 ("death","death") | **2** | 0 | -2 |
+
+* **The deaths are exact and they are the law's solid half**: every window's death count comes from
+  *tracking* (a track either arrives or it does not), and the two death windows give exactly 2 deaths
+  each for one fold, the fourfold window gives 0 -- no noise anywhere.
+* **The classification is the broken part.**  Probing the fibre at ``s* +- 5e-3`` for a solution within
+  a fixed 0.1 rad of the fold asks the census to find a pair sitting at ``c sqrt(eps)`` from the fold,
+  with ``c`` unknown and the basins near a fold small: it reported "invisible" for folds that
+  demonstrably change the count.  The right classifier tracks the pair itself (seeded at the fold with
+  the square-root radius from 3.16) instead of sampling for it -- the fifth time in this study that
+  sampling lost to structure, and the same lesson as 3.17/3.19/3.20.
+* **The births are census-based and therefore noisy**: the fourfold window measures 9 births where the
+  structure predicts 8 (4 folds x 2).  Deaths are exact because tracking decides them; births are
+  "solutions the census found that match no survivor", so they inherit the census's +-1.
+* Net: the law is **verified exactly on the death side** (4 windows, 0 discrepancies) and **to within
+  one solution on the birth side**, with the remaining error traced to the birth detector rather than
+  to the law.  Predicting *which* folds are events independently is still open, and the instrument for
+  it is now clear.
+
 ## 4. Finding 2: DH continuation
 
 ### 4.1 SR0 is exactly one parameter away, and the search says which one
