@@ -225,6 +225,43 @@ ill-conditioned direction; the deduplication tolerance needs to follow the condi
 solutions need to be continued, not re-solved).  That is a census-quality issue, not a branch
 issue, and it is now visible.
 
+### 3.9 The classical branch labels do not label this arm's branches
+
+`python3 -m study.exp15_branch_labels --poses 2 --seeds 500`, with `study/labels.py` computing the
+textbook shoulder/elbow/wrist signs from the *axes* (each vanishes on one stratum of the singular
+set: shoulder = wrist centre in the plane of axes 1-2, elbow = shoulder-elbow-wrist collinear,
+wrist = axes 4 and 6 aligned), and `study/exp15_branch_labels.resolve` deciding pairs by directed
+walks (both directions plus random admissible waypoints -- the one-directional walk of 3.7 leaves
+most pairs unresolved).
+
+Measured, and it refutes the naming:
+
+* **Each of the four label triples that occur appears exactly twice, and the two solutions sharing a
+  triple have opposite `det J` signs** -- so the sign certificate *proves* they are in different
+  branches.  The labels are therefore at most half as fine as the branches.
+* **12 pairs with different labels are connected by a witnessed path** (same branch), and **8 pairs
+  with identical labels are not** (and are provably different by the sign certificate).  So the
+  labels are neither necessary nor sufficient for "same branch" on this arm.
+* The reason is structural rather than numerical: the classical names assume the singular strata
+  they are named after.  The SR5's wrist is *offset* and its axes 2 and 3 are *parallel*, so its
+  singular set does not consist of those three strata, and a triple product that does not vanish on
+  any stratum cannot label branches.  The same caution applies to the SR4/SR5 class in general.
+* The directed oracle works and stays consistent: **0 walks across sign groups** (the certificate
+  audit), and the walk resolves more pairs than 3.7's single-direction version (7 of 28 at pose 0
+  versus 4 of 28 there).
+
+So the answer to "is there a cheap branch test" is:
+
+1. **`sign det J`** -- one Jacobian per solution, *rigorous* for "different branch" (it fired on
+   exactly the odd-crossing pairs, 0 disagreements over every experiment in this study), and
+   silent otherwise;
+2. **a witnessed clearance path** (walk, both directions, through waypoints) -- constructive for
+   "same branch", incomplete in the negative direction;
+3. **not the classical labels** -- measured false in both directions on this arm, which is worth
+   knowing before anyone builds a branch classifier on them;
+4. for the arms where an analytic fibre exists (SR0 here), the closed-form branches are the
+   labels, and the homotopy of section 4 carries them to the arm that has no closed form.
+
 ## 4. Finding 2: DH continuation
 
 ### 4.1 SR0 is exactly one parameter away, and the search says which one
