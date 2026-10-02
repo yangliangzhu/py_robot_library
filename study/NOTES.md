@@ -185,6 +185,19 @@ Same run, with clearance walks (`study/chamber.py`) at `delta = 5e-3`:
   interesting follow-up is whether those components correspond to the classical
   shoulder/elbow/wrist sign labels. That is round 3's experiment.
 
+### 3.7 A practical two-stage branch test, and how coarse it is
+
+The certificates compose into a cheap first stage and an expensive second one:
+
+1. **`sign det J` splits the solutions into two groups** and *proves* that a pair taken from
+   different groups is in different branches. Measured on three poses (9, 11 and 12 solutions):
+   the groups came out `4+/5-`, `6+/5-`, `6+/6-`, and of the `20`, `30`, `36` cross-group pairs,
+   **none** was connectable by a clearance walk — consistent with the certificate.
+2. **Within a group** the walk is what decides, and it is incomplete: of the `16`, `25`, `30`
+   same-group pairs, `4`, `7`, `9` were certified connected (same branch), the rest unresolved.
+   So the branch count is strictly smaller than the solution count — 12 solutions do not mean 12
+   branches — but this walk alone cannot finish the partition. That is exp03's job.
+
 ## 4. Next
 
 1. **exp02 — chamber census on SR5.** For each pose: all solutions (multi-start, `solve_lm`),
