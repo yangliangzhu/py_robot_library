@@ -1,0 +1,327 @@
+"""Tools for studying the branch structure of an inverse-kinematics map.
+
+The objects here are the ones the branch question is actually about:
+
+* ``Sigma`` -- the singular set, ``{q : rank J(q) < 6}``.  Measured by the smallest
+  singular value of the geometric Jacobian, ``sigma_min``, which is zero exactly on
+  ``Sigma`` and continuous everywhere (unlike ``det J``, which is signed and only exists
+  for square Jacobians, and unlike the Yoshikawa measure, which is a *product* of singular
+  values and therefore flattens out near the set instead of vanishing linearly).
+* a **chamber** -- a connected component of ``Q \\ Sigma``.  Two configurations in
+  different chambers cannot be joined by any path that avoids ``Sigma``: that direction is a
+  tautology, and it is the *useful* direction, because it gives a certificate of "different
+  branch" from a path scan.
+* the **fiber** over a pose ``T`` -- ``{q : FK(q) = T}``.  For a 6-DOF arm it is a finite
+  set; for a redundant arm it is a union of curves (the self-motion manifolds).  A *branch*
+  is a connected component of ``fiber \\ Sigma``, i.e. what remains of one self-motion curve
+  once the singular configurations on it are removed.
+
+Every function here is deliberately backend-agnostic: it takes any object with the library's
+``fk``, ``jacobian``, ``manip``, ``ik`` and ``lower_bounds``/``upper_bounds`` API, so the
+same experiment runs on ``RobotModelNumpy`` and ``RobotModelCasadi``.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+
+import numpy as np
+
+TWO_PI = 2.0 * np.pi
+
+
+# --------------------------------------------------------------------------- #
+# local measurements
+# --------------------------------------------------------------------------- #
+
+
+def sigma_min(model, q: np.ndarray) -> float:
+    """Smallest singular value of the geometric Jacobian: 0 exactly on the singular set."""
+    return float(np.linalg.svd(model.jacobian(np.asarray(q, dtype=float)), compute_uv=False)[-1])
+
+
+def sigma_spectrum(model, q: np.ndarray) -> np.ndarray:
+    """All singular values of the Jacobian, descending."""
+    return np.linalg.svd(model.jacobian(np.asarray(q, dtype=float)), compute_uv=False)
+
+
+def manipulation_measure(model, q: np.ndarray) -> float:
+    """The library's manipulability at ``q`` (Yoshikawa's measure)."""
+    return float(model.manip(np.asarray(q, dtype=float)))
+
+
+def pose_error(model, q: np.ndarray, target: np.ndarray) -> tuple[float, float]:
+    """``(position error, rotation error)`` of ``FK(q)`` against ``target``."""
+    diff = model.se3_diff(model.fk(q), target)
+    return float(np.linalg.norm(diff[:3])), float(np.linalg.norm(diff[3:]))
+
+
+def is_regular(model, q: np.ndarray, tol: float = 1e-6) -> bool:
+    """Whether ``q`` is away from the singular set by ``tol``."""
+    return sigma_min(model, q) > tol
+
+
+# --------------------------------------------------------------------------- #
+# the fiber: several solutions for one pose
+# --------------------------------------------------------------------------- #
+
+
+def circular_joints(model, tol: float = 1e-9) -> np.ndarray:
+    """Which joints are continuous rotation, as opposed to limited intervals.
+
+    The configuration space is a product of circles and intervals, and the distinction is not
+    cosmetic: on a limited joint ``q`` and ``q + 2*pi`` are *different* configurations (the
+    arm cannot get from one to the other without passing the limit), while on a continuous
+    joint they are the same one.  Treating every joint as circular would let a "shortest path"
+    leave the joint range; treating every joint as an interval would invent branch boundaries
+    at the limits.  A joint is circular when its range covers a full turn.
+    """
+    lower = np.asarray(model.lower_bounds, dtype=float)
+    upper = np.asarray(model.upper_bounds, dtype=float)
+    return (upper - lower) >= TWO_PI - tol
+
+
+def configuration_distance(a: np.ndarray, b: np.ndarray, circular: np.ndarray) -> float:
+    """Distance in the configuration space, wrapping the circular joints only."""
+    delta = np.asarray(a, dtype=float) - np.asarray(b, dtype=float)
+    delta = np.where(circular, (delta + np.pi) % TWO_PI - np.pi, delta)
+    return float(np.linalg.norm(delta))
+
+
+def shortest_representative(q_from: np.ndarray, q_to: np.ndarray, circular: np.ndarray) -> np.ndarray:
+    """``q_to`` shifted by whole turns on the circular joints, so the straight line is shortest."""
+    delta = np.asarray(q_to, dtype=float) - np.asarray(q_from, dtype=float)
+    delta = np.where(circular, (delta + np.pi) % TWO_PI - np.pi, delta)
+    return np.asarray(q_from, dtype=float) + delta
+
+
+@dataclass
+class Fiber:
+    """The solutions found for one pose, with the bookkeeping a census needs."""
+
+    target: np.ndarray
+    solutions: list[np.ndarray] = field(default_factory=list)
+    #: How many seeds converged, and how many hit each solution (index-aligned).
+    hits: list[int] = field(default_factory=list)
+    seeds: int = 0
+    converged: int = 0
+    #: Position/rotation error of each solution (they are all acceptance-level).
+    errors: list[tuple[float, float]] = field(default_factory=list)
+
+    @property
+    def count(self) -> int:
+        """How many distinct solutions were found."""
+        return len(self.solutions)
+
+    def summary(self) -> dict[str, object]:
+        """A compact, printable description of the census."""
+        return {
+            "solutions": self.count,
+            "seeds": self.seeds,
+            "converged": self.converged,
+            "hits": sorted(self.hits, reverse=True),
+            "worst_error": max((max(err) for err in self.errors), default=float("nan")),
+        }
+
+
+def find_fiber(
+    model,
+    target: np.ndarray,
+    *,
+    seeds: int = 512,
+    rng: np.random.Generator | None = None,
+    dedupe_tol: float = 1e-4,
+    accept: float = 1e-5,
+    circular: np.ndarray | None = None,
+) -> Fiber:
+    """Multi-start IK for one pose, deduplicated on the torus.
+
+    Args:
+        model: A robot model exposing ``ik``, ``fk`` and the joint bounds.
+        target: The 4x4 pose to solve for.
+        seeds: How many random restarts to run.
+        rng: Random generator (pass one for reproducibility).
+        dedupe_tol: Two solutions closer than this on the torus are the same one.
+        accept: Position/rotation error a solution must reach to be kept.
+
+    Returns:
+        The :class:`Fiber`.
+    """
+    rng = np.random.default_rng(0) if rng is None else rng
+    circular = circular_joints(model) if circular is None else circular
+    lower = np.asarray(model.lower_bounds, dtype=float)
+    upper = np.asarray(model.upper_bounds, dtype=float)
+    fiber = Fiber(target=np.asarray(target, dtype=float), seeds=seeds)
+    for _ in range(seeds):
+        seed = rng.uniform(lower, upper)
+        q, ok = model.ik(seed, target)
+        if not ok:
+            continue
+        position, rotation = pose_error(model, q, target)
+        if max(position, rotation) > accept:
+            continue
+        fiber.converged += 1
+        for index, known in enumerate(fiber.solutions):
+            if configuration_distance(q, known, circular) < dedupe_tol:
+                fiber.hits[index] += 1
+                break
+        else:
+            fiber.solutions.append(np.asarray(q, dtype=float))
+            fiber.hits.append(1)
+            fiber.errors.append((position, rotation))
+    return fiber
+
+
+# --------------------------------------------------------------------------- #
+# paths between two configurations
+# --------------------------------------------------------------------------- #
+
+
+def straight_path(
+    q_from: np.ndarray, q_to: np.ndarray, samples: int, circular: np.ndarray | None = None
+) -> np.ndarray:
+    """``samples`` points along the shortest straight line between two configurations."""
+    if circular is None:
+        circular = np.zeros_like(np.asarray(q_from, dtype=float), dtype=bool)
+    end = shortest_representative(q_from, q_to, circular)
+    s = np.linspace(0.0, 1.0, samples)[:, None]
+    return np.asarray(q_from, dtype=float) + s * (end - np.asarray(q_from, dtype=float))
+
+
+def _golden_minimum(function, low: float, high: float, iterations: int = 60) -> tuple[float, float]:
+    """Golden-section minimisation of a scalar function on ``[low, high]``.
+
+    Written out rather than imported: the study code is meant to need nothing beyond what
+    the library already depends on (numpy, casadi, yaml).
+    """
+    inverse_phi = (np.sqrt(5.0) - 1.0) / 2.0
+    a, b = float(low), float(high)
+    c, d = b - inverse_phi * (b - a), a + inverse_phi * (b - a)
+    fc, fd = function(c), function(d)
+    for _ in range(iterations):
+        if fc < fd:
+            b, d, fd = d, c, fc
+            c = b - inverse_phi * (b - a)
+            fc = function(c)
+        else:
+            a, c, fc = c, d, fd
+            d = a + inverse_phi * (b - a)
+            fd = function(d)
+    s = 0.5 * (a + b)
+    return s, float(function(s))
+
+
+@dataclass
+class PathScan:
+    """What a path between two configurations says about the singular set."""
+
+    #: Smallest ``sigma_min`` found on the path, after refining every local minimum.
+    min_sigma: float
+    #: Path parameter of that minimum, in ``[0, 1]``.
+    min_at: float
+    #: The configuration at that minimum.
+    min_q: np.ndarray
+    #: Smallest manipulability seen on the coarse sample, and the value at each end.
+    min_manip: float
+    end_manip: tuple[float, float]
+    #: ``sigma_min`` at each end (a pair whose ends are singular is not a branch question).
+    end_sigma: tuple[float, float]
+    #: Local minima found on the coarse sample, refined.
+    local_minima: list[tuple[float, float]] = field(default_factory=list)
+    samples: int = 0
+
+    @property
+    def end_singular(self) -> bool:
+        """Whether either end sits on the singular set (the user's excluded case)."""
+        return min(self.end_sigma) < 1e-6
+
+    @property
+    def touches_singular_set(self) -> bool:
+        """Whether the path passes through ``Sigma``, judged by the refined minimum."""
+        return self.min_sigma < 1e-7
+
+    @property
+    def manipulability_ratio(self) -> float:
+        """``min manip / max end manip`` -- the statistic the empirical criterion watches."""
+        reference = max(self.end_manip)
+        return float(self.min_manip / reference) if reference > 0 else float("nan")
+
+
+def scan_path(
+    model,
+    q_from: np.ndarray,
+    q_to: np.ndarray,
+    *,
+    samples: int = 201,
+    refine: bool = True,
+    circular: np.ndarray | None = None,
+) -> PathScan:
+    """Walk the shortest straight line between two configurations and look for ``Sigma``.
+
+    The coarse sample is only used to bracket local minima of ``sigma_min``; each bracket is
+    then refined by golden-section search, so "crossed the singular set" is decided by a
+    refined value that is actually zero, not by a threshold on a sampled dip.  That
+    distinction is the whole point of the experiment: a *dip* can be a near miss.
+    """
+    path = straight_path(q_from, q_to, samples, circular)
+    sigma = np.array([sigma_min(model, q) for q in path])
+    manip = np.array([manipulation_measure(model, q) for q in path])
+
+    brackets = []
+    for index in range(1, samples - 1):
+        if sigma[index] <= sigma[index - 1] and sigma[index] <= sigma[index + 1]:
+            brackets.append((index - 1, index + 1))
+    # the ends are candidates too, but they are reported separately
+    minima: list[tuple[float, float]] = []
+    best_s, best_value = float(np.argmin(sigma)) / (samples - 1), float(np.min(sigma))
+    if refine and brackets:
+        span = 1.0 / (samples - 1)
+        for low, high in brackets:
+            s, value = _golden_minimum(
+                lambda s_: sigma_min(model, path[0] + s_ * (path[-1] - path[0])),
+                low * span,
+                high * span,
+            )
+            minima.append((s, value))
+            if value < best_value:
+                best_s, best_value = s, value
+    else:
+        minima.append((best_s, best_value))
+
+    best_q = path[0] + best_s * (path[-1] - path[0])
+    return PathScan(
+        min_sigma=best_value,
+        min_at=best_s,
+        min_q=best_q,
+        min_manip=float(np.min(manip)),
+        end_manip=(float(manip[0]), float(manip[-1])),
+        end_sigma=(float(sigma[0]), float(sigma[-1])),
+        local_minima=sorted(minima, key=lambda item: item[1]),
+        samples=samples,
+    )
+
+
+def random_regular_configuration(
+    model,
+    rng: np.random.Generator,
+    *,
+    sigma_floor: float = 1e-3,
+    margin: float = 1e-9,
+    tries: int = 500,
+) -> np.ndarray:
+    """A random configuration well inside the joint bounds and away from ``Sigma``."""
+    lower = np.asarray(model.lower_bounds, dtype=float) + margin
+    upper = np.asarray(model.upper_bounds, dtype=float) - margin
+    for _ in range(tries):
+        q = rng.uniform(lower, upper)
+        if sigma_min(model, q) > sigma_floor:
+            return q
+    raise RuntimeError(
+        f"no regular configuration found in {tries} tries (sigma_floor={sigma_floor})"
+    )
+
+
+def random_reachable_target(model, rng: np.random.Generator, **kwargs) -> tuple[np.ndarray, np.ndarray]:
+    """``(target pose, configuration that produced it)``, the pose being regular."""
+    q = random_regular_configuration(model, rng, **kwargs)
+    return model.fk(q), q
