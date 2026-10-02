@@ -637,6 +637,34 @@ near side, none beyond) from a turning point (two on both sides):
   window that started this whole line of work); the one disagreement is now a stated measurement
   problem with a stated fix, not an unexplained residual.
 
+### 3.24 The classifier is radius-sensitive in both directions, and the reason is fundamental
+
+Tightening the pair-tracking neighbourhood to the measured law (``1.5 c sqrt(eps)`` up, as 3.23
+proposed) broke the windows that were previously exact:
+
+| window | tight radius | generous radius (8 c sqrt(eps)) | measured |
+|---|---|---|---|
+| [0.650, 0.663], 4 folds | all "complex fold" (predicted -8) | all "birth" (predicted +8) | **+8** |
+| [0.713, 0.723], 1 fold | "complex fold" (-2) | "death" (-2) | -2 |
+| [0.794, 0.804], 1 fold | "complex fold" (-2) | "death" (-2) | -2 |
+| [0.957, 0.967], 2 folds | "death x2" (-4) | "death x2" (-4) | -2 |
+
+* The tight radius cannot find the pair at all (the birth folds read as complex), the generous one
+  finds unrelated neighbours (the fourth window's turning point reads as a death).  Neither is right,
+  and the reason is not a badly chosen constant: **solving for a configuration within
+  ``c sqrt(eps)`` of a fold is ill-conditioned by construction** -- the pair is precisely the
+  degenerate direction -- so both "which solutions are there" and "how many" are hard to establish by
+  local solves.
+* What *is* reliable is tracking: a branch carried across the window either arrives or it does not, and
+  that is how the deaths were measured exactly in 3.21-3.23 (four windows, zero discrepancies).  So
+  the deterministic count is not merely a check on the classifier -- it **is** the classifier, and the
+  independent per-fold prediction is the part that remains open.
+* Reverted to the generous radius (which gives three of four windows) with the asymmetry documented in
+  the docstring, rather than leaving a tighter constant that looks principled and performs worse.
+* Sixth methodological instance of the same shape: the instrument, not the phenomenon, decides what
+  the numbers mean -- and here the instrument's limit is a conditioning property, not a tuning
+  parameter.
+
 ## 4. Finding 2: DH continuation
 
 ### 4.1 SR0 is exactly one parameter away, and the search says which one

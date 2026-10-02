@@ -38,6 +38,14 @@ from study.exp21_endgame import approach, refine_fold
 #: Amplitudes of the square-root seed, in the units of the fitted law (3.16 measured c ~ 1-2).
 AMPLITUDES = (0.2, 0.5, 1.0, 2.0, 4.0)
 
+#: The measured square-root constant of these pairs (3.22: c ~ 1.2), used to size the neighbourhood.
+C_LAW = 1.2
+
+#: A solution counts as a member of the pair only if its distance from the fold is of the order
+#: ``c sqrt(gap)``; a generous constant radius instead admits unrelated neighbours, which is how the
+#: classifier first misread the fold of 3.23 as a death.
+DISTANCE_BAND = (0.15, 6.0)
+
 
 def null_direction(model, q: np.ndarray) -> np.ndarray:
     """Right singular vector of the smallest singular value of the pose Jacobian."""
@@ -54,13 +62,22 @@ def pair_count(offset: float, target, s_star: float, q_star: np.ndarray, gap: fl
     none beyond) from a turning point (two on both sides) -- the blind spot of the first version of
     this classifier.  The pair separates along ``+-v``, so both signs are seeded, and the solutions
     found are deduplicated by configuration distance.
+
+    The neighbourhood is sized by the *measured* law (``0.15 c sqrt(gap)`` down, ``c = 1.2`` from
+    3.22) with a generous upper factor, and that asymmetry is itself measured: a generous radius admits
+    unrelated neighbours and misreads a complex fold as a death (3.23), while a tight one
+    (``1.5 c sqrt(gap)``) fails to find the pair at all and misreads births as complex folds (3.24).
+    Local solves this close to a fold are ill-conditioned, which is why the reliable classification of
+    events is the *tracking* one (a branch either arrives or it does not), not this probe.
     """
     s = s_star + gap
     if not 0.0 <= s <= 1.0:
         return 0, []
     model = sr0.robot(path_at(offset)(s))
     direction = null_direction(model, q_star)
-    limit = radii * np.sqrt(abs(gap)) + 1e-3
+    scale = C_LAW * np.sqrt(abs(gap))
+    limit = radii * scale
+    low = DISTANCE_BAND[0] * scale
     found: list[np.ndarray] = []
     distances: list[float] = []
     for sign in (1.0, -1.0):
@@ -69,12 +86,13 @@ def pair_count(offset: float, target, s_star: float, q_star: np.ndarray, gap: fl
             solution, converged = solve_lm(model, seed, target)
             if not converged:
                 continue
-            if iks.configuration_distance(solution, q_star, circular) > limit:
+            distance = iks.configuration_distance(solution, q_star, circular)
+            if not low <= distance <= limit:
                 continue
             if any(iks.configuration_distance(solution, other, circular) < 1e-3 for other in found):
                 continue
             found.append(solution)
-            distances.append(iks.configuration_distance(solution, q_star, circular))
+            distances.append(distance)
     return len(found), distances
 
 
