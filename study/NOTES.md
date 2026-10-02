@@ -578,6 +578,35 @@ and the failure localises exactly where the instrument is weak:
   to the law.  Predicting *which* folds are events independently is still open, and the instrument for
   it is now clear.
 
+### 3.22 Tracking the pair: the law verified exactly in three windows, and the fourth localises a blind spot
+
+exp27 classifies a fold by *tracking its pair* instead of sampling: the pair separates along the
+Jacobian's null direction at the fold, and it sits at ``c sqrt(eps)``, so a local solve seeded at
+``q* + c sqrt(eps) v`` answers a well-posed question.  With that classifier the law of 3.20 is tested
+again (exp26 now delegates to it):
+
+| window | folds | classified | predicted | measured | verdict |
+|---|---|---|---|---|---|
+| [0.650, 0.663] | 4 | birth x4 | **+8** | 8 -> 16 (0 died, 8 born) | **agrees** |
+| [0.713, 0.723] | 1 | death | **-2** | 16 -> 14 (2 died) | **agrees** |
+| [0.794, 0.804] | 1 | death | **-2** | 14 -> 12 (2 died) | **agrees** |
+| [0.957, 0.967] | 2 | death x2 | -4 | 12 -> 10 (2 died) | disagrees |
+
+* **The classifier works, and it confirms the square-root law per pair**: the distances it finds at
+  gaps ``1e-4, 1e-3, 5e-3`` are ``0.0119, 0.0374, 0.0822`` -- ratios ``3.14`` and ``2.20`` against
+  ``sqrt(10) = 3.16`` and ``sqrt(5) = 2.24`` -- for a fold pair, and ``0.0374, 0.119, 0.266``
+  (``3.18``, ``2.24``) for a birth pair.  Independent of 3.16's fit, and per pair.
+* **Three windows agree exactly**, including the fourfold birth window: four births predicted, eight
+  solutions gained, zero deaths -- the mechanism of 3.10/3.16/3.20 in one line.
+* The fourth window's disagreement is now localised precisely.  The two folds there are **not**
+  duplicates: their ``s*`` agrees to ``1e-10`` but their configurations are **8.89 rad apart**, so they
+  are two genuinely different fold points that happen to be born at the same parameter value.  Both
+  are classified "death", yet only one removes solutions -- and the classifier cannot tell the two
+  apart, because it asks *whether* a real solution is near the fold rather than *how many*: a death
+  has one solution (the pair) on the near side and none beyond, while a **turning point has two on
+  both sides**.  Counting the pair instead of testing for its presence is the fix, and it is the only
+  thing between this law and a clean four-for-four.
+
 ## 4. Finding 2: DH continuation
 
 ### 4.1 SR0 is exactly one parameter away, and the search says which one

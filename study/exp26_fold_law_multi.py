@@ -28,7 +28,6 @@ import numpy as np
 
 from study import ik_structure as iks
 from study import sr0
-from study.census import census, make_lm_solver
 from study.exp11_dh_continuation import link_transforms
 from study.exp13_homotopy_sr0_to_sr5 import path_at
 from study.exp21_endgame import approach, refine_fold
@@ -58,19 +57,17 @@ def folds_of(offset: float, target, seeds, *, near: float, iterations: int):
 
 def classify_fold(offset: float, target, s_star: float, q_star: np.ndarray, circular, *,
                   eps: float, seeds: int, rng, radius: float = 0.1) -> str:
-    """``'birth'``, ``'death'`` or ``'invisible'`` -- whether the pair is real on one side only."""
-    sides = {}
-    for label, s in (("before", s_star - eps), ("after", s_star + eps)):
-        model = sr0.robot(path_at(offset)(max(s, 0.0)))
-        fiber = census(model, target, solver=make_lm_solver(model), seeds=seeds, rng=rng)
-        sides[label] = any(
-            iks.configuration_distance(q_star, q, circular) < radius for q in fiber.solutions
-        )
-    if sides["before"] and not sides["after"]:
-        return "death"
-    if sides["after"] and not sides["before"]:
-        return "birth"
-    return "invisible"
+    """``'birth'``, ``'death'`` or ``'invisible'``, by tracking the coalescing pair.
+
+    The first version of this asked a census to find a real solution near the fold, which failed for a
+    structural reason (3.21): at gap ``eps`` the pair sits at ``c sqrt(eps)`` with ``c`` unknown.  The
+    pair is now found by seeding a local solve along the fold's null direction -- see
+    :mod:`study.exp27_pair_tracking`.
+    """
+    from study.exp27_pair_tracking import classify
+
+    kind, _evidence = classify(offset, target, s_star, q_star, circular)
+    return kind
 
 
 def main() -> int:
