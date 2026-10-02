@@ -764,6 +764,30 @@ at its ends), then the same carry-forward and deduplication.
   interval whose *ends* differ, so an interval with one birth and one death inside (net zero) would be
   missed.  Tightening that needs the fold spectrum of 3.18 rather than counts.
 
+### 3.29 The fold trigger is sound but not economical -- measured, and the count trigger wins
+
+exp31 replaces exp30's count trigger by the fold spectrum (3.18), which closes the "one birth and one
+death in the same interval" hole because every event *is* a fold.  Three scans, same poses:
+
+| pose | fold spectrum | fold-triggered | count-triggered | uniform |
+|---|---|---|---|---|
+| seed 0 | 4 folds at 0.9911-0.9936, found in **39.5 s** | 8 solutions, 18.9 s (9 samples) | 8 solutions, 13.5 s | 8 solutions, 43.1 s |
+| seed 7 | **none**, found in 4.2 s | 8 solutions, **6.3 s** (5 samples) | 8 solutions, 9.7 s | 8 solutions, 33.0 s |
+
+* **All three find the same eight solutions on both poses** (0 missed in every direction), so the
+  trigger changes the cost, not the answer -- which is the property a refinement trigger should have.
+* **The fold spectrum costs more than it saves**: 39.5 s to enumerate the folds of pose 0 (about forty
+  near-singular candidates, each refined by the augmented Newton at ~106 ms), against which the 18.9 s
+  scan is a detail; the total (58 s) is worse than the uniform scan it was meant to beat.
+* **Where it does win is the event-free pose**: with no folds to trigger on, the fold-triggered scan is
+  just the coarse grid and comes in at 6.3 s, the cheapest scan measured anywhere in this study -- so
+  the method's cost adapts to the pose's event structure, which the uniform grid cannot do.
+* Practical reading: use the **count trigger** (13.5 s) as the default refinement -- cheap and
+  sufficient on these poses -- and compute the spectrum when it is wanted for its own sake (it is what
+  gives the birth attribution of 3.18).  Paying 40 s for a trigger that saves 5 s is not a trade; the
+  "one birth and one death in one interval" hole is better closed by taking the coarse grid to six or
+  seven points, which costs a census and not a spectrum.
+
 ## 4. Finding 2: DH continuation
 
 ### 4.1 SR0 is exactly one parameter away, and the search says which one
