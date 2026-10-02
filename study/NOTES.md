@@ -801,6 +801,53 @@ death in the same interval" hole because every event *is* a fold.  Three scans, 
   "one birth and one death in one interval" hole is better closed by taking the coarse grid to six or
   seven points, which costs a census and not a spectrum.
 
+### 3.30 Instrument failure 8: averaging a configuration-dependent quantity (and franka is not S-R-S)
+
+The user asked whether the franka's last three axes really intersect, pointing at a figure in the
+franka repository.  They do not, and the way the wrong claim got into this study is worth recording.
+
+* **What was claimed and why it was wrong.**  In a discussion turn I stated that franka's axes 5, 6, 7
+  pairwise intersect (a spherical wrist).  That number came from the **ER3** fingerprint measured
+  earlier in this study -- ER3 *is* a textbook S-R-S arm -- and I applied it to franka without
+  measuring franka.  My own franka repository documented the opposite all along
+  (``docs/api.md``: row 7 ``[0.088, 0.0, 1.5708, 0.0]`` "(the wrist offset)";
+  ``docs/method.md``: "wrist offset | DH row 7, a = 0.088"), and the repository's method removes that
+  offset as its first step.  So the correction is not new information to the project, only to this
+  study's summary.
+* **The tool defect that would have caught it.**  ``arm_geometry.axis_fingerprint`` averaged the
+  pairwise axis distances over random configurations.  That is harmless for **adjacent** axes --
+  axis ``i`` is fixed in link ``i-1``, axis ``i+1`` in link ``i``, and the two links differ by a
+  rotation *about axis i*, which leaves it in place, so the pair distance is structural -- but for
+  ``j >= i+2`` the intervening joints move one axis relative to the other and the distance is a
+  property of the configuration.  Averaging it reports a number no configuration has:
+  the same table printed ``5-7: 0.000`` while the axis lines it had just printed were 88 mm apart,
+  which is the self-contradiction that exposed the defect.
+* **Fix.**  ``axis_fingerprint`` now measures at one configuration (zeros by default) and says so;
+  ``structural_report`` prints only invariants: adjacent-axis distances and, for a triple, the
+  distance from the intersection point of the first two axes to the third (concurrency).  The
+  user-provided URDF makes the franka fact unambiguous: ``<joint name="panda_joint7">`` has
+  ``<origin xyz="0.088 0 0">`` and ``<axis xyz="0 0 1"/>``, so the joint-7 axis is displaced 88 mm
+  from the 5-6 intersection point.
+* **Corrected table (all entries configuration independent):**
+
+  | arm | shoulder 1-2-3 | wrist, last three axes |
+  |---|---|---|
+  | franka panda | **concurrent, 0.0000 mm** | **not concurrent, offset 88.0000 mm** |
+  | ROKAE ER3 (7 axes) | concurrent | **concurrent (true S-R-S)** |
+  | SR5 | not concurrent | not concurrent, offset **136.0000 mm** |
+  | SR0 (link 5 y = 0) | not concurrent | **concurrent, 0.0000 mm** |
+
+* **What changes and what does not.**  franka is **not** S-R-S: its *shoulder* is spherical and its
+  *wrist* carries an 88 mm offset, which is exactly why my earlier franka work had to reduce the
+  offset away before applying an elbow law.  Nothing in Finding 2 changes, and it is now *stronger*:
+  SR0's sphericity is confirmed by the invariant test (0.0000 mm) rather than by an average over
+  random poses, and SR5's obstruction is exactly 136.0000 mm.
+* **Lesson, the eighth of its kind.**  Two errors in one: quoting a measurement from a different
+  robot, and a tool that averaged a quantity that is not constant.  Both were caught only by a
+  reader comparing a claim against a figure; the defence that should have worked is in the study's
+  own conventions -- *every claim with the command that produces it* -- since running the franka
+  fingerprint would have shown 88 mm immediately.
+
 ## 4. Finding 2: DH continuation
 
 ### 4.1 SR0 is exactly one parameter away, and the search says which one

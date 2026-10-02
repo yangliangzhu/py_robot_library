@@ -127,43 +127,121 @@ class AxisPair:
 def axis_fingerprint(
     model, q: np.ndarray | None = None, *, samples: int = 5, seed: int = 0
 ) -> list[AxisPair]:
-    """The pairwise axis table, averaged over a few configurations.
+    """The pairwise axis table **at one configuration**.
 
-    Averaging over configurations is safe for these quantities: the *distance* between two joint
-    axes is a property of the arm's structure and does not depend on ``q`` at all for a serial
-    chain (each axis is fixed in its parent link), so several samples are a check rather than a
-    necessity -- the spread is reported by the caller if it wants it.
+    Only *adjacent* pairs are structural invariants.  Axis ``i`` is fixed in link ``i-1`` and axis
+    ``i+1`` in link ``i``, and the two links differ by a rotation about axis ``i`` -- which leaves
+    axis ``i`` where it is -- so the ``i, i+1`` distance is the same at every configuration.  For
+    ``j >= i+2`` the intervening joints move one axis relative to the other, so the distance is a
+    property of the *configuration*, not of the arm.
+
+    An earlier version of this function averaged the distances over random configurations, which for
+    non-adjacent pairs averages a varying quantity and reports a number that no configuration has;
+    it also produced a self-contradictory table (axes 5 and 7 reported at 0 mm while the printed
+    lines were 88 mm apart), which is how the defect was found.  Use :func:`structural_report` for
+    the invariants.
 
     Args:
         model: Robot model.
-        q: Configuration to measure at; a random regular one when omitted.
-        samples: How many configurations to average over.
-        seed: Random seed for those configurations.
+        q: Configuration to measure at; zeros when omitted.
+        samples: Accepted and ignored; kept for call compatibility.
+        seed: Accepted and ignored; kept for call compatibility.
 
     Returns:
-        One :class:`AxisPair` per pair ``i < j``, in row-major order.
+        One :class:`AxisPair` per pair ``i < j``, in row-major order, measured at ``q``.
     """
-    rng = np.random.default_rng(seed)
-    accumulators = np.zeros((model.num_dof, model.num_dof))
-    angles = np.zeros_like(accumulators)
-    for _ in range(samples):
-        configuration = (
-            rng.uniform(model.lower_bounds, model.upper_bounds) if q is None else np.asarray(q, float)
-        )
-        origins, directions = joint_axes(model, configuration)
-        for i in range(model.num_dof):
-            for j in range(i + 1, model.num_dof):
-                accumulators[i, j] += line_distance(
-                    origins[i], directions[i], origins[j], directions[j]
-                )
-                angles[i, j] += line_angle(directions[i], directions[j])
+    del samples, seed
+    configuration = np.zeros(model.num_dof) if q is None else np.asarray(q, dtype=float)
+    origins, directions = joint_axes(model, configuration)
     pairs = []
     for i in range(model.num_dof):
         for j in range(i + 1, model.num_dof):
             pairs.append(
-                AxisPair(i + 1, j + 1, accumulators[i, j] / samples, angles[i, j] / samples)
+                AxisPair(
+                    i + 1,
+                    j + 1,
+                    line_distance(origins[i], directions[i], origins[j], directions[j]),
+                    line_angle(directions[i], directions[j]),
+                )
             )
     return pairs
+
+
+def axis_triple_is_concurrent(
+    model, triple: tuple[int, int, int], q: np.ndarray | None = None
+) -> tuple[bool, float]:
+    """Whether three joint axes meet at one point -- the invariant test for a spherical wrist.
+
+    The first two axes of the triple must be adjacent (or already intersect); the test is the
+    distance from *their* intersection point to the third axis.  That distance is configuration
+    independent when the first two are adjacent, which is what makes the answer structural rather
+    than a snapshot.
+
+    Args:
+        model: Robot model.
+        triple: Three 1-based joint numbers, e.g. ``(4, 5, 6)``.
+        q: Configuration to measure at; zeros when omitted.
+
+    Returns:
+        ``(concurrent, distance in metres)``.
+    """
+    first, second, third = (index - 1 for index in triple)
+    configuration = np.zeros(model.num_dof) if q is None else np.asarray(q, dtype=float)
+    origins, directions = joint_axes(model, configuration)
+    point = _intersection_point(
+        origins[first], directions[first], origins[second], directions[second]
+    )
+    if point is None:
+        return False, float("nan")
+    return (
+        line_distance(point, directions[third], origins[third], directions[third]) < 1e-9,
+        line_distance(point, directions[third], origins[third], directions[third]),
+    )
+
+
+def _intersection_point(
+    p1: np.ndarray, d1: np.ndarray, p2: np.ndarray, d2: np.ndarray
+) -> np.ndarray | None:
+    """Intersection point of two lines, or ``None`` when they are parallel."""
+    cross = np.cross(d1, d2)
+    if float(np.linalg.norm(cross)) < 1e-12:
+        return None
+    matrix = np.array([[d1 @ d1, -(d1 @ d2)], [d1 @ d2, -(d2 @ d2)]])
+    right = np.array([(p2 - p1) @ d1, (p2 - p1) @ d2])
+    parameters = np.linalg.solve(matrix, right)
+    return p1 + parameters[0] * d1
+
+
+def structural_report(model, *, wrist: tuple[int, int, int] | None = None) -> str:
+    """The *invariant* structural facts: adjacent-axis distances and axis-triple concurrency.
+
+    Args:
+        model: Robot model.
+        wrist: Triple to test for concurrency; the last three axes when omitted.
+
+    Returns:
+        A multi-line report.
+    """
+    n = model.num_dof
+    wrist = wrist or (n - 2, n - 1, n)
+    lines = ["adjacent-axis geometry (configuration independent), in mm:"]
+    for index in range(n - 1):
+        pair = [
+            item for item in axis_fingerprint(model)
+            if item.first == index + 1 and item.second == index + 2
+        ][0]
+        lines.append(
+            f"  axes {pair.first}-{pair.second}: distance {1000 * pair.distance:9.4f} mm, "
+            f"angle {pair.angle_deg:6.2f} deg"
+        )
+    for triple in ((1, 2, 3), (n - 2, n - 1, n)):
+        concurrent, distance = axis_triple_is_concurrent(model, triple)
+        lines.append(
+            f"  axes {triple[0]}-{triple[1]}-{triple[2]}: "
+            f"{'CONCURRENT (spherical)' if concurrent else 'not concurrent'}"
+            f" | offset {1000 * distance:9.4f} mm"
+        )
+    return "\n".join(lines)
 
 
 def describe(model, q: np.ndarray | None = None) -> str:
