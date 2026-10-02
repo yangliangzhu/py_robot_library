@@ -46,24 +46,36 @@ def null_direction(model, q: np.ndarray) -> np.ndarray:
     return vector / np.linalg.norm(vector)
 
 
-def pair_present(offset: float, target, s_star: float, q_star: np.ndarray, gap: float,
-                 circular, *, radii: float = 8.0) -> tuple[bool, float]:
-    """Whether a real solution sits near ``q*`` at ``s* +- gap``, seeding along the null direction."""
+def pair_count(offset: float, target, s_star: float, q_star: np.ndarray, gap: float,
+               circular, *, radii: float = 8.0) -> tuple[int, list[float]]:
+    """How many real solutions of the pair sit near ``q*`` at ``s* + gap``.
+
+    Asking *how many* instead of *whether* is what separates a death (one solution on the near side,
+    none beyond) from a turning point (two on both sides) -- the blind spot of the first version of
+    this classifier.  The pair separates along ``+-v``, so both signs are seeded, and the solutions
+    found are deduplicated by configuration distance.
+    """
     s = s_star + gap
     if not 0.0 <= s <= 1.0:
-        return False, float("nan")
+        return 0, []
     model = sr0.robot(path_at(offset)(s))
     direction = null_direction(model, q_star)
-    best = float("nan")
-    for amplitude in AMPLITUDES:
-        seed = q_star + amplitude * np.sqrt(abs(gap)) * direction
-        solution, converged = solve_lm(model, seed, target)
-        if not converged:
-            continue
-        distance = iks.configuration_distance(solution, q_star, circular)
-        if distance < radii * np.sqrt(abs(gap)) + 1e-3:
-            best = distance if np.isnan(best) else min(best, distance)
-    return (not np.isnan(best)), best
+    limit = radii * np.sqrt(abs(gap)) + 1e-3
+    found: list[np.ndarray] = []
+    distances: list[float] = []
+    for sign in (1.0, -1.0):
+        for amplitude in AMPLITUDES:
+            seed = q_star + sign * amplitude * np.sqrt(abs(gap)) * direction
+            solution, converged = solve_lm(model, seed, target)
+            if not converged:
+                continue
+            if iks.configuration_distance(solution, q_star, circular) > limit:
+                continue
+            if any(iks.configuration_distance(solution, other, circular) < 1e-3 for other in found):
+                continue
+            found.append(solution)
+            distances.append(iks.configuration_distance(solution, q_star, circular))
+    return len(found), distances
 
 
 def classify(offset: float, target, s_star: float, q_star: np.ndarray, circular, *,
@@ -72,16 +84,19 @@ def classify(offset: float, target, s_star: float, q_star: np.ndarray, circular,
     evidence: dict[str, list] = {"before": [], "after": []}
     for gap in gaps:
         for label, signed in (("before", -gap), ("after", +gap)):
-            present, distance = pair_present(offset, target, s_star, q_star, signed, circular)
-            evidence[label].append((present, distance))
-    before = sum(1 for present, _d in evidence["before"] if present)
-    after = sum(1 for present, _d in evidence["after"] if present)
+            count, distances = pair_count(offset, target, s_star, q_star, signed, circular)
+            evidence[label].append((count, [round(value, 5) for value in distances]))
+    # the pair is a *pair*: two solutions on a side that has it, none on a side that does not
+    before = max((count for count, _d in evidence["before"]), default=0)
+    after = max((count for count, _d in evidence["after"]), default=0)
     if before and not after:
         kind = "death"
     elif after and not before:
         kind = "birth"
+    elif before and after:
+        kind = "turning point"
     else:
-        kind = "invisible"
+        kind = "complex fold"
     return kind, evidence
 
 

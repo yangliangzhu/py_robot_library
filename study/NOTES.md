@@ -607,6 +607,36 @@ again (exp26 now delegates to it):
   both sides**.  Counting the pair instead of testing for its presence is the fix, and it is the only
   thing between this law and a clean four-for-four.
 
+### 3.23 Counting the pair: three windows exact, and the fourth narrows to a radius question
+
+exp27's classifier now counts how many real solutions sit near the fold on each side (seeded along
+``+-v`` with amplitudes ``c sqrt(eps)``), because *how many* is what separates a death (one on the
+near side, none beyond) from a turning point (two on both sides):
+
+| window | classified | predicted | measured | verdict |
+|---|---|---|---|---|
+| [0.650, 0.663] | birth x4 | +8 | 8 -> 16 (0 died, 8 born) | **agrees** |
+| [0.713, 0.723] | death | -2 | 16 -> 14 (2 died) | **agrees** |
+| [0.794, 0.804] | death | -2 | 14 -> 12 (2 died) | **agrees** |
+| [0.957, 0.967] | death x2 | -4 | 12 -> 10 (2 died) | disagrees |
+
+* The birth window is now exact, mechanism and count: four folds, four births, eight solutions gained,
+  zero deaths -- and each birth pair independently obeys ``c sqrt(eps)`` with ratios 3.18 and 2.24
+  against ``sqrt(10)`` and ``sqrt(5)``.
+* The fourth window still disagrees, and the reason is now specific.  Its two folds are 8.89 rad apart
+  in configuration space (same ``s*`` to 1e-10), and the second one reads "death" although the count
+  loses only two solutions.  With a search radius of ``8 sqrt(eps) + 1e-3 ~ 0.57 rad`` and twelve
+  solutions spread over the fibre, the solutions the classifier finds "near" that fold need not be the
+  pair at all -- they can be unrelated neighbours that happen to be inside the radius, which would make
+  the near side read as occupied for a fold whose own pair is complex on both sides.
+* The fix is the same principle as everywhere else in this study: size the neighbourhood by the
+  *measured* law instead of a generous constant.  3.22 measured ``c ~ 1.2`` for these pairs, so the
+  radius should be ``~1.5 c sqrt(eps) ~ 0.09 rad`` at ``eps = 5e-3``, not 0.57 -- and a solution found
+  inside a tight radius should then be confirmed by tracking it a short step in ``s``.
+* Status: the law stands exactly where the instrument is tight (three windows, including the birth
+  window that started this whole line of work); the one disagreement is now a stated measurement
+  problem with a stated fix, not an unexplained residual.
+
 ## 4. Finding 2: DH continuation
 
 ### 4.1 SR0 is exactly one parameter away, and the search says which one
