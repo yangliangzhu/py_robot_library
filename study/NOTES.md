@@ -459,6 +459,41 @@ count them by locating the jump with bisection on the fibre size and then counti
 Recorded as an open item rather than a result, in line with the three earlier instrument failures
 (3.3/3.8/4.2): the numbers a method produces are only as good as what the method actually measures.
 
+### 3.18 Structural completeness: the fold points are isolated, and the 8 -> 16 jump is four of them
+
+exp23's first design was wrong in an instructive way: it tried to *track* fold curves in ``s``, but for
+a fixed target pose the augmented system (7 equations, 7 unknowns) has **isolated** solutions, not
+curves -- the tracker therefore stood still, refining the same point 61 times while the clearance at
+its ends stayed at ``1e-11``, which is how the mistake was visible.  The right count is the number of
+distinct fold *points* in an interval, and the right seeds are deterministic: the near-singular
+configurations **collected along the tracked branches**, not a random census (exp22's failure).
+
+Measured (pose seed 0, ``link 5 y: 0 -> 0.136 m``, 121 near-singular configurations collected, each
+refined by the augmented Newton, deduplicated at ``1e-4`` in ``s``):
+
+| fold ``s*`` | clearance at the fold |
+|---|---|
+| **0.655086** | 8.8e-12 |
+| **0.656878** | 3.6e-11 |
+| **0.657375** | 2.1e-11 |
+| **0.658119** | 1.5e-10 |
+| 0.718354 | 1.1e-10 |
+| 0.799244 | 1.7e-12 |
+| 0.961848 | 2.2e-10 |
+
+* **The 8 -> 16 jump is exactly four folds**, bunched inside a window of ``0.003`` in the parameter
+  (0.6551 .. 0.6581), each a double root: ``4 x 2 = 8`` new solutions, which is the observed jump.
+  So the "multiple root splitting" picture is right in mechanism and *twofold* in multiplicity -- the
+  jump comes from four independent double roots, not one root of higher order.
+* The three later folds are the deaths found in exp21 (``0.718354``, ``0.799244``, ``0.961848``),
+  reproduced here to six decimals from an independent seed set: the two instruments agree.
+* **Structural completeness** for this pose: every solution of the real arm can now be attributed to a
+  birth at one of the four early folds and, where applicable, a death at a later one -- not merely
+  "the scan finds everything" (exp17) but *where each solution comes from*.
+* Methodological note, the fourth of its kind in this study: the deterministic seed set (tracked
+  branches) worked where the statistical one (a 150-seed census, exp22) did not.  Structure beats
+  sampling for locating events, exactly as the branch certificates beat the dip heuristic.
+
 ## 4. Finding 2: DH continuation
 
 ### 4.1 SR0 is exactly one parameter away, and the search says which one
