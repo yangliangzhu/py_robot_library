@@ -302,7 +302,37 @@ Validation (`python3 -m study.exp12_sr0_solver --poses 5 --seeds 400 --match 1e-
   reference here, and the census needs a conditioning-aware dedupe before it can be trusted to
   count.
 
-### 4.4 Next
+### 4.4 The homotopy SR0 -> SR5, and what it does not reach
+
+`python3 -m study.exp13_homotopy_sr0_to_sr5 --poses 2 --seeds 800 --retries 6`.  Seeds are SR0's
+fibre from the deterministic solver (eight solutions); the tracker carries each along
+``link 5 y: 0 -> 0.136 m`` with the predictor-corrector and a step controller on the clearance;
+the reference is a 800-seed multi-start census of the real arm.  The parameter space is 18- or
+19-dimensional, all eight seeds reached on the *straight* path (0.7 s for the whole pose).
+
+* **Pose A: 8 of 8 arrived, and the sets agree exactly** -- 0 census solutions missed, 0 homotopy
+  solutions the census missed.  Where the arm has eight solutions, the method is complete:
+  SR0's closed-form fibre, carried 0.136 m, *is* the SR5's fibre.
+* **Pose B: 6 of 8 arrived, census 13, and 8 census solutions were never reached** (`sigma_floor =
+  2e-3` halts the other two paths at ``s = 0.72`` and ``s = 0.96``).  The straight path meets the
+  discriminant there -- where a pair of solutions is born or dies -- and a tracker that cannot
+  switch branches cannot follow a solution through it.  This is the measured form of "the formula
+  is defined near the singular set but not usable" from 4.2, and the reason the missing solutions
+  are exactly the ones behind such a meeting point.
+* **Retries on generic curved paths** (the standard trick: add a bump that vanishes at both ends,
+  so the endpoints stay SR0 and SR5 while the route changes) help but do not close the gap: with 6
+  retries per stopped branch, pose B went from 5 to 6 arrivals.  The discriminant has codimension
+  one, so a generic path avoids *most* of it, but a solution that does not exist at ``s = 1`` on
+  any real path connected to the seed cannot be reached this way at all.
+* One solution at pose B was found by the homotopy and *missed* by the 800-seed census, which is
+  the same census under-counting seen in 3.1/3.8 from the other side.
+
+So the honest statement of the method is: **continuation from a solvable neighbour gives a
+guaranteed subset of the fibre -- complete when the two arms' solution counts match along the path
+-- and completeness in general needs branch switching at the discriminant** (deflation, or
+tracking the pair through the fold), not just a better step controller.
+
+### 4.5 Next
 
 1. ~~A closed-form solver for SR0~~ -- done above (deterministic and complete; the ``(q4, q6)``
    finish is a two-variable Newton rather than a closed form, and every solution is verified
