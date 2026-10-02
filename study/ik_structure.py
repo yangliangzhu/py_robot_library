@@ -45,6 +45,29 @@ def sigma_spectrum(model, q: np.ndarray) -> np.ndarray:
     return np.linalg.svd(model.jacobian(np.asarray(q, dtype=float)), compute_uv=False)
 
 
+def det_jacobian(model, q: np.ndarray) -> float:
+    """Determinant of the geometric Jacobian; only defined for a square (6-DOF) Jacobian.
+
+    The determinant is the cheap *signed* witness this study leans on: it is continuous, it
+    vanishes exactly on the singular set for a 6-DOF arm, and a *sign change* between two
+    samples is a certified crossing -- unlike a manipulability dip, which is only a symptom.
+
+    Args:
+        model: Robot model.
+        q: Joint positions in radians, length ``num_dof``.
+
+    Returns:
+        ``det J(q)``.
+
+    Raises:
+        ValueError: If the robot is not 6-DOF, where ``det J`` is not defined.
+    """
+    jac = np.asarray(model.jacobian(np.asarray(q, dtype=float)), dtype=float)
+    if jac.shape != (6, 6):
+        raise ValueError(f"det J needs a 6x6 Jacobian, got {jac.shape}")
+    return float(np.linalg.det(jac))
+
+
 def manipulation_measure(model, q: np.ndarray) -> float:
     """The library's manipulability at ``q`` (Yoshikawa's measure)."""
     return float(model.manip(np.asarray(q, dtype=float)))
@@ -229,6 +252,22 @@ class PathScan:
     #: Local minima found on the coarse sample, refined.
     local_minima: list[tuple[float, float]] = field(default_factory=list)
     samples: int = 0
+    #: ``det J`` at the two ends (NaN when the Jacobian is not square).
+    end_det: tuple[float, float] = (float("nan"), float("nan"))
+    #: Path parameters where ``det J`` changes sign, bisected to the crossing.
+    det_sign_changes: list[float] = field(default_factory=list)
+    #: Path parameters where ``|det J|`` touches zero *without* changing sign (a grazing hit).
+    det_touches: list[float] = field(default_factory=list)
+
+    @property
+    def crossings(self) -> int:
+        """Certified transversal crossings of the singular set along this path."""
+        return len(self.det_sign_changes)
+
+    @property
+    def different_chambers(self) -> bool:
+        """Whether an odd number of transversal crossings *proves* different chambers."""
+        return self.crossings % 2 == 1
 
     @property
     def end_singular(self) -> bool:
@@ -288,6 +327,46 @@ def scan_path(
     else:
         minima.append((best_s, best_value))
 
+    end_det = (float("nan"), float("nan"))
+    sign_changes: list[float] = []
+    touches: list[float] = []
+    if model.num_dof == 6:
+        dets = np.array([det_jacobian(model, q) for q in path])
+        end_det = (float(dets[0]), float(dets[-1]))
+        span = 1.0 / (samples - 1)
+
+        def det_at(s_: float) -> float:
+            return det_jacobian(model, path[0] + s_ * (path[-1] - path[0]))
+
+        for index in range(samples - 1):
+            low, high = dets[index], dets[index + 1]
+            if low == 0.0 or high == 0.0 or (low < 0.0) != (high < 0.0):
+                # bisect the sign change (or the exact zero) to a path parameter
+                a, b = index * span, (index + 1) * span
+                fa = det_at(a)
+                for _ in range(60):
+                    mid = 0.5 * (a + b)
+                    fm = det_at(mid)
+                    if fm == 0.0:
+                        a = b = mid
+                        break
+                    if (fa < 0.0) != (fm < 0.0):
+                        b = mid
+                    else:
+                        a, fa = mid, fm
+                sign_changes.append(0.5 * (a + b))
+        # a grazing hit: a local minimum of |det J| that refinement brings to zero without a
+        # sign change (the path touches the singular set instead of crossing it)
+        for index in range(1, samples - 1):
+            if abs(dets[index]) <= abs(dets[index - 1]) and abs(dets[index]) <= abs(dets[index + 1]):
+                if abs(dets[index]) > 1e-9 * max(1.0, float(np.max(np.abs(dets)))):
+                    continue
+                s_, value = _golden_minimum(
+                    lambda s_: abs(det_at(s_)), (index - 1) * span, (index + 1) * span
+                )
+                if value < 1e-12 * max(1.0, float(np.max(np.abs(dets)))):
+                    touches.append(s_)
+
     best_q = path[0] + best_s * (path[-1] - path[0])
     return PathScan(
         min_sigma=best_value,
@@ -298,6 +377,9 @@ def scan_path(
         end_sigma=(float(sigma[0]), float(sigma[-1])),
         local_minima=sorted(minima, key=lambda item: item[1]),
         samples=samples,
+        end_det=end_det,
+        det_sign_changes=sign_changes,
+        det_touches=touches,
     )
 
 

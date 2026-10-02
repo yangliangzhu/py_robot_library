@@ -66,19 +66,19 @@ arbitrary joint-space path. The ER3 measurements in §3.3 already show the conti
 
 ## 3. Measured so far
 
-### 3.1 A 6R with an offset wrist has few real solutions, and a census is not cheap
+### 3.1 How many solutions a 6R with an offset wrist has, and why a census is not cheap
 
-`python3 -m study.exp00_solver_baselines --robot sr5 --backend casadi --seeds 400`
+`python3 -m study.exp02_pair_census` (SR5, casadi, 400–600 seeds per pose)
 
-* Solutions found at random regular poses: **8, 8, 8** in one run, **4, 4, 5** in another
-  (different poses). The count varies with the pose, so "up to 8" is a property of the arm and
-  the pose, not a constant.
-* Basin sizes are nearly uniform when the count is small: at one pose, 8 solutions from 551
-  converged seeds had hit counts `[99, 93, 72, 66, 64, 57, 53, 47]`.
-* Rare solutions exist: at one pose a 5th solution appeared once in 800 seeds (hit count 1 of
-  222 converged). Any census that stops when it stops finding new solutions can therefore miss
-  a solution with a small basin — which is exactly why §5.3 wants a homotopy census.
-* All solutions found were regular: `sigma_min` between 0.01 and 0.21.
+* Counts found: **8, 8, 8, 8, 4** over five poses, and **8, 8, 9, 12, 6, 2** over another six.
+  The count depends on the pose, and it reaches **12** — so "at most 8 solutions", the number the
+  original clustering produced, was an artifact of its seed count and clustering radius, not a
+  property of the arm. A general 6R has up to 16.
+* Basins are roughly uniform: at one pose the 8 solutions were hit `[24, 24, 24, 22, 15, 15]`
+  times out of 135 converged seeds.
+* Rare solutions exist: one pose showed a 5th solution hit **once** in 800 seeds, so a census
+  that stops when it stops finding new solutions can miss a small-basin solution. This is the
+  gap that homotopy continuation (Finding 2) is meant to close.
 
 ### 3.2 Solver baselines (SR5, casadi, 150–400 seeds)
 
@@ -125,6 +125,65 @@ the tracing subclass is verified against the library class on 20/20 seeds first)
   `0.02`) the damped-least-squares step oscillates.
 * Both matter beyond this study: a control loop that gates on `ok` rejects usable solutions
   near singularities, and any census that trusts `ok` under-counts solutions.
+
+### 3.5 The pair census: what the empirical criterion actually detects
+
+`python3 -m study.exp02_pair_census --poses 5 --seeds 400 --resolve` (SR5; 118 pairs of
+distinct solutions over five poses; every pair scanned with the refined-minimum crossing test)
+
+* **Paths that touch the singular set: 112/118.** 68 pairs cross once, 44 cross *twice* (the
+  straight line leaves the chamber and comes back), 0 graze. Only 6 pairs' straight paths avoid
+  `Sigma` altogether, with clearances `5.5e-4 … 4.9e-3` against a `sigma_min` scale of `0.078`
+  at the solutions — i.e. the paths that "avoid" the singular set pass within 0.7–6% of the
+  typical clearance. Three of those six dip to a manipulability ratio of 0.003–0.005, which is
+  exactly the "sharp dip, never zero" counterexample from the original experiments: a near miss,
+  now measured rather than suspected.
+* **The criterion as a crossing detector** (truth = the refined minimum of `sigma_min` reaches
+  zero, which is what "the path crossed a singularity" means):
+
+  | dip threshold | dips fired | true positives | false positives | false negatives |
+  |---|---|---|---|---|
+  | 0.20 / 0.10 / 0.05 | 118 | 112 | 6 | 0 |
+  | 0.01 | 112 | 112 | 0 | 0 |
+  | 0.005 | 100 | 100 | 0 | 12 |
+
+  A looser threshold never misses a crossing but fires on near misses; a tighter one misses
+  crossings, because a dip's depth depends on *which* singular stratum is crossed — the
+  manipulability is a product of six singular values, and crossing a boundary where only one of
+  them vanishes need not take the product near zero. On an earlier six-pose run the same table
+  had 11 false negatives at a 0.01 threshold, so the safe threshold is arm- and pose-dependent:
+  the criterion has no setting that is simultaneously exact everywhere, which is the honest
+  form of "it holds with high probability in higher dimensions".
+* The **one-Jacobian sign certificate** (`sign det J(q1) != sign det J(q2)`) fired for exactly
+  the 68 odd-crossing pairs, with **zero disagreements** against the path scans. It is the cheap
+  sufficient test the question asked for: two Jacobians and no path at all.
+
+### 3.6 Distinct solutions can share a branch: the criterion's assumption is false
+
+Same run, with clearance walks (`study/chamber.py`) at `delta = 5e-3`:
+
+* **14 pairs were connected by a witnessed path keeping `sigma_min >= 5e-3`** — i.e. provably in
+  the same connected component of `Q \ Sigma`. Six of them are the pairs whose straight path
+  avoids `Sigma`; the other eight are pairs whose straight path crosses it twice, so the double
+  crossing was a detour, not a branch boundary.
+* **Negative control: 68/68 certified-different pairs could not be connected** by the same walk.
+  The machinery is therefore self-consistent — and getting it there mattered: with endpoint-only
+  step checks, 2 of 16 control pairs were "connected", which is how a false certificate looks.
+  Every accepted step is now verified along its whole segment.
+* Why this is a *proof* and not evidence: a path in `Q \ Sigma` from `q1` to `q2` with
+  `FK(q1) = FK(q2) = T` projects to a loop in the workspace based at `T`, and the path *is* the
+  lift of that loop. Two solutions joined that way are two points of one sheet of the covering
+  `FK : Q_reg -> W`, i.e. one branch in the standard sense (the sheet, not the solution).
+* So the branch structure of a 6R is **not** one branch per solution: the number of branches is
+  the number of connected components of `Q \ Sigma`, and a component can cover the workspace
+  with degree > 1 (several solutions over the same pose). The practical consequence for the
+  criterion is that it is **sound but incomplete**: a path witnessed to avoid `Sigma` does prove
+  "same branch", while *crossing* `Sigma` does not prove "different branch" — the path may leave
+  a chamber and return, which is what 8 of the 14 witnesses did.
+* Open: the full partition of a pose's solutions into branches needs a better connectivity
+  oracle than a greedy walk (randomised walks or a planner in `{sigma_min >= delta}`), and the
+  interesting follow-up is whether those components correspond to the classical
+  shoulder/elbow/wrist sign labels. That is round 3's experiment.
 
 ## 4. Next
 
