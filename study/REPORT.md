@@ -2,7 +2,15 @@
 
 对象：珞石 SR5（6 轴、腕部偏置；与 SR4 同族同结构，按用户确认以 SR5 为准）。
 代码与数据：`py_robot_library` 分支 `study/ik-branch-and-continuation`，实验在 `study/`。
-详细日志：`study/NOTES.md`（英文，逐条含被推翻的中间假设）；汇总：`study/README.md`；实际输出存档：`study/REPRODUCTION.md`。
+**本简报的基线提交：`b33bd80`**（此提交上十条头条命令的实际输出见 `study/REPRODUCTION.md`）。
+
+| 想做什么 | 看哪里 |
+|---|---|
+| 十分钟读懂结论 | 本文件 |
+| 逐条对照命令与测量 | `study/README.md` |
+| 看被推翻的中间假设与每一次仪器失误 | `study/NOTES.md`（§3.1~§3.29） |
+| 确认数字仍可复现 | `bash study/reproduce.sh` → `study/REPRODUCTION.md` |
+| 直接调用完备求解器 | `from study.complete_ik import solve_all` |
 
 ---
 
