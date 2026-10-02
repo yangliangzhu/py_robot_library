@@ -332,7 +332,31 @@ guaranteed subset of the fibre -- complete when the two arms' solution counts ma
 -- and completeness in general needs branch switching at the discriminant** (deflation, or
 tracking the pair through the fold), not just a better step controller.
 
-### 4.5 Next
+### 4.5 Reseeding at the discriminant closes the gap -- and beats the census
+
+`python3 -m study.exp14_reseed_at_discriminant --poses 2 --seeds 800`.  The observation that makes
+the gap closable: the *target pose never moves*, only the DH parameters do, so at every ``s`` the
+current arm has a whole fibre for that pose.  When a tracked branch dies at the discriminant, the
+branches born at an earlier one are present at that same ``s`` -- a multi-start solve of the
+*intermediate* arm finds them, and they can be carried on to ``s = 1``.
+
+* **Pose B (the hard one, exp13: 5 of 8 arrived, 8 census solutions missed)**: reseeding at the two
+  stalls started 53 further tracks, and the final count of census solutions still missed fell to
+  **1 of 11**.
+* **Pose A** (the earlier easy one) now shows the opposite error: the straight path arrived 8 of 8
+  while an 800-seed census found only 5, so **6 of the homotopy's solutions were ones the census
+  missed**.  At equal or lower cost the analytic-seeded homotopy is *more* complete than
+  random-restart numerical IK -- which is the practical claim the method should be judged on, and
+  it is the same census under-counting measured in 3.1, 3.8 and 4.4 from other directions.
+* Tracker cost, for scale: the whole straight-path stage is ~1 s per pose; reseeding adds one
+  local census per stall.
+
+So the recipe that comes out of this is: **SR0's closed-form fibre -> track along the parameter
+path -> reseed at every stall -> track again**, with the residual gap being the solutions whose
+birth fold was never visited by the path.  Closing that last one needs an endgame (deflation) or a
+complex path; the measurements above say how small that residue is in practice.
+
+### 4.6 Next
 
 1. ~~A closed-form solver for SR0~~ -- done above (deterministic and complete; the ``(q4, q6)``
    finish is a two-variable Newton rather than a closed form, and every solution is verified
