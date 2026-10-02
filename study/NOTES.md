@@ -520,6 +520,34 @@ Newton) and the fibre size measured by a 400-seed census.
   one ``s`` to the next (the scan of exp17, or a tracker seeded densely) -- rather than a statistical
   one.  Recorded as the next instrument, in line with 3.17: the same mistake twice would be a habit.
 
+### 3.20 The deterministic count: the law holds exactly, and the exception refines it
+
+`python3 -m study.exp25_deterministic_count --pose-seed 0` splits the fibre into **survivors** (every
+previous solution carried forward by the predictor-corrector -- exact, no sampling) and **births**
+(solutions of the new arm matching no survivor), so the count difference is deterministic up to birth
+detection:
+
+| window | folds | survivors | died | born | delta | prediction |
+|---|---|---|---|---|---|---|
+| [0.650, 0.662] | 4 | 8/8 | 0 | **8** | **+8** | +8 |
+| [0.710, 0.725] | 1 | 14/16 | **2** | 0 | **-2** | 2 |
+| [0.792, 0.806] | 1 | 12/14 | **2** | 0 | **-2** | 2 |
+| [0.950, 0.975] | 2 | 10/12 | **2** | 0 | **-2** | 4 |
+
+* **Three windows obey the law exactly and with no noise at all**: the fourfold group adds exactly
+  eight solutions (eight births, no deaths), and each single fold removes exactly two.  The census
+  noise that defeated exp24 is gone because nothing is being estimated.
+* The fourth window is the interesting one.  It contains two folds but loses only two solutions, so
+  one of the folds does not change the real fibre size -- and that is not a defect of the count but a
+  property of folds: a fold only changes the *real* count when its coalescing pair crosses between
+  real and complex.  Probed at ``s* +- 5e-3`` for the fold at ``0.961848``, the nearest real solution
+  is ``8.2e-2`` rad before and ``3.0`` rad after -- the dying pair is real before and gone after,
+  while the other fold of the window has no real pair near it on either side: a complex turning point.
+* **Refined law**: ``fibre`` changes by ``+-2`` per *real event*, i.e. per fold whose pair changes
+  reality; folds of complex pairs deform the fibre without changing what is real.  Counting folds is
+  therefore an upper bound on the events, which is exactly why exp24's "2 folds, expected 4" was
+  wrong in its premise rather than in its arithmetic.
+
 ## 4. Finding 2: DH continuation
 
 ### 4.1 SR0 is exactly one parameter away, and the search says which one
