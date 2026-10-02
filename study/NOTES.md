@@ -436,6 +436,29 @@ stall.
   size from 8 to 16 cannot be one high-order root producing eight branches -- it must be **four
   separate folds**.  Counting the distinct folds along the path would settle it.
 
+### 3.17 The fold-count corollary: not settled, because this instrument is not good enough
+
+The corollary from 3.16 was that a jump of the fibre size from 8 to 16 must be *four* folds, since
+each fold splits two branches.  `python3 -m study.exp22_fold_census --pose-seed 0 --seeds 150` tried to
+count them by locating the jump with bisection on the fibre size and then counting the coalescing
+(near-singular) configurations just after it.  It does not work, and the reason is worth recording:
+
+* **The instrument is a statistical estimate.**  At a fixed ``s`` the 150-seed census returns 18 and
+  then 16 on neighbouring samples; the count fluctuates by +-2, so "where the count changes" is not a
+  well-defined event and the bisection refines noise.
+* **Near-singular clusters at a grid point are not folds.**  The clusters found (3, 10, 8 at the three
+  apparent events, with clearances from 6e-4 to 2e-2) count what the census happened to find at that
+  ``s``, which includes configurations that are merely close to the singular set -- the same near-miss
+  population that produced the dip heuristic's false positives in 1.3.
+* So the corollary **remains unverified**.  The instrument that would settle it is not a bigger census
+  but a different one: follow the zeros of ``det J`` **as functions of ``s``** (a fold curve per
+  coalescing pair, tracked like any other branch, with exp21's augmented system as the corrector) and
+  count how many distinct curves the path crosses.  That is a well-posed 1-D problem, unlike counting
+  a noisy fibre size.
+
+Recorded as an open item rather than a result, in line with the three earlier instrument failures
+(3.3/3.8/4.2): the numbers a method produces are only as good as what the method actually measures.
+
 ## 4. Finding 2: DH continuation
 
 ### 4.1 SR0 is exactly one parameter away, and the search says which one
