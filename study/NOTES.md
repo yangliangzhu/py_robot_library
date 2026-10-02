@@ -338,6 +338,33 @@ and the measurements are:
   in the same run **1/20**.  Small samples, clear direction -- and it is the same phenomenon as the
   fourteen same-chamber pairs of 1.4, only much more frequent.
 
+### 3.13 One fibre's partition, determined: two branches, and the cheap certificate is enough
+
+`python3 -m study.exp19_partition --poses 3 --seeds 600 --waypoints 6` (plus one earlier run at 800
+seeds).  Two certificates applied to the same fibre -- ``sign det J`` (rigorous for "different", one
+Jacobian per solution) and a witnessed clearance route (constructive for "same", tried both ways and
+through random admissible waypoints) -- and then the equivalence classes by transitive closure:
+
+| pose | solutions | sign groups | pairs: same / different / undetermined | classes after closure | dip-heuristic false positives |
+|---|---|---|---|---|---|
+| 1 | 8 | 4+ / 4- | 7 / 16 / 5 | **[4, 4]** -- the sign split | - |
+| 2 | 8 | 4+ / 4- | 7 / 16 / 5 | [4, 3, 1] | 4 |
+| 3 | **12** | 6+ / 6- | 26 / 36 / 4 | **[6, 6]** -- the sign split | 4 |
+| 4 | 8 | 3+ / 5- | 10 / 15 / 3 | **[5, 3]** -- the sign split | 2 |
+
+* **The partition is the determinant-sign split in three of the four poses**, i.e. the O(1)
+  certificate is not just sound but *sufficient* there -- and the pair-level residue does not matter,
+  because the witnessed pairs already generate the classes by transitivity.
+* The 12-solution pose has **two** branches of six, not twelve and not eight: "number of solutions"
+  and "number of branches" differ by a factor of six on this arm.
+* The remaining pose leaves one sign group of four as ``[3, 1]``: either it holds two branches or the
+  walk missed a route.  That is the honest residue of this method, and it is the only one in four
+  poses.
+* The **dip heuristic's false positives are now certified**: 2-4 pairs per pose dip below ``0.01``
+  although they sit inside a transitively *proved* same-branch class.  Compare the measured error
+  rates of 1.3: the near-miss false positives are not an artefact of a threshold choice, they are
+  routes that come close to the singular set without reaching it.
+
 ## 4. Finding 2: DH continuation
 
 ### 4.1 SR0 is exactly one parameter away, and the search says which one
