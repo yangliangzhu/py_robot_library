@@ -331,6 +331,25 @@ python3 -m study.exp20_labels_redundant --robot franka --seeds 150
   （含 0.54/0.78 rad 的短弧、一个 2.57 rad 自闭合的环、以及 30~60 rad 的长弧）；其中 3 个因步数预算
   未定，故 13 是**下界**而非计数。
 
+### 2.12 打包成一个调用：`study/complete_ik.py`
+
+```python
+from study.complete_ik import solve_all
+solutions = solve_all(model, target, mode="scan")   # 或 "census" / "homotopy"
+```
+
+返回去重后的全部解，每个都带残差与来源，且用正运动学**逐个验证**（接受阈 1e-6，即库内量级）。
+自检（`python3 -m study.complete_ik`）：
+
+| 位姿 | `census`（300 种子） | `homotopy`（8 闭式种子） | `scan` |
+|---|---|---|---|
+| 0 | 3 个（3.2 s） | 4 个（1.1 s） | **8 个（43 s）** |
+| 1 | 6 个（2.1 s） | **0 个**（0.0 s） | **8 个（56 s）** |
+
+只有 `scan` 在两个位姿上都拿到 8 个 —— 普查拿到多少**依赖位姿**（本课题多处测到它欠计数），而同伦在
+分支停滞时返回**空集而非错解**。要"数得全"就用 `scan`，要"亚秒级"就用 `homotopy`，要"快速的部分集"
+就用 `census`。
+
 ---
 
 ## 方法学教训（本课题复用价值最高的部分）

@@ -693,6 +693,30 @@ by what it misses of the union and what it costs.
   matters and the path is unobstructed; the scan when completeness is the point; and never the plain
   library solver from a random seed.
 
+### 3.26 The recipe as one call, and what the three modes actually deliver
+
+`study/complete_ik.py` packages the study's method behind a single entry point, ``solve_all(model,
+target, mode=...)``, which returns deduplicated solutions each verified against the forward kinematics
+(``max(position error, rotation error) <= 1e-6``, which is the library's own acceptance scale).
+Its self-check on two poses (different poses from exp28's stream, which is why the numbers differ):
+
+| pose | ``census`` (300 seeds) | ``homotopy`` (8 closed-form seeds) | ``scan`` (9 grid points) |
+|---|---|---|---|
+| 0 | **3** (3.2 s) | 4 (1.1 s) | **8** (43 s) |
+| 1 | **6** (2.1 s) | **0** (0.0 s) | **8** (56 s) |
+
+* **Only the scan reached eight on both poses.**  The census returned 3 and 6 -- the same under-counting
+  measured in 3.8/3.14/3.17 and in the solver comparison of exp28, where the *same* mode found 8 on
+  other poses: how much a 300-seed census finds is pose-dependent, and it can be less than half.
+* **The homotopy's zero on pose 1 is not a bug but its characteristic**: branches that stall at a
+  discriminant do not arrive, so the fast mode returns nothing rather than something wrong.
+* Worst residuals: ``2.1e-08`` for the homotopy and scan modes, ``4.0e-07`` and ``9.2e-07`` for the
+  census (the census's solvers are accepted at the library's tolerance).  A caller gets the residual
+  with every solution, so the difference is visible instead of implied.
+* Practical reading: the scan is the mode to reach for when the *count* matters (it is the one that was
+  complete in every experiment of this study), the homotopy when a sub-second answer on an
+  unobstructed path is enough, and the census when a fast, partial set is acceptable.
+
 ## 4. Finding 2: DH continuation
 
 ### 4.1 SR0 is exactly one parameter away, and the search says which one
