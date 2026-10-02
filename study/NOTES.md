@@ -288,6 +288,27 @@ stalls actually are:
 The completion this points at: **scan the path for events by fibre size, not by stalls, and reseed at
 every event** (births included).  That is the next experiment.
 
+### 3.11 (Finding 2) Scanning the path instead of following branches: complete coverage
+
+`python3 -m study.exp17_event_reseed --pose-seeds 0 1 --grid 17 --census-seeds 250`.  The consequence
+of 3.10: stop following branches and scan the path.  At every sample of ``s`` the intermediate arm is
+solved from scratch; every solution found anywhere along the sweep becomes a seed and is carried
+forward to the real arm; the reference is a 1000-seed census of the real arm.
+
+* **Pose 0** (the one whose fibre jumps ``8 -> 16 -> 14 -> 12 -> 13 -> 13 -> 10``): 164 distinct seeds
+  over 17 samples, 10 distinct arrivals, reference census 11 -- **0 reference solutions missed, 0
+  arrivals the census missed**.  (The 11th census "solution" is the twin artifact of 3.8/4.3: it
+  matches one of the ten within ``1e-3``.)
+* **Pose 1**: fibre ``6 -> 5`` along the path, 93 seeds, 6 arrivals, reference 5 -- **0 missed**, and
+  **1 arrival the census did not find**: the analytic-seeded continuation is again more complete than
+  random-restart IK.
+* Price, measured: the scan is 50-71 s per pose (17 samples x 250 seeds) plus 7-15 s of tracking,
+  against ~1 s for following the eight SR0 branches and ~10-20 s for a 1000-seed census.
+
+So the method is complete in the practical sense that matters -- it covers a thorough census and
+exceeds it -- at scan cost, and the reason it had to become a scan is exactly 3.10: births happen to
+pairs no tracked branch is following.
+
 ## 4. Finding 2: DH continuation
 
 ### 4.1 SR0 is exactly one parameter away, and the search says which one
