@@ -198,6 +198,33 @@ The certificates compose into a cheap first stage and an expensive second one:
    So the branch count is strictly smaller than the solution count — 12 solutions do not mean 12
    branches — but this walk alone cannot finish the partition. That is exp03's job.
 
+### 3.8 A roadmap oracle, its audit, and why it is not yet the answer
+
+`study/roadmap.py` samples configurations that keep clearance, joins the ones that can see each
+other along a *length-verified* segment, and reads components off the graph.  Two things came out
+of building it, both worth keeping:
+
+* **A certificate defect, caught by the audit.** The first version verified every edge with a
+  fixed sample *count*.  On a long edge that leaves gaps, and the roadmap promptly reported
+  "17 solutions, one branch" for a pose whose own determinant signs prove at least two chambers.
+  Edges are now sampled per *radian* of length (`SAMPLES_PER_RADIAN = 400`) and capped at
+  `MAX_EDGE = 0.6` rad, and `audit_against_sign` re-checks every component against the one-Jacobian
+  certificate as a standing test.  Measured after the fix: **0 violations** on three poses
+  (8, 17 and 8 solutions).  This is the second time in this study that an endpoint-only clearance
+  check produced a false certificate, which is why the audit is part of the module now.
+* **The sampling is not yet dense enough to partition.** 300 points in a six-dimensional box of
+  half-width ~4 rad give a road of isolated nodes: the partition came out as 6, 15 and 8
+  components with 2 solutions unattached, i.e. mostly inconclusive.  The oracle is *sound* but
+  *weak*, and the next iteration should grow trees from the solutions outward (bidirectional or
+  RRT-style) instead of sampling the box uniformly.
+
+One measurement from that run is worth recording on its own: the census at one pose produced 17
+"distinct" solutions whose closest pair is **1.1e-04 rad** apart, while other poses have closest
+pairs of 2.5 rad.  A 6R cannot have 17 solutions, so the census is producing numerical twins in an
+ill-conditioned direction; the deduplication tolerance needs to follow the conditioning (or the
+solutions need to be continued, not re-solved).  That is a census-quality issue, not a branch
+issue, and it is now visible.
+
 ## 4. Finding 2: DH continuation
 
 ### 4.1 SR0 is exactly one parameter away, and the search says which one
