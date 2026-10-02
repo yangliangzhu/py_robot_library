@@ -366,7 +366,7 @@ def _cycle_lengths(permutation: tuple[int, ...]) -> list[int]:
 def main() -> int:
     """Run the first monodromy measurement on one pose."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--robot", default="sr5")
+    parser.add_argument("--robot", default="sr5", help="'sr5', 'sr0' (control) or any config name")
     parser.add_argument("--seeds", type=int, default=600)
     parser.add_argument("--sigma-floor", type=float, default=2e-3)
     parser.add_argument("--radius", type=float, default=0.05, help="position-loop radius, metres")
@@ -374,12 +374,31 @@ def main() -> int:
     parser.add_argument("--seed", type=int, default=0)
     args = parser.parse_args()
 
-    model = ModelFactory.create(args.robot, backend="casadi", ik_type=IkType.IK_STANDARD)
+    if args.robot == "sr0":
+        # the Pieper-solvable neighbour of the SR5 (link 5's y offset zeroed): the control group for
+        # "solvable arm", where the solutions come from +-acos choices and the real monodromy should be
+        # simple -- run it to separate tracker weakness from physical obstruction
+        from study import sr0 as sr0_module
+
+        model = sr0_module.robot()
+    else:
+        model = ModelFactory.create(args.robot, backend="casadi", ik_type=IkType.IK_STANDARD)
     circular = iks.circular_joints(model)
     rng = np.random.default_rng(args.seed)
     target, _ = iks.random_reachable_target(model, rng)
     fiber = census(model, target, solver=make_lm_solver(model), seeds=args.seeds, rng=rng)
-    solutions = [q for q in fiber.solutions if iks.sigma_min(model, q) > args.sigma_floor]
+    # deduplicate on the torus (every revolute joint is 2 pi periodic) and keep the solutions that
+    # have a representative inside the joint limits: the first is a question about the pose equation,
+    # the second about the robot
+    solutions: list[np.ndarray] = []
+    for candidate in fiber.solutions:
+        if iks.sigma_min(model, candidate) <= args.sigma_floor:
+            continue
+        if not iks.physically_admissible(model, candidate):
+            continue
+        if any(iks.torus_distance(candidate, kept) < 1e-3 for kept in solutions):
+            continue
+        solutions.append(candidate)
     print(_self_test())
     print(f"{args.robot}: {len(solutions)} solutions at the base pose "
           f"(clearance above {args.sigma_floor:g})\n")
