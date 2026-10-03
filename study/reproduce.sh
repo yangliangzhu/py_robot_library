@@ -16,6 +16,7 @@ commands=(
   "python3 -m study.exp11_dh_continuation --steps 3"
   "python3 -m study.exp12_sr0_solver --poses 2 --seeds 300 --match 1e-3"
   "python3 -m study.exp02_pair_census --poses 2 --seeds 300 --resolve"
+  "python3 -m study.exp02_pair_census --poses 5 --seeds 400 --resolve"
   "python3 -m study.exp15_branch_labels --poses 1 --seeds 400"
   "python3 -m study.exp19_partition --poses 1 --seeds 600 --waypoints 4"
   "python3 -m study.exp20_labels_redundant --robot franka --seeds 120"
@@ -25,7 +26,7 @@ commands=(
 )
 
 {
-  echo "# 复现抽查（基线提交 $head）"
+  echo "# 复现抽查（基线提交 $head，numpy $(python3 -c 'import numpy; print(numpy.__version__)')）"
   echo
   echo "本文件记录在提交 \`$head\` 上重跑本课题十条头条命令时的实际输出（每个命令截取末尾若干行），"
   echo "用于确认 REPORT.md / README.md / NOTES.md 里“命令 → 测量”的链条在最终状态下仍然成立。"
