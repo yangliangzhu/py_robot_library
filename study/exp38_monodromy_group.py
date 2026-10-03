@@ -47,18 +47,45 @@ def torus_distance_complex(first: np.ndarray, second: np.ndarray) -> float:
     return float(np.linalg.norm(delta))
 
 
-def track_segment(base_links, offset: float, target: np.ndarray, q0: np.ndarray,
-                  s_from: float, s_to: float, *, steps: int = 120, max_step: float = 0.1,
-                  tolerance: float = 1e-10) -> tuple[np.ndarray, float, bool]:
-    """Carry one root along the real parameter from ``s_from`` to ``s_to``, complex-safe.
+def make_s_path(s_from: float, s_to: float, avoid: list[float], *, r: float = 5e-4,
+                straight_step: float = 2e-3, arc_samples: int = 32) -> list[complex]:
+    """The real segment ``s_from -> s_to``, arcing around each avoided fold (upper half-plane).
+
+    A plain real segment passes straight through a fold, where the two coalescing roots collide
+    and a real Newton step cannot continue onto the complex pair -- measured: every death-fold
+    track stalled with residual ~1e-2.  Arcing around the fold keeps the path regular and the
+    continuation smooth; the side (upper half-plane) is a convention, held fixed.
+    """
+    direction = 1.0 if s_to > s_from else -1.0
+    events = sorted(a for a in avoid if min(s_from, s_to) < a < max(s_from, s_to))
+    points: list[complex] = []
+    cursor = s_from
+    for a in events:
+        entry = a - direction * r
+        count = max(2, int(abs(entry - cursor) / straight_step))
+        points.extend(complex(v) for v in np.linspace(cursor, entry, count, endpoint=False))
+        # upper half-plane arc from entry to exit: theta sweeps so that Im >= 0 throughout
+        start_angle, sweep = (np.pi, -np.pi) if direction > 0 else (0.0, np.pi)
+        thetas = start_angle + sweep * np.linspace(0.0, 1.0, arc_samples, endpoint=False)
+        points.extend(a + r * np.exp(1j * thetas))
+        cursor = a + direction * r
+    count = max(2, int(abs(s_to - cursor) / straight_step))
+    points.extend(complex(v) for v in np.linspace(cursor, s_to, count, endpoint=False))
+    points.append(complex(s_to))
+    return points
+
+
+def track_path(base_links, offset: float, target: np.ndarray, q0: np.ndarray,
+               s_points: list[complex], *, max_step: float = 0.1,
+               tolerance: float = 1e-10) -> tuple[np.ndarray, float, bool]:
+    """Carry one root along a given sequence of (complex) parameter values.
 
     Adaptive halving as in exp37's loop tracker: big steps and residuals are refused.
     """
     q = np.asarray(q0, dtype=complex)
     worst = 0.0
-    s_prev = s_from
-    for k in range(1, steps + 1):
-        s_goal = s_from + (s_to - s_from) * k / steps
+    s_prev = complex(s_points[0])
+    for s_goal in s_points[1:]:
         span, accepted = s_goal - s_prev, False
         for _ in range(8):
             s_mid = s_prev + span
@@ -143,11 +170,13 @@ def main() -> int:
               f"distances to q* {iks.configuration_distance(pair[0], q_star, circular):.4f} / "
               f"{iks.configuration_distance(pair[1], q_star, circular):.4f}")
 
+    all_fold_s = [s for s, _ in folds]
     for fold_index, (s0, pair) in pairs.items():
         s_star = folds[fold_index][0]
         if any(abs(s_star - d) < 1e-4 for d in DEATH_FOLDS):
             for side, q0 in enumerate(pair):
-                q_end, worst, ok = track_segment(base_links, offset, target, q0, s0, 1.0)
+                q_end, worst, ok = track_path(base_links, offset, target, q0,
+                                              make_s_path(s0, 1.0, all_fold_s))
                 residual = float(np.linalg.norm(
                     residual12(links_at(base_links, offset, 1.0), q_end, target)))
                 print(f"    death fold {s_star:.6f} pair {side}: -> s=1 ok={ok} "
@@ -164,7 +193,8 @@ def main() -> int:
         s_star = folds[fold_index][0]
         endpoints = []
         for q0 in pair:
-            q_end, worst, ok = track_segment(base_links, offset, target, q0, s0, 1.0)
+            q_end, worst, ok = track_path(base_links, offset, target, q0,
+                                          make_s_path(s0, 1.0, all_fold_s))
             if not ok:
                 endpoints.append(None)
                 continue
