@@ -77,8 +77,17 @@ def refine_fold(
     return s, q, float(np.linalg.norm(augmented(path(s), q, target)))
 
 
-def approach(path, target: np.ndarray, q_seed: np.ndarray, s_stop: float, *, step: float = 0.02):
-    """Walk from ``s = 0`` towards ``s_stop`` and record ``(s, q)`` at every accepted step."""
+def approach(path, target: np.ndarray, q_seed: np.ndarray, s_stop: float, *, step: float = 0.02,
+             include_rejected: bool = False):
+    """Walk from ``s = 0`` towards ``s_stop`` and record ``(s, q)`` at every accepted step.
+
+    Args:
+        include_rejected: When the walk gives up (the step has halved below 1e-5 with the residual or
+            the clearance still bad), append the rejected probe point as well.  Without it a stalled
+            branch contributes only its last *accepted* configuration, which can still be far from the
+            singular set -- measured: a fold census built on accepted points alone found zero folds on
+            poses where a survival count proves branches die.
+    """
     s = 0.0
     q, _ = homotopy.correct(path(0.0), q_seed, target)
     trace = [(0.0, q.copy())]
@@ -94,6 +103,8 @@ def approach(path, target: np.ndarray, q_seed: np.ndarray, s_stop: float, *, ste
         if residual > 1e-11 or homotopy.sigma_min_links(links, candidate) < 2e-3:
             step *= 0.5
             if step < 1e-5:
+                if include_rejected:
+                    trace.append((s + probe, candidate.copy()))
                 break
             continue
         s += probe

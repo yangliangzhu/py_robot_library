@@ -16,8 +16,8 @@ import argparse
 
 import numpy as np
 
+from study import homotopy, sr0
 from study import ik_structure as iks
-from study import sr0
 from study.exp11_dh_continuation import link_transforms
 from study.exp13_homotopy_sr0_to_sr5 import path_at
 from study.exp21_endgame import approach, refine_fold
@@ -28,7 +28,7 @@ def spectrum(offset: float, target, seeds, *, near: float, iterations: int):
     path = path_at(offset)
     candidates = []
     for seed in seeds:
-        for s, q in approach(path, target, seed, 1.0):
+        for s, q in approach(path, target, seed, 1.0, include_rejected=True):
             if iks.sigma_min(sr0.robot(path(s)), q) < near:
                 candidates.append((s, q))
     folds: list[tuple[float, np.ndarray]] = []
@@ -74,11 +74,19 @@ def main() -> int:
             target, _ = iks.random_reachable_target(sr5_model, pose_rng)
         seeds = [s.q for s in sr0.solve(sr0_model, target)]
         folds = spectrum(offset, target, seeds, near=args.near, iterations=args.iterations)
+        # arrivals: each death removes a pair, so the prediction is folds >= (8 - arrivals) / 2, with
+        # equality when no pair is born along the path
+        arrived = 0
+        for seed in seeds:
+            track = homotopy.track(path_at(offset), target, seed, sigma_floor=2e-3)
+            arrived += int(track.finished)
+        deaths = len(seeds) - arrived
         total += len(folds)
         fold_counts.append(len(folds))
         fold_free += int(not folds)
         values = [round(s, 6) for s, _q in folds]
-        print(f"pose {pose}: {len(folds)} folds at {values}")
+        print(f"pose {pose}: {len(folds)} folds, arrivals {arrived}/{len(seeds)} "
+              f"(deaths {deaths}, predicted folds >= {deaths / 2:.1f}) at {values}")
     print(f"\ntotal: {total} folds over {args.poses} poses | counts {fold_counts} | "
           f"fold-free {fold_free}/{args.poses} ({100.0 * fold_free / max(args.poses, 1):.0f}%)")
     print("interpretation: a fold-free pose is one where every branch survives the straight path, which "

@@ -59,6 +59,10 @@ def main() -> int:
     parser.add_argument("--pair", type=int, nargs=2, default=[5, 3])
     parser.add_argument("--waypoint-seed", type=int, default=1003)
     parser.add_argument("--u-range", type=float, default=0.15)
+    parser.add_argument("--fold-source", default="census", choices=["census", "track"],
+                        help="census covers untracked-pair births (exp43); track is the old one")
+    parser.add_argument("--folds-cache", default="",
+                        help="npz cache for the census fold spectrum (computed once)")
     args = parser.parse_args()
 
     model = ModelFactory.create("sr5", backend="casadi", ik_type=IkType.IK_STANDARD)
@@ -73,8 +77,24 @@ def main() -> int:
     print("phase 1: fold spectrum at the witness pose")
     offset = float(link_transforms()[4][1, 3])
     path = path_at(offset)
-    folds = fold_seeds(path, target, sr0.solve(sr0.robot(), target))
-    print(f"  {len(folds)} folds: {[f'{s:.4f}' for s, _ in folds]}")
+    if args.fold_source == "census":
+        import os  # noqa: PLC0415
+
+        from study.exp43_fold_census import census_fold_seeds  # noqa: PLC0415
+
+        if args.folds_cache and os.path.exists(args.folds_cache):
+            archive = np.load(args.folds_cache)
+            folds = [(float(s), q) for s, q in zip(archive["s"], archive["q"], strict=True)]
+            print(f"  loaded {len(folds)} folds from {args.folds_cache}")
+        else:
+            folds = census_fold_seeds(path, target, sr0.robot(link_transforms()),
+                                      verbose=True)
+            if args.folds_cache:
+                np.savez(args.folds_cache, s=[s for s, _ in folds],
+                         q=np.array([q for _, q in folds]))
+    else:
+        folds = fold_seeds(path, target, sr0.solve(sr0.robot(), target))
+    print(f"  {len(folds)} folds ({args.fold_source} source): {[f'{s:.4f}' for s, _ in folds]}")
 
     print("phase 2: (s, x) fold curves and their s=1 crossings")
     augmented_su = make_augmented(path, target, 0, "pos")
