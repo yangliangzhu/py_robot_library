@@ -66,13 +66,23 @@ def main() -> int:
     parser.add_argument("--waypoints", type=int, default=12)
     parser.add_argument("--dip", type=float, default=0.01, help="dip threshold for the heuristic")
     parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--target-seed", type=int, default=None,
+                        help="decouple the poses from the census stream: pose k uses "
+                             "default_rng(target_seed + k), so re-running with more waypoints or more "
+                             "seeds chases the *same* pose (a coupled stream silently changes the pose, "
+                             "which made one comparison in this study invalid)")
     args = parser.parse_args()
 
     model = ModelFactory.create(args.robot, backend="casadi", ik_type=IkType.IK_STANDARD)
     circular = iks.circular_joints(model)
     rng = np.random.default_rng(args.seed)
     for pose in range(args.poses):
-        target, _ = iks.random_reachable_target(model, rng)
+        if args.target_seed is None:
+            target, _ = iks.random_reachable_target(model, rng)
+        else:
+            target, _ = iks.random_reachable_target(
+                model, np.random.default_rng(args.target_seed + pose)
+            )
         fiber = census(model, target, solver=make_lm_solver(model), seeds=args.seeds, rng=rng)
         solutions = [q for q in fiber.solutions if iks.sigma_min(model, q) > args.delta]
         signs = [int(np.sign(iks.det_jacobian(model, q))) for q in solutions]
