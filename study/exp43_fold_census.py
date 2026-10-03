@@ -66,6 +66,9 @@ def main() -> int:
     parser.add_argument("--samples", type=int, default=300, help="random configs per s")
     parser.add_argument("--threshold", type=float, default=0.04)
     parser.add_argument("--seed", type=int, default=23)
+    parser.add_argument("--skip-track", action="store_true",
+                        help="skip the (slow) tracking-based reference run")
+    parser.add_argument("--save", default="", help="npz path to save the census fold spectrum")
     args = parser.parse_args()
 
     offset = float(link_transforms()[4][1, 3])
@@ -79,37 +82,23 @@ def main() -> int:
     rng = np.random.default_rng(0)
     target, _ = iks.random_reachable_target(model, rng)
 
-    print("tracking-based spectrum (exp35 machinery, reference):")
-    folds_tracked = fold_seeds(path, target, sr0.solve(sr0.robot(), target))
-    tracked_s = [s for s, _ in folds_tracked]
-    print(f"  {len(tracked_s)} folds: {[f'{s:.4f}' for s in tracked_s]}")
+    tracked_s: list[float] = []
+    if not args.skip_track:
+        print("tracking-based spectrum (exp35 machinery, reference):")
+        folds_tracked = fold_seeds(path, target, sr0.solve(sr0.robot(), target))
+        tracked_s = [s for s, _ in folds_tracked]
+        print(f"  {len(tracked_s)} folds: {[f'{s:.4f}' for s in tracked_s]}")
 
     print(f"census-based spectrum ({args.grid} s x {args.samples} configs, "
           f"threshold {args.threshold}):")
-    lower = np.asarray(sr5_model.lower_bounds)
-    upper = np.asarray(sr5_model.upper_bounds)
-    rng_c = np.random.default_rng(args.seed)
-    found: list[tuple[float, float]] = []  # (s*, residual)
-    kept = refined = 0
-    for s in np.linspace(0.05, 1.0, args.grid):
-        links = path(s)
-        for _ in range(args.samples):
-            q = rng_c.uniform(lower, upper)
-            if homotopy.sigma_min_links(links, q) > args.threshold:
-                continue
-            kept += 1
-            refined += 1
-            s_star, _, residual = refine_fold(path, target, q, s)
-            if residual > 1e-8 or not (0.0 < s_star < 1.3):
-                continue
-            if any(abs(s_star - old) < 3e-4 for old, _ in found):
-                continue
-            found.append((s_star, residual))
-            print(f"  fold at s* = {s_star:.6f} (residual {residual:.1e})")
-    found.sort()
-    census_s = [s for s, _ in found]
-    print(f"  {len(census_s)} folds: {[f'{s:.4f}' for s in census_s]} "
-          f"({kept} near-singular samples refined)")
+    folds_census = census_fold_seeds(path, target, sr5_model, grid=args.grid,
+                                     samples=args.samples, threshold=args.threshold,
+                                     seed=args.seed, verbose=True)
+    census_s = [s for s, _ in folds_census]
+    print(f"  {len(census_s)} folds: {[f'{s:.4f}' for s in census_s]}")
+    if args.save:
+        np.savez(args.save, s=census_s, q=np.array([q for _, q in folds_census]))
+        print(f"  saved to {args.save}")
 
     only_census = [s for s in census_s if not any(abs(s - t) < 3e-4 for t in tracked_s)]
     only_tracked = [t for t in tracked_s if not any(abs(t - s) < 3e-4 for s in census_s)]
