@@ -71,8 +71,12 @@ def refine_fold(
             augmented(path(s + 1e-7), q, target) - augmented(path(s - 1e-7), q, target)
         ) / 2e-7
         update = np.linalg.lstsq(jacobian, -residual, rcond=None)[0]
-        # keep the parameter inside [0, 1] and damp wild steps
-        s = float(np.clip(s + update[6], 0.0, 1.0))
+        # Keep the parameter near the path but NOT hard-clamped to [0, 1]: kimi measured that the
+        # clamp silently swallows folds at the boundary (0.9911, 0.9936 refined to s = 1.000000 with
+        # residuals 7.7e-4 and 1.3) and makes any fold beyond the end (measured: a real fold at
+        # s = 1.047164) impossible to refine at all.  The wider window keeps the protection against
+        # wild steps while letting the discriminant be found where it actually is.
+        s = float(np.clip(s + update[6], -0.3, 1.3))
         q = q + update[:6]
     return s, q, float(np.linalg.norm(augmented(path(s), q, target)))
 
