@@ -51,6 +51,11 @@ def main() -> int:
     parser.add_argument("--near", type=float, default=0.05)
     parser.add_argument("--iterations", type=int, default=12)
     parser.add_argument("--target-seed", type=int, default=200)
+    parser.add_argument("--target-mode", choices=("reachable", "fk"), default="reachable",
+                        help="'reachable' samples a pose in the workspace; 'fk' takes the forward "
+                             "kinematics of a random in-limit configuration, which is how the pose of "
+                             "exp16/exp23 (the one with seven folds) was made -- the two distributions "
+                             "need not agree about how often a pose has folds")
     args = parser.parse_args()
 
     offset = float(link_transforms()[4][1, 3])
@@ -60,9 +65,13 @@ def main() -> int:
     fold_free = 0
     fold_counts: list[int] = []
     for pose in range(args.poses):
-        target, _ = iks.random_reachable_target(
-            sr5_model, np.random.default_rng(args.target_seed + pose)
-        )
+        pose_rng = np.random.default_rng(args.target_seed + pose)
+        if args.target_mode == "fk":
+            lower = np.asarray(sr5_model.lower_bounds)
+            upper = np.asarray(sr5_model.upper_bounds)
+            target = sr5_model.fk(pose_rng.uniform(lower, upper))
+        else:
+            target, _ = iks.random_reachable_target(sr5_model, pose_rng)
         seeds = [s.q for s in sr0.solve(sr0_model, target)]
         folds = spectrum(offset, target, seeds, near=args.near, iterations=args.iterations)
         total += len(folds)

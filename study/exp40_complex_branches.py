@@ -123,7 +123,7 @@ def main() -> int:
             continue
         fibre.append(candidate)
     for s_star, q_star in folds:
-        if s_star not in (0.718354, 0.799244, 0.961848):
+        if not any(abs(s_star - d) < 1e-4 for d in (0.718354, 0.799244, 0.961848)):
             continue
         s0, pair = pair_at_fold(base_links, offset, target, path, q_star, s_star, circular)
         for q0 in pair:
