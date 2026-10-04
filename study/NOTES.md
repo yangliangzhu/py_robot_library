@@ -1088,6 +1088,27 @@ arm is symmetric under ``q3 -> -q3``) and the singular share falling as the grid
 signature of a *curve* of singular cells rather than a thickening.  Command:
 ``python3 -c "from study import cuspidal3r as c3; m=c3.build(); print(c3.aspect_labels(m, grid=500)[0].max())"``.
 
+
+**How big is the job Q18 has to finish?  The aspect multiplicity distribution.**  The uniqueness
+domains of an aspect are at least as many as the aspect's multiplicity over a pose (``f`` is
+injective on each, so ``m`` solutions over one pose need ``m`` domains), which makes the
+distribution the size of the "complete partition" task.  Measured with 300-seed censuses on twelve
+poses (`model.sr5`, seeds 11):
+
+| fibre | per-sign-group multiplicities | poses |
+|---|---|---|
+| 12 | (6, 6) | 1 |
+| 8 | (4, 4) | 8 |
+| 6 | (3, 3) | 1 |
+| 4 | (2, 2) | 1 |
+| 2 | (1, 1) | 1 |
+
+So the *typical* SR5 pose has 8 solutions in two groups of four -- four uniqueness domains per
+aspect -- and the 12-solution pose that exp19/exp49 use is the richest case, not the common one.
+The sign split is exactly the aspect split in all twelve poses here (consistent with exp19's 12/13),
+so Q18's remaining work is: resolve one aspect into its ``m`` uniqueness domains for the poses that
+matter, with ``m`` between 1 and 6.
+
 Also recorded: a flood fill that precomputes its list of start cells labels 3480 components on a
 two-component torus (the list is computed before any labelling, so every free cell starts a new
 component). Cheap to fix, invisible without a sanity check on the component count -- which is why
