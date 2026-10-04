@@ -1299,6 +1299,37 @@ census twins (deterministic given the seed, so the two runs agree):
 
 数量几乎不变（45 -> 45）⇒ 那 253 个解**不是**被跟踪分支的孪生，而是这些采样纤维里货真价实、没有任何轨迹跟随的实解——**Q20 的盲区被独立证实**。  Command: ``python3 -m study.exp50_births_and_stops --pose-seed 0 --merge 1e-2``.
 
+
+### 3.38 The loop's event timeline in one place: deaths early, births late, and the sheet change between
+
+The three measurements on the same object (pose seed 0, pair (0, 7), 168-sample loop, command
+``python3 -m study.exp50_births_and_stops --pose-seed 0``) belong to one timeline, and reading them
+apart hides the structure:
+
+| sample range | what is measured there |
+|---|---|
+| 31 | three branches die (tracks 1, 7, 9) -- classified folds by the next-target census; tracks 7 and 9 die as a pair (nearest 1.20e-13 rad apart just before) |
+| 45 | three more die (tracks 2, 5, 8) -- folds |
+| 1-30 (30 samples) | pairwise gap below 1e-2: the approach phase of the pairs that die at 31 and 45 |
+| **123-167** | **the carried branches no longer cover the fibre**: 45 samples with unoccupied solutions, 253 in total, one contiguous run to the end of the loop |
+
+So the loop's discriminant crossings are **not** symmetric in kind: the deaths happen in the first
+quarter (two clusters, at 31 and 45), while from sample 123 to the end solutions exist that no track
+follows -- the birth side of the same phenomenon.  A detector built on "two live tracks collide and
+die" registers the first two clusters and is structurally blind to the third event, which is exactly
+the asymmetry Q20 records and why the seeds-1/2 runs reported zero collisions while their tracked
+pairs still changed sheet.
+
+What this timeline makes obvious about the next step: the births must be **picked up at the run's
+start (sample 123) and carried forward** (Q23's remainder).  Then the same table has births as well
+as deaths, the live count stops being monotone, and the crossing count of a loop becomes a property
+of the loop rather than of which pair happened to be tracked.
+
+Instrument note: the run that produced this table is deterministic in its seed and parameters, and
+two delayed jobs of this study wrote to its log file at different times; their outputs agree, which
+is what makes the table usable -- but the rule stands that only measurement jobs may run in the
+background and only into their own log (3.37's bookkeeping hazard).
+
 Also recorded: a flood fill that precomputes its list of start cells labels 3480 components on a
 two-component torus (the list is computed before any labelling, so every free cell starts a new
 component). Cheap to fix, invisible without a sanity check on the component count -- which is why
