@@ -1342,6 +1342,32 @@ restarts) had not printed when this was written, so the *birth* half of the seed
 established is that adding the census phase did not perturb the stop classification: the two
 independent seed-1 runs (before and after the phase was added) agree on 3 folds / 0 drops.
 
+
+### 3.39 Births come in several events per loop, not one: the two-pose census
+
+The seed-1 census finished on a rerun with fewer restarts (``--sample-seeds 40``; the first attempt's
+process died before printing, which is recorded as the pending item it was):
+
+| pose seed | loop samples | lift | stop verdict | samples with unoccupied solutions | total | contiguous runs |
+|---|---|---|---|---|---|---|
+| 0 | 168 | 4/10 arrivals | 6 folds / 0 drops | **45** | 253 | **1**: (123, 167) |
+| 1 | 103 | 5/8 arrivals | 3 folds / 0 drops | **43** | 126 | **3**: (36, 39), (42, 42), (65, 102) |
+
+Two things this settles and one it opens:
+
+* The phenomenon is **generic**, not a seed-0 accident: on both poses a large fraction of the loop's
+  samples (45/168 and 43/103, i.e. 27% and 42%) carry real solutions that no carried track occupies.
+* The *structure* differs: seed 0's is one run to the end of the loop, seed 1's is **three runs**
+  (a short one at 36-39, a singleton at 42, and a long one from 65 to the end).  So a loop has
+  **several birth events**, not one -- and Q23's remainder (pick the births up and carry them
+  forward) has to handle a *sequence* of them, re-running the pickup at every sample where the live
+  set fails to cover the fibre, rather than once at a single "birth sample".
+* Opened: whether the run boundaries (36, 42, 65) coincide with the loop's *deaths* (which for seed 1
+  sit at samples 51-52 from 3.37) or with crossings the gap detector misses.  That is a per-sample
+  comparison the next instrument should print directly: deaths, births and gap minima in one table.
+
+Control unchanged: the degenerate loop is 8/8 arrivals with no permutations, collisions or stops.
+
 Also recorded: a flood fill that precomputes its list of start cells labels 3480 components on a
 two-component torus (the list is computed before any labelling, so every free cell starts a new
 component). Cheap to fix, invisible without a sanity check on the component count -- which is why
