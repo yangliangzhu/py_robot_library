@@ -1039,6 +1039,29 @@ track survives, and the events that end that are the collisions of two *other* b
 other (a pair dying at a fold) -- the path's image crossing the discriminant image, i.e. leaving the
 uniqueness domain it started in.
 
+
+### 3.35 Q21 probed and refuted: the max-step guard is not what discards the six branches
+
+Q21's working hypothesis was that the six branches exp49 drops *at healthy clearance with no partner*
+(know Q21) were casualties of the corrector's step bound.  Measured, on the same seed-0 run with the
+bound relaxed tenfold (``--max-step 5.0`` against the default 0.5):
+
+| run | arrivals | deaths | collision samples | shortest gap | tracked pair |
+|---|---|---|---|---|---|
+| ``--max-step 0.5`` | 2/10 | same six | 3 (46, 47, 48) | 9.12e-15 | track 1 -> solution 6, 0.0e+00 |
+| ``--max-step 5.0`` | 2/10 | same six | 3 (46, 47, 48) | 6.69e-14 | track 1 -> solution 6, 0.0e+00 |
+
+Identical in every reported quantity, and the identity control stays 10/10 in both.  So the step
+bound is *not* the cause: whatever stops those six branches happens inside the corrector's
+convergence at a task step the bisection could not shrink usefully, not at the guard.  The
+hypothesis is recorded as refuted rather than quietly dropped -- a fix aimed at the guard would
+have changed nothing, and the probe cost one run.
+
+What the probe does *not* distinguish (and what the next instrument should): whether the six
+branches genuinely cease to be real inside a sample interval (a fold the samples straddle) or the
+corrector lands in a neighbouring basin whose residual happens to be near zero.  The instrument for
+that is Q20's birth reseeding plus a per-sample double-root test, not a bigger step bound.
+
 Also recorded: a flood fill that precomputes its list of start cells labels 3480 components on a
 two-component torus (the list is computed before any labelling, so every free cell starts a new
 component). Cheap to fix, invisible without a sanity check on the component count -- which is why

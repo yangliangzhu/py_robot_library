@@ -96,6 +96,8 @@ def main() -> int:
     parser.add_argument("--tries", type=int, default=12, help="poses to try before giving up")
     parser.add_argument("--delta", type=float, default=5e-3)
     parser.add_argument("--waypoints", type=int, default=4)
+    parser.add_argument("--max-step", type=float, default=0.5,
+                        help="largest joint-space step the corrector may take (Q21 probe)")
     args = parser.parse_args()
 
     rng = np.random.default_rng(args.pose_seed)
@@ -145,7 +147,7 @@ def main() -> int:
         task_of, jacobian_of, targets, solutions, residual=residual_of,
         interpolate=ts.se3_interpolate,
         sigma=lambda q: iks.sigma_min(model, q),
-        sigma_floor=1e-9, collision=1e-2, merge=1e-6,
+        sigma_floor=1e-9, collision=1e-2, merge=1e-6, max_step=args.max_step,
         distance=lambda a, b: iks.configuration_distance(a, b, circular),
     )
     arrivals = result.arrivals
