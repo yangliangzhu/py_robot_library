@@ -254,6 +254,16 @@ def pair_dead_roots(roots_before, dead, model, circular):
     return pairs, remaining
 
 
+def postures_of(roots_before, origin, group: int) -> list[int]:
+    """Original posture labels of the track(s) holding the root at ``group`` in a subdivided run.
+
+    The subdivided run numbers its tracks by position in the start list, and pruning can retire one,
+    so a group's holders must be mapped one by one; reading the group index as a posture index names
+    the wrong branch.
+    """
+    return sorted({p for holder in roots_before[group][1] for p in origin.get(holder, [])})
+
+
 def main() -> int:
     """Run the measurement."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
@@ -317,6 +327,10 @@ def main() -> int:
     for before, after in intervals:
         roots = distinct_live(head.lifts, before, circular)
         starts = [q for q, _ in roots]
+        # Labels: the subdivided run numbers its tracks by position in ``starts``, which is a
+        # permutation of the original (posture) indices; without this map a report would name the
+        # wrong branch as the one that dies.
+        origin = {index: holders for index, (_, holders) in enumerate(roots)}
         # The fine path must keep t = 0 as its first sample: the starts are the solutions there, and
         # a path that begins one sub-sample later would attribute them to the wrong target.
         ladder = np.linspace(0.0, 1.0, args.subdivisions + 1)
@@ -341,9 +355,11 @@ def main() -> int:
                                        circular=circular)
             dead = dead_roots(roots_before, census_after, links, pose_a, circular)
             detail = [(list(roots_before[m][1]),
-                       int(np.sign(iks.det_jacobian(model, roots_before[m][0])))) for m in dead]
+                       int(np.sign(iks.det_jacobian(model, roots_before[m][0]))),
+                       postures_of(roots_before, origin, m)) for m in dead]
             print(f"      sub-sample {sub}: live {count_before} -> {count_after}, census after "
-                  f"{len(census_after)}, dead roots (tracks, det J sign) {[(h, s) for h, s in detail]}")
+                  f"{len(census_after)}, dead roots (subdivided-run track, det J sign, original "
+                  f"postures) {[(h, s, o) for h, s, o in detail]}")
             if len(dead) not in (2, 4):
                 print(f"        {len(dead)} dead root(s): the crossing test needs a pair, so this "
                       f"event is reported unresolved (Q24)")
@@ -359,8 +375,8 @@ def main() -> int:
                 lo, hi, gap, sigma, roots_at = localise_crossing(links, model, pose_a, pose_b,
                                                                  seeds_pair,
                                                                  iterations=args.bisections)
-                print(f"        pair (tracks {list(roots_before[a][1])} / "
-                      f"{list(roots_before[b][1])}): crossing bracketed in [{lo:.6f}, {hi:.6f}] "
+                print(f"        pair (postures {postures_of(roots_before, origin, a)} / {postures_of(roots_before, origin, b)}): "
+                      f"crossing bracketed in [{lo:.6f}, {hi:.6f}] "
                       f"of this event interval; pair gap at the bracket {gap:.3e} rad, coalesced "
                       f"sigma_min {sigma:.3e}")
                 step = lo / 2.0 if lo > 0 else 0.0

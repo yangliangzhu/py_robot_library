@@ -1585,6 +1585,72 @@ merging to 9.12e-15 then dying together" on the 118-sample loop) still needs the
 ``merged`` duration plus a bracket -- before it can be quoted as a crossing.  Registered, not done.
 
 
+### 3.42 The A->B answer with located ends: each posture's feasible arc, and where it ends
+
+``python3 -m study.exp52_feasible_arcs --pose-seed 0`` (new module, number registered first; about
+20 s).  exp50 answered "which posture can track how much of the loop" in samples, and exp51 located
+the crossings; this module puts the two together in the form the planning question is asked: **one
+loop, run once per posture, with the arc measured as a fraction of the loop's Cartesian length and
+its end named**.  Track indices equal base-solution indices here because nothing is admitted
+mid-path, so the table speaks about *named* postures.
+
+The lift is the repaired instrument (box guard + duplicate pruning) with no admission: live
+10 -> 2, 8 stops, **0 collisions, 0 merges, 0 duplicates** -- the faults of 3.40 are gone.  The loop's
+Cartesian length (sum of ``se3_error`` steps) is 4.5335 over 167 intervals.
+
+| posture | sign | arc (samples) | Cartesian fraction | ends at |
+|---|---|---|---|---|
+| 0 | -1 | 0..167 | **100.0%** | whole loop |
+| 6 | +1 | 0..167 | **100.0%** | whole loop |
+| 1 | +1 | 0..31 | 23.2% | crossing at sample 31.2693 (`sigma_min` 1.3e-07), paired with 7 |
+| 7 | -1 | 0..31 | 23.2% | crossing at 31.2693, paired with 1 |
+| 2 | -1 | 0..45 | 30.8% | crossing at 45.3948 (`sigma_min` 8.2e-08), paired with 5 |
+| 5 | +1 | 0..45 | 30.8% | crossing at 45.3948, paired with 2 |
+| 4 | -1 | 0..45 | 30.8% | crossing at 45.3847 (`sigma_min` 2.7e-07), paired with 8 |
+| 8 | +1 | 0..45 | 30.8% | crossing at 45.3847, paired with 4 |
+| 3 | -1 | 0..1 | **0.9%** | crossing at 1.4176 (`sigma_min` 1.8e-06), paired with 9 |
+| 9 | +1 | 0..1 | **0.9%** | crossing at 1.4176, paired with 3 |
+
+Every arc ends at a located crossing, every pair is one ``det J`` sign against the other, and the
+pairs are exactly the four the fold-pair test finds (exp51): (3, 9) at 1.4176, (1, 7) at 31.2693,
+(4, 8) at 45.3847 and (2, 5) at 45.3948 -- the last two being the resolved halves of the -4, 0.010
+samples apart.  So the operational form of "the feasible-path region is the image of a uniqueness
+domain" is: **a posture owns one arc of this loop, its length is the part of the path whose image
+stays inside that domain's image, and the arc ends exactly where the path crosses the discriminant
+image**.  Two postures own the whole loop and eight do not; that is what "同分支 != 同可行路径域"
+means in numbers on this path.
+
+**How accurately is a crossing located?  Two routes, and the honest answer is 0.005 of a sample.**
+exp52 seeds its bisection with a *march* (the pair's two configurations walked forward in 64
+substeps with the same corrector, stopping where they stop being two roots), because seeding the
+bisection a whole interval away fails early and biases the bracket late (measured: 45.3847/45.3948
+from interval-level seeds against 45.3792/45.3894 from sub-interval-level seeds -- the same two folds
+named 0.005 samples apart).  With the march, the positions are **stable to six decimals across march
+resolutions 32/64/128** (1.417569, 31.269323, 45.384651, 45.394843), and they still differ from
+exp51's tracker-based brackets by 0.003 to 0.0055 samples.  The reason is structural rather than
+numerical: a *tracker* can give up slightly before the pair ceases to be real (near the fold the
+corrector is ill-conditioned and the step guard bites), so a bracket built on "the last sample the
+tracker reached" can end before the true crossing, while a bracket built on "the seeds still correct
+to two distinct roots" can reach further.  Both routes agree on the identity of the pairs, on the
+resolution of the -4 into two folds, on their order, on the exponents (0.499-0.510) and on the two
+zero certificates; where they disagree, by 0.005 of a sample interval -- about 0.1 mm of Cartesian
+travel on this loop -- the difference is **未决** and is reported as the accuracy of the localisation.
+The lesson generalises the one from 3.33: a bisection bracket is 1e-6 wide because that is the
+bisection's stopping rule, **not** because the crossing is known to 1e-6.
+
+The augmented system (exp51's ``refine_fold_pose``, seeded from the march) certifies one fold on this
+route too: pair (2, 5) at sample 45.394813, residual 3.6e-05, ``det J = -7.8e-13``,
+``sigma_min = 1.0e-11``; the other three stall (residuals 4.5e-03 to 1.5e-02), as in 3.41.
+
+Control: the degenerate loop gives 10 -> 10 live, 0 stops, 0 collisions, 0 merges.
+
+Method note, recorded because it produced a wrong table for one run: the subdivided run numbers its
+tracks by position in its start list, and pruning can retire one, so a group's *holders* must be
+mapped through the start list to recover the original posture labels -- reading the group index as a
+posture index named posture 6 as the partner of 1 at the 31-32 fold, where the whole-loop run and
+3.40's table both say 7.  exp51 now prints both (subdivided-run track and original postures).
+
+
 ## 4. Finding 2: DH continuation
 
 ### 4.1 SR0 is exactly one parameter away, and the search says which one
