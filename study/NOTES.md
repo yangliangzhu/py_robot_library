@@ -1331,6 +1331,17 @@ is what makes the table usable -- but the rule stands that only measurement jobs
 background and only into their own log (3.37's bookkeeping hazard).
 
 
+
+**Seed-1 rerun inside the reseeding build: the verdict reproduces, the census did not finish.**  The
+same pose seed 1 that 3.37 used, now run with the per-sample reseeding phase compiled in
+(``exp50 --pose-seed 1``), reproduces the stop verdict exactly -- **3 fold(s), 0 tracker drop(s)** --
+and its log
+(``.scratch/exp50_birth_s1.log``) stops after that line: the reseeding census (103 samples x 120
+restarts) had not printed when this was written, so the *birth* half of the seed-1 comparison is
+**未决**, with the log path recorded so the next session can read it rather than re-run it.  What is
+established is that adding the census phase did not perturb the stop classification: the two
+independent seed-1 runs (before and after the phase was added) agree on 3 folds / 0 drops.
+
 Also recorded: a flood fill that precomputes its list of start cells labels 3480 components on a
 two-component torus (the list is computed before any labelling, so every free cell starts a new
 component). Cheap to fix, invisible without a sanity check on the component count -- which is why
