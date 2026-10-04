@@ -1828,6 +1828,40 @@ Q9; the useful part of this round's probe is that the counting instrument now *r
 number it has not earned.
 
 
+### 3.46 Admitting births along the twist path works -- and the profile shows the births are the target arm's own solutions
+
+The registered fix for Q25 (3.44/3.45): carry the parallel arm's solutions along the twist path in
+small steps and, at every grid point, census the *current* arm at the fixed target, admitting every
+verified solution no live track occupies -- Q23's instrument in parameter space.
+``python3 -m study.exp53_second_neighbour --poses 12 --seeds 60 --homotopy --reference-seeds 150
+--births --grid 40 --birth-seeds 40 --deep-seeds 300``:
+
+* both blind poses in this sample come out **fully recovered** (6/6 and 8/8 reference solutions, 14/14
+  over the sample), which is what the mechanism was for;
+* but the profile says where the births came from: the census along the path reads **4** solutions at
+  every one of the 40 grid points, the carried tracks stay at 4, and the count jumps only at
+  ``s = 1.00`` (to 6 and 8) -- **all six admitted births are at ``s = 1``**;
+* the deep control (300 seeds) at ``s = 0.5`` and ``s = 0.95`` finds **4 solutions from 109 and 75
+  successful solves** (second pose: 4 from 92 and 91).  So "the intermediate arms have four solutions
+  at this pose" is not an artefact of a starved census -- with a third of a thousand restarts landing
+  on four roots, no fifth root was seen.
+
+The honest reading: on *this* path, the four SR5 branches that the parallel arm lacks do not exist for
+the intermediate arms either, so they cannot be born *along* the path -- "admitting births" therefore
+degenerates into **censusing the target arm at the last step**.  The second neighbour is a genuine
+seed source for half the fibre (3.44) and the pipeline that combines it with a census is complete,
+but the completion is the census's, not the homotopy's.  Remaining 未决 in detail: a narrow basin that
+none of the ~100 successful solves at ``s = 0.5`` fell into is not excluded; and a *different* path
+family (one that passes through arms whose fibre at this pose is larger) would be the way to look for
+births strictly inside the path.
+
+Consequence for how this should be used, stated as the recommendation the measurements support: seed
+with SR0 where its closed form has solutions, seed the SR0-blind poses with either parallel arm (each
+gives 4 real solutions there), and complete the fibre with the census/scan -- which is what the
+existing deterministic pipeline already does; the second neighbour's value is that the *blind* poses
+are no longer blind, not that a single straight homotopy now solves them.
+
+
 
 ## 4. Finding 2: DH continuation
 

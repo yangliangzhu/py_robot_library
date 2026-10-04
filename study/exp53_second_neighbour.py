@@ -175,6 +175,109 @@ def census(model, target, rng, *, seeds: int, dedupe: float = 1e-4) -> int:
     return len(found)
 
 
+def homotopy_with_births(links_at, target, starts, *, grid, seeds, merge, rng, sigma_floor,
+                         tolerance=1e-10):
+    """Walk a parameter path in small steps, admitting solutions the carried tracks do not cover.
+
+    A forward tracker can only follow what it carries, so a branch that appears along the path -- for
+    the twist path, one of the SR5 solutions with no counterpart at ``s = 0`` -- is invisible to it;
+    that is measured in 3.44/3.45 as the reason the second neighbour recovers only half the fibre.
+    This is Q23's instrument in parameter space: at every grid point, census the *current* arm at the
+    fixed target and add every verified solution no live track occupies as a new track.
+
+    Args:
+        links_at: ``s -> link transforms``; the arm at parameter ``s``.
+        target: The pose being solved, fixed along the path.
+        starts: Solutions of ``links_at(0)`` to carry.
+        grid: Number of steps from ``s = 0`` to ``s = 1``.
+        seeds: Census restarts per grid point.
+        merge: Torus distance below which a census solution is one a track already occupies.
+        rng: Generator for the census seeds.
+        sigma_floor: Clearance passed to the tracker.
+        tolerance: Pose residual the tracker must reach.
+
+    Returns:
+        ``(tracks, births, profile)``: the tracks (each a dict with ``q``, ``s``, ``born`` and
+        ``alive``), the admitted births as ``(s, q)`` pairs, and ``(s, census size, live tracks)`` at
+        every grid point.
+    """
+    tracks = [{"q": np.asarray(q, dtype=float), "s": 0.0, "born": 0.0, "alive": True,
+               "reason": "carried"} for q in starts]
+    births: list[tuple[float, np.ndarray]] = []
+    #: ``(s, census size, live tracks)`` per grid point: says *where* the fibre grows, which is what
+    #: separates a genuine birth along the path from a census of the target arm at the last step.
+    profile: list[tuple[float, int, int]] = []
+    for step in range(1, grid + 1):
+        s_to = step / grid
+        for track in tracks:
+            if not track["alive"]:
+                continue
+            s_from = track["s"]
+            from study.homotopy import track as homotopy_track
+
+            def segment(u: float, a: float = s_from, b: float = s_to) -> list[np.ndarray]:
+                """The path restricted to the sub-interval ``[a, b]``, re-parameterised to [0, 1]."""
+                return links_at(a + float(u) * (b - a))
+
+            result = homotopy_track(segment, target, track["q"], sigma_floor=sigma_floor,
+                                    tolerance=tolerance)
+            if result.finished:
+                track["q"] = np.asarray(result.q, dtype=float)
+                track["s"] = s_to
+            else:
+                track["alive"] = False
+                track["reason"] = result.reason
+        model = build(links_at(s_to))
+        fiber = census_of(model, target, rng, seeds=seeds, dedupe=1e-3)
+        profile.append((s_to, len(fiber), sum(1 for track in tracks if track["alive"])))
+        occupied = [track["q"] for track in tracks if track["alive"]]
+        for candidate in fiber:
+            if any(iks.torus_distance(candidate, other) < merge for other in occupied):
+                continue
+            occupied.append(candidate)
+            tracks.append({"q": candidate, "s": s_to, "born": s_to, "alive": True,
+                           "reason": "born"})
+            births.append((s_to, candidate))
+    return tracks, births, profile
+
+
+def census_count(model, target, rng, *, seeds: int, dedupe: float = 1e-4) -> tuple[int, int]:
+    """``(distinct solutions, seeds that converged)`` -- the convergence count matters when a small
+    number is being read as "the fibre really is that small"."""
+    lower = np.asarray(model.lower_bounds, dtype=float)
+    upper = np.asarray(model.upper_bounds, dtype=float)
+    found: list[np.ndarray] = []
+    converged = 0
+    for _ in range(seeds):
+        seed = lower + (upper - lower) * rng.random(model.num_dof)
+        q, ok = solve_lm(model, seed, target)
+        if not ok:
+            continue
+        converged += 1
+        q = np.asarray(q, dtype=float)
+        if any(iks.torus_distance(q, other) < dedupe for other in found):
+            continue
+        found.append(q)
+    return len(found), converged
+
+
+def census_of(model, target, rng, *, seeds: int, dedupe: float = 1e-4) -> list[np.ndarray]:
+    """Distinct real solutions of ``model`` at ``target`` (the module's census helper, as a list)."""
+    lower = np.asarray(model.lower_bounds, dtype=float)
+    upper = np.asarray(model.upper_bounds, dtype=float)
+    found: list[np.ndarray] = []
+    for _ in range(seeds):
+        seed = lower + (upper - lower) * rng.random(model.num_dof)
+        q, converged = solve_lm(model, seed, target)
+        if not converged:
+            continue
+        q = np.asarray(q, dtype=float)
+        if any(iks.torus_distance(q, other) < dedupe for other in found):
+            continue
+        found.append(q)
+    return found
+
+
 def main() -> int:
     """Run the measurement."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
@@ -194,6 +297,17 @@ def main() -> int:
                         help="curved-path retries per stopped start")
     parser.add_argument("--amplitude", type=float, default=0.02,
                         help="size of the curved path's bump, metres")
+    parser.add_argument("--births", action="store_true",
+                        help="phase 4: admit uncovered solutions at every grid point of the twist "
+                             "path (the DH-side counterpart of Q23)")
+    parser.add_argument("--grid", type=int, default=40, help="homotopy steps for phase 4")
+    parser.add_argument("--birth-seeds", type=int, default=40, help="census restarts per grid point")
+    parser.add_argument("--deep-seeds", type=int, default=300,
+                        help="seeds for the deep census at --deep-at, to test whether the "
+                             "intermediate arms really have fewer solutions")
+    parser.add_argument("--deep-at", type=float, nargs="*", default=[0.5, 0.95])
+    parser.add_argument("--merge", type=float, default=1e-2,
+                        help="torus distance below which a census solution is one a track occupies")
     args = parser.parse_args()
 
     rng = np.random.default_rng(0)
@@ -312,6 +426,56 @@ def main() -> int:
         print(f"    totals: {solved_poses}/{len(blind_targets)} blind poses fully recovered, "
               f"{recovered}/{total_reference} reference solutions reached from {total_arrivals} "
               f"arrivals of {total_starts} starts ({total_retried} curved retries)")
+
+    if args.births:
+        from study.census import census as multi_start
+        from study.census import make_lm_solver
+
+        print(f"\nphase 4: the same blind poses with births admitted along the twist path "
+              f"({args.grid} grid points, {args.birth_seeds} census seeds each; Q23's instrument in "
+              f"parameter space)")
+        recovered = total_reference = total_births = 0
+        solved_poses = 0
+        for index, target in enumerate(blind_targets):
+            reference = multi_start(sr5_model, target, solver=make_lm_solver(sr5_model),
+                                    seeds=args.reference_seeds, rng=rng, dedupe_tol=1e-4,
+                                    circular=circular)
+            known = [np.asarray(q, dtype=float) for q in reference.solutions]
+            starts = census_of(build(parallel_path(args.twist0)(0.0)), target, rng,
+                               seeds=args.seeds, dedupe=1e-3)
+            tracks, births, profile = homotopy_with_births(parallel_path(args.twist0), target,
+                                                           starts, grid=args.grid,
+                                                           seeds=args.birth_seeds,
+                                                           merge=args.merge, rng=rng,
+                                                           sigma_floor=args.sigma_floor)
+            alive = [track["q"] for track in tracks if track["alive"]]
+            reached: list[int] = []
+            for q_final in alive:
+                for slot, candidate in enumerate(known):
+                    if slot in reached:
+                        continue
+                    if iks.torus_distance(q_final, candidate) < 1e-3:
+                        reached.append(slot)
+                        break
+            total_reference += len(known)
+            recovered += len(reached)
+            total_births += len(births)
+            solved_poses += int(bool(len(known)) and len(reached) == len(known))
+            born_at = sorted({round(s, 3) for s, _q in births})
+            print(f"    pose {index + 1}: SR5 reference {len(known)}, starts {len(starts)}, "
+                  f"births admitted {len(births)} at s {born_at[:8]}, alive at s = 1 "
+                  f"{len(alive)}, reference solutions reached {len(reached)}")
+            print(f"      fibre along the path (s: census / live) "
+                  f"{[(f'{s:.2f}', c, a) for s, c, a in profile]}")
+            deep = {s: census_count(build(parallel_path(args.twist0)(s)), target, rng,
+                                    seeds=args.deep_seeds, dedupe=1e-3)
+                    for s in args.deep_at}
+            print(f"      deep census ({args.deep_seeds} seeds) at s {args.deep_at} -> "
+                  f"{{s: solutions/converged}} {deep} (rules out a weak census as the reason no "
+                  f"birth appears before s = 1)")
+        print(f"    totals: {solved_poses}/{len(blind_targets)} blind poses fully recovered, "
+              f"{recovered}/{total_reference} reference solutions reached, {total_births} births "
+              f"admitted")
     return 0
 
 
