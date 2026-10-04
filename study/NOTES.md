@@ -1522,6 +1522,69 @@ run report indexed ``counts`` from 0, so the printed sample ranges were shifted 
 fault only; the sample numbers in this entry are the corrected ones).
 
 
+### 3.41 The -4 event is two folds, and each one is located in task space (Q24)
+
+``python3 -m study.exp51_event_resolution --pose-seed 0 --subdivisions 96`` (48 s; new module,
+number registered in ``QUESTIONS.md`` before use).  Two questions were open on the loop's event
+table: does the interval that changes the fibre by four hide two folds or one degenerate event, and
+where *in task space* does a crossing happen?  Both are answered by refining the path rather than the
+detector: the witness polyline is subdivided in joint space (``path[k] + t (path[k+1] - path[k])`` for
+96 values of ``t``, the ``t = 0`` sample kept so the starts are attributed to the right target) and
+the same guarded/pruned tracker walks it.
+
+**The -4 resolves.**  Interval 45-46 gives **two** changes instead of one -- sub-sample 37: 6 -> 4
+(dead roots, tracks 2 and 5), sub-sample 38: 4 -> 2 (tracks 1 and 3) -- with the census agreeing at
+each step (4 then 2) and the two pairs of opposite ``det J`` sign.  The single folds at 1-2 and
+31-32 stay single at this resolution (one change each, a pair of opposite signs).  So the loop has
+**six** fold crossings, not five, and the sample-interval count was hiding one of them.
+
+**Each crossing is bracketed in task space.**  ``localise_crossing`` bisects the *pose* interval
+(``ts.se3_interpolate``, so every bisection point is a pose) between "the pair is still two distinct
+real roots" (each seed continued locally, with a jump guard, so a census cannot masquerade as a
+continuation) and "it is not", to 1e-6 of the event interval:
+
+| event (samples) | tracks | bracket | pair gap at the bracket | coalesced ``sigma_min`` | exponent | ``tau*`` from ``gap^2`` line |
+|---|---|---|---|---|---|---|
+| 1 -> 2 | 3 / 9 | [0.791977, 0.791978] | 3.03e-04 | 2.78e-06 | 0.503 | 0.791873 |
+| 31 -> 32 | 1 / 6 | [0.149731, 0.149732] | 4.55e-06 | 2.19e-08 | 0.503 | 0.149693 |
+| 45 -> 46 (first) | 2 / 5 | [0.405725, 0.405726] | 7.55e-06 | 2.00e-07 | 0.501 | 0.405701 |
+| 45 -> 46 (second) | 1 / 3 | [0.379368, 0.379369] | 1.94e-06 | 6.17e-08 | 0.501 | 0.379344 |
+
+Two things are certified there and neither is assumed.  First, **both numbers go to zero at the
+crossing**: the pair's gap is 1.9e-06 to 3.0e-04 rad and the coalesced configuration's clearance is
+6.2e-08 to 2.8e-06 -- three to five orders below the ``sigma_min ~ 1.2e-02`` measured at every stop
+(3.37), which is exactly the difference between "the samples straddle a fold" and "the pose is on the
+discriminant image".  Second, the gap vanishes as the **square root of the task offset**: a geometric
+ladder towards the crossing fits exponents **0.501, 0.501, 0.503, 0.503** -- the task-path-side
+counterpart of the split exponent measured on the DH side (exp27: 0.389-0.448 for three folds), and
+the reason the ladder is not decoration: fitting ``gap^2`` as a straight line in the offset gives an
+independent estimator of the crossing (``tau*`` in the last column) which agrees with the bisection
+bracket to 1e-4 to 2e-5 of an event interval, i.e. two different instruments, one geometric and one
+algebraic, locating the same pose.  Every pair's two branches carry **opposite det J signs**
+(+-1.0e-04 to +-1.6e-04) at the bracket, i.e. the crossing is between the two aspects the fold
+separates (Wenger).
+
+**One fold is certified as a singular configuration of the pose it crosses.**  ``refine_fold_pose``
+solves the augmented system of the *task* map -- unknowns ``(q, tau)``, equations ``fk(q) = T(tau)``
+(six) and ``det J(q) = 0`` (one), with a weight-1e-3 row pinning ``tau`` to the event segment (without
+it the Newton walks off along the extrapolated pose line and "converges" to a fold of a pose the path
+never visits: measured ``tau = -90``, ``5340``, ``-15696`` with small residuals).  For the 45-46
+second fold it converges to ``tau = 0.379368``, residual **4.3e-10**, ``det J = 1.7e-17``,
+``sigma_min = 1.7e-16``, and ``tau`` equals the bracket's ``lo`` to all six digits printed -- a point
+that is simultaneously a solution of the pose and singular.  For the other three folds this refinement
+stalls from a bracket-level seed (residuals 4e-3 to 2e-2, ``det J`` 4e-3 to 2e-2), which is reported
+rather than papered over: those three crossings rest on the bracket plus the two zero certificates plus
+the exponent, not on the augmented point.  The seed that does work is the midpoint of *the bracket's
+own roots*, which is why ``localise_crossing`` returns them.
+
+**Control.**  Subdividing a degenerate (constant) path gives 6 -> 6 live, 0 collisions, 0 merges,
+0 stops -- the events are the arm's, not the subdivision's.
+
+What is left of Q24 is the other half: the older exp49 reading ("three collision samples, a pair
+merging to 9.12e-15 then dying together" on the 118-sample loop) still needs the same treatment --
+``merged`` duration plus a bracket -- before it can be quoted as a crossing.  Registered, not done.
+
+
 ## 4. Finding 2: DH continuation
 
 ### 4.1 SR0 is exactly one parameter away, and the search says which one
