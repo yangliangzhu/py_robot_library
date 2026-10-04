@@ -1368,6 +1368,27 @@ Two things this settles and one it opens:
 
 Control unchanged: the degenerate loop is 8/8 arrivals with no permutations, collisions or stops.
 
+
+**Do the birth runs coincide with the deaths?  Measured: no, on both poses.**  The death samples are
+known from the same runs (3.37: seed 0 dies at 31 and 45; seed 1 at 51 and 52), and the birth runs are
+(123, 167) for seed 0 and (36, 39), (42, 42), (65, 102) for seed 1:
+
+| pose | death samples | birth runs | relation |
+|---|---|---|---|
+| 0 | 31, 45 | (123, 167) | births begin **78 samples after** the last death |
+| 1 | 51, 52 | (36, 39), (42, 42), (65, 102) | one run **before** the deaths, one **between** them and the long run **after** |
+
+So the two event kinds are not two views of the same samples: deaths are where a *tracked* pair
+coalesces, births are where the live set stops covering the fibre, and on this loop they sit in
+different places (seed 0: deaths early, births late; seed 1: a birth before the deaths, a singleton
+between them, and the long run after).  That also explains why a gap-threshold detector reports
+nothing for seed 1: the samples where its deaths happen carry gaps of order 7e-2 (3.37), i.e. the
+dying branches there are the tracked ones and their partners are not carried at all -- the events
+that matter are the ones the live set cannot see.
+
+The next instrument therefore has to print the three families in one table (deaths, births, gap
+minima per sample) rather than comparing them across notes, which is what this entry had to do.
+
 Also recorded: a flood fill that precomputes its list of start cells labels 3480 components on a
 two-component torus (the list is computed before any labelling, so every free cell starts a new
 component). Cheap to fix, invisible without a sanity check on the component count -- which is why
