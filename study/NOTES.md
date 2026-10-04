@@ -1109,6 +1109,28 @@ The sign split is exactly the aspect split in all twelve poses here (consistent 
 so Q18's remaining work is: resolve one aspect into its ``m`` uniqueness domains for the poses that
 matter, with ``m`` between 1 and 6.
 
+
+**A structural cusp candidate, and the fibre test that refuted it.**  The census-based triple-root
+statistic (3.32) was noise-dominated, so the cusp was hunted structurally instead: a cusp of the
+singular *image* is where the image velocity along the critical curve vanishes, i.e. where
+``Dg . t = 0`` with ``t`` the tangent of ``{det Dg = 0}``.  Over 240x240 samples of the critical
+curve the criterion separates cleanly -- median ``|image velocity|`` **1.596**, smallest
+**7.157e-03** (ratio 4.5e-03) -- and a pattern search refines the winner to
+
+    q2 = +2.25147559, q3 = +2.98854297  ->  (rho, z) = (3.46013884, +1.43635918),  |v| = 2.14e-03
+
+with a mirror at ``z = -1.4364`` (two cusps, matching the review's 0/2/4 possibilities).
+
+**The fibre test does not confirm it.**  At the candidate and at three inward probes
+``(rho - 2e-3, 8e-3, 3e-2)`` the census finds **2** solutions and no triple (spread ``inf``), where a
+cusp must show three coincident solutions.  So the vanishing image velocity there has another
+cause -- the critical curve's image is *tangent* to itself or to the coordinate fold ``rho >= 0``
+without a triple root -- and the criterion alone is not sufficient.  The fibre count is the arbiter;
+the 3R cusp therefore remains **unresolved**, now with a refuted candidate rather than a noisy
+guess.  Next instrument: the discriminant of the quartic (a zero set in ``(rho^2, z)``), which is
+structural on both sides, plus a triple-root test seeded *at* the candidate with the pair-tracking
+amplitude that exp27 measured (``c sqrt(eps)``).
+
 Also recorded: a flood fill that precomputes its list of start cells labels 3480 components on a
 two-component torus (the list is computed before any labelling, so every free cell starts a new
 component). Cheap to fix, invisible without a sanity check on the component count -- which is why
