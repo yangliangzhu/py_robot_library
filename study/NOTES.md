@@ -1412,6 +1412,116 @@ component). Cheap to fix, invisible without a sanity check on the component coun
 the run prints the component count and the cell-count balance (44700/44700) rather than just the
 label field.
 
+### 3.40 Carrying the births forward closes the loop's real event table -- and two tracker faults fall out of it
+
+Q23's remainder, implemented.  A forward lift can only follow what it carries, so the per-sample
+census of 3.37 could *point at* the blind spot but not repair it.  The tracker now has an ``admit``
+hook (``study/taskspace.py``): at every sample the caller may hand it configurations and they become
+ordinary tracks (``Lift.born`` records the sample), so a pair that becomes real mid-path is followed
+to the end like anything else.  ``study/exp50_births_and_stops.py`` drives it with a ``FiberAdmitter``
+that (a) seeds a census from the previous sample's solutions plus fresh restarts, (b) admits every
+verified real solution no live track covers, and (c) classifies it **structurally**: continue it
+*backwards* one sample with the same residual convention (``homotopy.correct``,
+``se3_error(FK(q), target)``).  A corrector that reaches the previous target without a basin jump
+means the branch was already real there (a dropped track, or one the earlier census missed); a
+corrector that cannot get there has run into the discriminant *between* the samples, i.e. a **birth**.
+Two further additions read the result: ``root_census`` (fresh multi-start seeds, every root
+Newton-polished, then deduplicated -- ``census``'s own tolerance cannot be tightened, at 1e-6 it
+chains one root into 83-109 "solutions"), and a fold-pair test (continue the *next* sample's fibre
+back one sample and see which live roots have no continuation).
+
+**Run 1, the unchanged instrument** (``python3 -m study.exp50_births_and_stops --pose-seed 0``,
+7m0s): the raw reseeding phase still reads exactly 45 of 168 samples and 253 unoccupied solutions in
+the single run (123, 167) -- 3.37's numbers reproduce bit for bit.  The carried lift then reads:
+
+* live count is no longer monotone: **10 -> 7 -> 4 -> 6 -> 10 -> 12**, in runs 1-31: 10, 32-45: 7,
+  46-122: 4, 123-127: 6, 128-165: 10, 166-167: 12;
+* admissions at **3 samples**: 123 (+2), 128 (+4), 166 (+2); all 8 classified as **births**
+  (backward residual 5.34e-16 .. 3.22e-02, against the 1e-9 tolerance), **0** dropped branches
+  re-admitted, **0** samples with an odd birth count (real folds make solutions in pairs, so an odd
+  count would mean the census found only one of the two);
+* control (degenerate loop, hook armed): 20 samples, 10 -> 10 live, **0 admissions, 0 births,
+  0 collisions**.
+
+**Two tracker faults fall out of the comparison with the fibre.**  The run also prints, for every
+event sample, an independent census of the fibre, and against it the carried tracker is wrong:
+
+| sample | fibre (census) | live tracks (carried) | live *distinct* | signs (census) | outside the joint box |
+|---|---|---|---|---|---|
+| 0 | 10 | 10 | 10 | 5/5 | 0 |
+| 31 | **8** | 10 | 9 | 5/4 | 1 |
+| 32 | 6 | 7 | 7 | 4/3 | 1 |
+| 45 | 6 | 7 | 7 | 4/3 | 1 |
+| 46 | **2** | 4 | 4 | 2/2 | 2 |
+| 123 | 4 | 6 | 6 | 3/3 | 2 |
+| 167 | 10 | 12 | 12 | 6/6 | 2 |
+
+* **Fault 11 -- a fold jump leaves a duplicate track.**  The fault report localises it exactly:
+  ``merged samples by pair (first..last: tracks) [(2, 31, [7, 9])]``.  Tracks 7 and 9 are 2.56e-09
+  apart at sample 2 (they were >= 3.96e-01 apart at sample 1 and every base pair is >= 7.07e-01
+  apart) and ~1e-14 apart for the next 28 samples, then both stop at sample 31.  A *genuine* fold
+  coalescence is instantaneous -- the pair coincides at one sample and both are gone at the next --
+  so a merge that **persists** is a tracker fault: the corrector crossed the fold between samples 1
+  and 2, failed to die, and settled on the *other* real solution, leaving two tracks on one branch.
+  Root cause: the jump guard measures the distance between the corrected configuration and the
+  *tangent prediction*, and near the fold the prediction itself is pushed onto the neighbouring
+  branch, so a jump of more than 0.4 rad passes a 0.3 rad guard.  Fix: read the merged pair and
+  retire the newer track (two distinct branches cannot coincide away from the discriminant) --
+  ``prune_merged``.
+* **Fault 12 -- the tracker never checked the joint box.**  Configurations it reports are solutions
+  of the pose but not necessarily configurations the arm can be in: at full strength 2 of the 12
+  final live tracks are outside the limits (`--box-guard` off), and the distance to the nearest base
+  solution reaches 2.46e+02 rad for such a track (the census, by contrast, is clipped to the box by
+  ``solve_lm``).  Fix: the ``feasible`` predicate, checked wherever the corrector's clearance is
+  checked; exp50 passes "inside the box, 1e-6 of slack".  Both fixes are **off by default** in the
+  run so that the previously recorded Q20/Q21 numbers stay reproducible with the instrument that
+  made them.
+
+**Run 2, repaired** (``python3 -m study.exp50_births_and_stops --pose-seed 0 --box-guard
+--prune-merged``, 7m1s).  The box guard alone removes the jump (``collisions 0, merged 0``, the
+duplicate list is empty; pruning was armed and had nothing to do), and the event table becomes
+*verified*: the carried live set matches the independent polished census at **all 13 probe samples**
+(10, 10, 8, 8, 6, 6, 2, 4, 4, 8, 8, 10, 10), the live runs become 1-31: 8, 32-45: 6, 46-122: 2,
+123-127: 4, 128-165: 8, 166-167: 10, and every fold kills **exactly two roots of opposite ``det J``
+sign**:
+
+| between samples | fibre | dead roots (holding track, sign, ``sigma_min``) |
+|---|---|---|
+| 1 and 2 | 10 -> 8 | (3, -1, 4.4e-03), (9, +1, 3.2e-03) |
+| 31 and 32 | 8 -> 6 | (1, +1, 1.2e-02), (7, -1, 1.2e-02) |
+| 45 and 46 | 6 -> 2 | (2, -1, 1.4e-02), (4, -1, 1.2e-02), (5, +1, 1.5e-02), (8, +1, 1.2e-02) |
+
+So the loop's **real event table** is three death events (-2, -2, -4) and three birth events
+(+2, +4, +2): **8 branches die and 8 are born**, the fibre size returns to its starting value
+(10 -> 10, the witness path's last configuration being 3.4e-06 from the first pose), and at the end
+the 10 live tracks sit on the 10 base solutions (largest distance to the nearest base solution
+1.95e-05 rad).  The two folds inside the 45-46 interval show up as four dead roots paired by
+opposite sign, i.e. two events between two samples -- which is what the resolution question (Q24)
+is about.  Note what the births *are*, structurally: after the loop the live set is the fibre again,
+so the 8 born tracks replace exactly the 8 that died.  On the real side the loop's lift is therefore
+a **partial** map on the fibre -- only 2 of the 10 starting postures (tracks 0 and 6) can be carried
+around it, ending on solutions 7 and 6 -- and the births are what closes the image back onto the
+fibre.  That is the real-side counterpart of the complex monodromy being a total permutation.
+
+**Consequence for the earlier crossing readings -- flagged, not yet re-measured.**  The signature
+"two tracks merge to ~1e-14 and then die together" was read in 3.34/3.38 (exp49's 118-sample loop,
+3 collision samples 46/47/48, "a pair merging to 9.12e-15 then dying together") as a discriminant
+crossing.  Fault 11 shows that the *same* signature is produced by a fold jump, and the
+discriminator is duration: a genuine coalescence is one sample, a jump persists.  3.34's merge
+lasted three samples, so that number must be re-measured with the census/fold-pair instrument before
+it is quoted as a crossing; what survives unchanged is the death side of the A->B answer (the stop
+samples are verified folds by the local census in 3.37 and by the fibre table above).  Registered as
+Q24 together with the resolution experiment: subdivide the witness polyline around a multi-event
+interval (the -4 at 45-46) and check that the folds separate into individual crossings, each with
+the pair's gap going to zero and ``sigma_min`` to zero at the crossing pose.
+
+Commands: ``python3 -m study.exp50_births_and_stops --pose-seed 0`` (raw + carried, unchanged
+instrument) and ``... --pose-seed 0 --box-guard --prune-merged`` (verified table).  Logs:
+``.scratch/exp50_carry_s0b.log``, ``.scratch/exp50_guarded_s0.log``.  Also fixed while here: the live
+run report indexed ``counts`` from 0, so the printed sample ranges were shifted by one (a display
+fault only; the sample numbers in this entry are the corrected ones).
+
+
 ## 4. Finding 2: DH continuation
 
 ### 4.1 SR0 is exactly one parameter away, and the search says which one

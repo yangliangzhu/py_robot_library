@@ -138,6 +138,12 @@ class Lift:
     #: Corrected steps rejected as basin jumps (the instrument fault this tracker guards against).
     jumps: int = 0
     reason: str = ""
+    #: Sample at which the track entered the lift set; 0 for a track started at ``targets[0]``, and
+    #: the birth sample for one admitted mid-path by :func:`lift_fiber`'s ``admit`` hook.
+    born: int = 0
+    #: Set when the track was dropped as a duplicate: two live tracks coincided away from the
+    #: discriminant, which the fibre cannot do, so one of them is a jump artefact.
+    retired: bool = False
 
     @property
     def progress(self) -> float:
@@ -151,6 +157,7 @@ def lift(
     tolerance: float = 1e-9, min_division: float = 1e-4, jump_tolerance: float = 0.3,
     max_step: float = 0.5, residual: TaskResidual | None = None,
     interpolate: TaskInterpolation | None = None,
+    feasible: Callable[[np.ndarray], bool] | None = None,
 ) -> Lift:
     """Carry one solution along ``targets``, bisecting the task interval when a step fails.
 
@@ -168,6 +175,9 @@ def lift(
         max_step: Largest joint-space step the corrector may take; longer proposals are bisected.
         residual: Error function ``(q, target) -> vector``; see :func:`newton`.
         interpolate: Target interpolation ``(a, b, fraction)``; see :func:`se3_interpolate`.
+        feasible: Predicate a corrected configuration must satisfy, e.g. "inside the joint box".
+            Without it the tracker can walk a limited joint past its stop, and the configuration it
+            reports is a solution of the pose but not one the arm can be in.
 
     Returns:
         The :class:`Lift`; ``finished`` is the certificate that the whole path was tracked.
@@ -180,7 +190,8 @@ def lift(
     for index in range(1, targets.shape[0]):
         q, ok, clearance, jumps = _interval(task, jacobian, targets[index - 1], targets[index],
                                             result.q, sigma, sigma_floor, tolerance, min_division,
-                                            jump_tolerance, max_step, residual, interpolate)
+                                            jump_tolerance, max_step, residual, interpolate,
+                                            feasible)
         result.jumps += jumps
         if not ok:
             result.reason = (
@@ -202,8 +213,8 @@ def lift(
 
 
 def _interval(task, jacobian, target_a, target_b, q_start, sigma, sigma_floor, tolerance,
-              min_division, jump_tolerance, max_step, residual=None, interpolate=None
-              ) -> tuple[np.ndarray, bool, float, int]:
+              min_division, jump_tolerance, max_step, residual=None, interpolate=None,
+              feasible=None) -> tuple[np.ndarray, bool, float, int]:
     """Advance from ``target_a`` to ``target_b``, bisecting when the corrector cannot follow.
 
     The predictor is the **tangent** step ``dq = pinv(J) (target_b - target_a)``, not the previous
@@ -239,7 +250,8 @@ def _interval(task, jacobian, target_a, target_b, q_start, sigma, sigma_floor, t
         clearance = float(sigma(trial))
         drifted = float(np.linalg.norm(trial - predicted))
         if (residual_value <= tolerance and clearance >= sigma_floor
-                and drifted <= jump_tolerance and step_length <= max_step):
+                and drifted <= jump_tolerance and step_length <= max_step
+                and (feasible is None or feasible(trial))):
             lo = mid
             q = trial
             best_residual = residual_value
@@ -256,7 +268,8 @@ def _interval(task, jacobian, target_a, target_b, q_start, sigma, sigma_floor, t
     final, final_residual = newton(task, jacobian, target_b, q, tolerance=tolerance,
                                    residual=residual)
     clearance = float(sigma(final))
-    if final_residual <= tolerance and clearance >= sigma_floor:
+    if (final_residual <= tolerance and clearance >= sigma_floor
+            and (feasible is None or feasible(final))):
         return final, True, clearance, jumps
     if lo < 1.0:
         return q, False, best_clearance, jumps
@@ -277,6 +290,12 @@ class FiberLift:
     #: Number of live tracks at each sample index.
     counts: list[int]
     collision_threshold: float
+    #: Indices of the two tracks attaining the minimum gap at each sample (``None`` if fewer than
+    #: two are live).  A gap that stays tiny for many samples is a tracker fault, not a fold, and
+    #: saying *which* pair it is decides between the two readings.
+    closest: list[tuple[int, int] | None]
+    #: Tracks dropped as duplicates, as ``(sample, kept track, retired track)``.
+    duplicates: list[tuple[int, int, int]] = field(default_factory=list)
 
     @property
     def arrivals(self) -> list[int]:
@@ -291,12 +310,23 @@ def lift_fiber(
     merge: float = 1e-6, jump_tolerance: float = 0.3, max_step: float = 0.5,
     residual: TaskResidual | None = None, interpolate: TaskInterpolation | None = None,
     distance: Callable[[np.ndarray, np.ndarray], float] | None = None,
+    admit: Callable[[int, list[np.ndarray]], list[np.ndarray]] | None = None,
+    feasible: Callable[[np.ndarray], bool] | None = None,
+    prune_merged: bool = False,
 ) -> FiberLift:
     """Track every solution in ``starts`` along ``targets`` in lockstep.
 
     Lockstep matters: the collision report compares positions at the *same* sample, so a lift that
     cannot keep up must not silently shift the comparison.  A track that dies stays dead (the
     configuration is not advanced), which is what a real fold does to a real branch.
+
+    ``admit`` lifts the tracker's structural blindness: a forward lift can only follow what it
+    already carries, so a pair of branches that becomes real *between* two samples (a birth at a
+    fold) is invisible to it, and a branch the corrector dropped is not recovered either.  When
+    given, ``admit(index, alive)`` is called at every sample with the configurations alive there and
+    returns configurations at that same target to be *added* as new tracks (each gets
+    ``Lift.born = index``); it is the caller's job to verify that the returned configurations are
+    real solutions there.  Counts, gaps and collisions from that sample on include the new tracks.
 
     Args:
         task: Task map.
@@ -315,6 +345,14 @@ def lift_fiber(
         residual: Error function ``(q, target) -> vector``; see :func:`newton`.
         interpolate: Target interpolation ``(a, b, fraction)``; see :func:`se3_interpolate`.
         distance: Distance between configurations; Euclidean when omitted.
+        admit: Optional hook admitting solutions found mid-path; see above.
+        feasible: Predicate every corrected configuration must satisfy (e.g. inside the joint box);
+            see :func:`lift`.  Without it a track can walk a limited joint past its stop.
+        prune_merged: Drop a live track that coincides with an older live track.  Two distinct
+            branches cannot be the same configuration away from the discriminant, so a coincidence
+            means the newer track is a jump artefact -- the fault a fold crossing produces when the
+            corrector follows the *other* real solution instead of dying.  Retired tracks stop being
+            advanced, leave the live counts, and are listed in :attr:`FiberLift.duplicates`.
 
     Returns:
         The :class:`FiberLift`.
@@ -333,13 +371,15 @@ def lift_fiber(
     collisions: list[int] = []
     merged: list[int] = []
     counts: list[int] = []
+    closest: list[tuple[int, int] | None] = []
+    duplicates: list[tuple[int, int, int]] = []
     for index in range(1, targets.shape[0]):
         for item in lifts:
-            if not item.finished and item.index == index - 1:
+            if (not item.finished and not item.retired and item.index == index - 1):
                 q, ok, clearance, jumps = _interval(
                     task, jacobian, targets[index - 1], targets[index], item.q,
                     (lambda q: 0.0) if sigma is None else sigma, sigma_floor, tolerance,
-                    min_division, jump_tolerance, max_step, residual, interpolate)
+                    min_division, jump_tolerance, max_step, residual, interpolate, feasible)
                 item.jumps += jumps
                 if ok:
                     item.q = q
@@ -351,23 +391,48 @@ def lift_fiber(
                     item.min_sigma = min(item.min_sigma, clearance)
                 else:
                     item.reason = f"died between samples {index - 1} and {index}"
-        alive = [item.q for item in lifts if item.index == index]
+        alive = [i for i, item in enumerate(lifts) if item.index == index and not item.retired]
+        if admit is not None:
+            for q in admit(index, [lifts[i].q for i in alive]):
+                q = np.asarray(q, dtype=float)
+                lifts.append(Lift(
+                    start=q.copy(), q=q.copy(), finished=False, index=index, residual=0.0,
+                    min_sigma=0.0 if sigma is None else float(sigma(q)), min_sigma_at=index,
+                    samples=[q.copy()], born=index))
+            alive = [i for i, item in enumerate(lifts) if item.index == index and not item.retired]
+        if prune_merged:
+            kept: list[int] = []
+            for i in alive:
+                holder = next((k for k in kept if distance(lifts[k].q, lifts[i].q) < merge), None)
+                if holder is None:
+                    kept.append(i)
+                else:
+                    lifts[i].retired = True
+                    duplicates.append((index, holder, i))
+            alive = kept
         counts.append(len(alive))
         best = float("inf")
-        for i in range(len(alive)):
-            for j in range(i + 1, len(alive)):
-                best = min(best, distance(alive[i], alive[j]))
+        nearest = None
+        for a in range(len(alive)):
+            for b in range(a + 1, len(alive)):
+                gap = distance(lifts[alive[a]].q, lifts[alive[b]].q)
+                if gap < best:
+                    best = gap
+                    nearest = (alive[a], alive[b])
         gaps.append(best)
+        closest.append(nearest)
         if best < collision:
             collisions.append(index)
         if best < merge:
             merged.append(index)
     for item in lifts:
+        if item.retired:
+            continue
         if item.index == targets.shape[0] - 1:
             item.finished = True
             item.reason = item.reason or "arrived"
     return FiberLift(lifts=lifts, gaps=gaps, collisions=collisions, merged=merged, counts=counts,
-                     collision_threshold=collision)
+                     collision_threshold=collision, closest=closest, duplicates=duplicates)
 
 
 def circle_targets(centre: np.ndarray, radius: float, samples: int, *, axis_a: int = 0,
