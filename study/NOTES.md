@@ -1954,6 +1954,78 @@ factor that actually vanishes; (c) then, and only then, redo the ``Delta``-singu
 ``rho > 0`` with the Hessian-degeneracy and cubic-term tests, and cross-check against
 ``census_position``.  Until (b) passes, no cusp claim of any kind is on the table.
 
+### 3.49 The clean elimination works: the IK quartic is the one degree-4 factor that vanishes at a fibre root
+
+3.48's step (a)+(b), done.  The route that works is: substitute the exact rational workspace point
+into the two polynomials, **remove their common factor explicitly** (``sp.gcd``, degree 2 in ``u`` --
+the pre-factoring of the prototype was an accident of sympy's simplification and changed the
+elimination), take the resultant of the *primitive* parts, and then select the factor by evaluating it
+at a **known fibre root in 60-digit arithmetic** (scratch script ``.scratch/clean_elimination.py``):
+
+| ``(rho, z)`` | resultant degree in ``t`` | factor that vanishes at the fibre's ``t`` | every other factor |
+|---|---|---|---|
+| (13/5, 9/10) | 56 | **mult 1, deg 4**: ``|value|`` 7.96e-06 (``t = -10.0274``) and 2.01e-05 (``t = +10.0274``) | 1.0e+02, 1.0e+02, 4.0e+02 |
+| (6/5, 2/5) | 56 | **mult 1, deg 4**: ``|value|`` 1.01e-10 (``t = +0.3737``) and 5.79e-11 (``t = -0.3737``) | 1.1e+00, 1.6e+00, 4.1e+00 |
+
+So there **is** a unique degree-4, multiplicity-1 factor that vanishes at the fibre's ``t``, at both
+signs of ``t`` (consistent with the arm's ``q3 -> -q3`` mirror pair), on two different workspace
+points, while every other factor is O(1) -- and the residual values are explained rather than
+tolerated: the fibre root is itself a numerical solution (``q`` good to ~1e-9), and the factor's
+derivative amplifies that (``|dt| ~ 5e-8`` gives ``|value| ~ 1e-6`` at ``t ~ 10``, ``~1e-10`` at
+``t ~ 0.4``).  The selection rule therefore has to be "small relative to the other factors", not
+"exactly zero" -- which is also why 3.47's phase-1 comparison could not work.
+
+Both earlier readings are now accounted for: the prototype's multiplicity-1 factor was *not* this one
+(it evaluates to +41 at the fibre root, 3.48), and the float evaluation of the cleared numerator is
+worthless (3.48).  What is still missing is the factor's **symbolic** coefficients as functions of
+``(rho, z)`` -- the job that computes them (explicit gcd symbolically, then the resultant and the
+factor selection) is running; until it lands, the cusp search should use the numeric route above
+(exact rational point -> factor -> its discriminant) rather than the withdrawn ``A, B, C`` of 3.47.
+
+### 3.50 Q26 answered: this cuspidal 3R has no cusp -- and the IK is an explicit quadratic in tan^2(q3/2)
+
+With the elimination clean (3.49, scratch ``.scratch/clean_elimination.py`` and
+``.scratch/symbolic_clean.py``), the symbolic run produced the validated quartic.  Monic-normalised
+and with ``t = tan(q3/2)``:
+
+    P(t) = t^4 + 2 (A2/A0) t^2 + A1/A0,     A0 = 16R^2 + 32RZ - 360R + 16Z^2 - 296Z + 1769
+                                            A1 = 16R^2 + 32RZ - 168R + 16Z^2 - 104Z + 185
+                                            A2 = 16R^2 + 32RZ - 264R + 16Z^2 - 200Z + 401
+
+with ``R = rho^2``, ``Z = z^2``.  So the position IK of this arm is exactly a **quadratic in
+``t^2``** -- the structural reading of 3.47 was right, its coefficients were not -- and the arm is
+solvable by radicals through an explicit quadratic, not merely through "some quartic".  The
+multiplicity-1 deg-4 factor that vanishes at the fibre root (3.49: 6.1e-07 against O(1e2) for every
+other factor) is this one.
+
+**Its discriminant is a conic, and the conic has no singular point.**  ``Delta_w = A2^2 - A0 A1``
+expands and factors as ``-576 * C2`` with
+
+    C2 = 16R^2 + 32R Z - 264R + 16Z^2 - 136Z + 289,
+
+so the boundary (a double root in ``t``) is the single conic ``C2 = 0`` in the ``(R, Z)`` plane, and
+``grad C2 = (32R + 32Z - 264, 32R + 32Z - 136)`` can never vanish: the two components demand
+``32R + 32Z = 264`` and ``= 136`` at once, so ``C2 = 0`` with ``grad C2 = 0`` has **no solution**
+(sympy: ``solve`` returns the empty list).  A Gauss-Newton search for singular points of ``Delta_w``
+over ``R in [0.01, 30]``, ``Z in [-12, 26]`` finds **none** (``NOTES`` 3.49's script, 26x26 seed
+grid).  The only degenerate locus of the chart is ``rho = 0``, where the map ``(R, Z) -> (rho, z)``
+itself is singular -- and that is exactly where 3.47's search landed, with a *non-degenerate* Hessian.
+
+**Consequences, and the previous readings closed out.**
+
+* **The cusp does not exist on this arm** (in this chart), so Q26 is answered negatively rather than
+  left open: a cuspidal arm need not have a cusp, which is precisely Wenger's logic -- the cusp is a
+  *sufficient* mechanism for cuspidality, not a necessary one.  The arm's cuspidality is established
+  independently by the aspect structure (exp48: one aspect holds two solutions of one pose).
+* **The refuted candidate of 3.36 is explained**: ``(rho, z) = (3.4601, +-1.4364)`` gives
+  ``C2 = -0.3456`` and ``Delta_w = +199.1``, i.e. it is **not on the boundary at all**.  The fibre test
+  that refuted it was right, and the "image velocity minimisation" criterion that proposed it was
+  measuring something else.
+* 3.47's withdrawn coefficients came from pre-factoring the numerators (an accident of sympy's
+  simplification); the working route is the explicit ``gcd`` (degree 2 in ``u``) followed by the
+  resultant of the primitive parts (degree 56 in ``t``) and factor selection by high-precision
+  evaluation at a known fibre root (3.48/3.49).
+
 ## 4. Finding 2: DH continuation
 
 
