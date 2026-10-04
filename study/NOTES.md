@@ -1231,6 +1231,19 @@ Two consequences, both registered:
 Controls in the same run: the degenerate loop gives 10/10 arrivals, 0 permutations, 0 collisions,
 0 stops -- the events belong to the arm.
 
+
+**Seed-1 reproduction of exp50** (``python3 -m study.exp50_births_and_stops --pose-seed 1``): 8
+solutions (4+/4-), pair (0, 2), witness 103 configurations; the lift arrives 5/8 with live counts
+8 -> 5, shortest gap **7.06e-02**, crossing candidates **0 of 102** samples, and the three stops are
+classified **3 fold(s), 0 tracker drop(s)** -- tracks 4 and 7 have two real solutions near them at
+the sample where they stop and none at the next target, track 6 has none at either.  The degenerate
+control is 8/8 arrivals, 0 permutations, 0 collisions, 0 stops.  So 3.37's verdict -- every stop on
+this loop is a branch that genuinely dies between two samples, not one the tracker lost -- reproduces
+on a second pose, and Q21's closure is not a single-pose artefact.  It also shows how large the Q20
+blind spot can be: this pose reports **zero** crossing candidates even though the tracked pair
+changes sheet, so the death/birth events there are invisible to a gap threshold -- the reseeding
+step is what has to find them.
+
 Also recorded: a flood fill that precomputes its list of start cells labels 3480 components on a
 two-component torus (the list is computed before any labelling, so every free cell starts a new
 component). Cheap to fix, invisible without a sanity check on the component count -- which is why
