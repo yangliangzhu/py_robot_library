@@ -1863,6 +1863,59 @@ are no longer blind, not that a single straight homotopy now solves them.
 
 
 
+### 3.47 The 3R cusp: the elimination is done, the verification fails, and the search finds only the chart boundary
+
+Q26, the last open piece of ②.  The registered route was the discriminant of the position IK, so the
+first step is the algebra rather than a search.  ``study/exp54_cusp_discriminant.py``
+(``python3 -m study.exp54_cusp_discriminant --grid 16``; the symbolic derivation is behind
+``--derive`` because it takes minutes).
+
+**What is established: the elimination itself.**  With ``q1 = 0`` (the arm's ``(rho, z)`` do not
+depend on it) and ``u = tan(q2/2)``, ``t = tan(q3/2)``, the two position equations become polynomials
+of degree 4 and 2 in ``u``; their resultant in ``u`` factors exactly as
+
+    (t^2 + 1)^2 * (t^2 + 4)^2 * (4 t^2 + 1)^2 * Q(t),
+    Q = A t^4 + B t^2 + C,
+    A = 16 rho^4 + 32 rho^2 z^2 - 360 rho^2 + 16 z^4 - 296 z^2 + 1769
+    B = 32 rho^4 + 64 rho^2 z^2 - 528 rho^2 + 32 z^4 - 400 z^2 + 802
+    C = 16 rho^4 + 32 rho^2 z^2 - 168 rho^2 + 16 z^4 - 104 z^2 + 185
+
+with the three repeated factors being the Weierstrass denominators' asymptotic branches (they are
+the factors with multiplicity 2).  The derivation is reproducible (``--derive``), and the module
+asserts that the exact rows it uses match ``cuspidal3r``'s defaults, so the coefficients are not
+transcribed on trust.
+
+**What fails: the check that would make them usable.**  Phase 1 compares the roots of ``Q`` in
+``t^2`` with the censused fibre's ``tan^2(q3/2)`` at five workspace points:
+
+| ``(rho, z)`` | fibre solutions | real roots in ``t^2`` | worst ``|t^2|`` discrepancy |
+|---|---|---|---|
+| (1.20, +0.40) | 2 | 2 | 4.79e-02 |
+| (2.00, -0.30) | 2 | 2 | 1.42e+00 |
+| (2.60, +0.90) | 2 | 2 | 1.00e+02 |
+| (3.20, +0.20) | 2 | 2 | 5.20e+00 |
+| (4.00, -0.60) | 0 | 0 | 0.00e+00 |
+
+The counts agree and the values do not, so the derived quadratic is **not** the arm's IK as written:
+either the substitution, the selection of the multiplicity-1 factor, or the ``t -> q3``
+correspondence is wrong.  The coefficients are therefore recorded as *unvalidated* and the module
+says so in its own docstring; nothing in this study may be derived from them until phase 1 passes.
+
+**What the singular-point search found: the chart boundary, not a cusp.**  Solving ``Delta = 0`` and
+``grad Delta = 0`` (Gauss-Newton from a 16x16 seed grid) converges to two points,
+``(rho, z) = (0, +-2.061553)`` with residual 1.7e-10 -- and there the Hessian of ``Delta`` is
+**non-degenerate** (determinant -7.4e+11) with a large cubic term, at ``rho = 0``, which is the
+boundary of the cylindrical chart: the census there returns 194-198 "solutions" per azimuth with
+clearances of 1e-14 (the solver collapsing onto a continuum of near-singular configurations).  So
+both roots are artefacts of the chart, and no cusp is claimed.
+
+**Next attempt, precisely.**  (a) substitute a *known* fibre solution's ``(u, t)`` into the two
+polynomial equations and confirm they vanish -- that validates or kills the substitution before any
+factor is trusted; (b) re-read the factor list *including* the multiplicity-2 factors (the true
+quartic may be hiding inside a squared factor, which would also explain the mismatch); (c) restrict
+the ``Delta`` search to ``rho > 0`` and keep the Hessian-degeneracy and cubic-term tests as the cusp
+criterion; (d) then, and only then, cross-check against ``census_position`` at the candidate.
+
 ## 4. Finding 2: DH continuation
 
 
