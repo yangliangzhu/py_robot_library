@@ -71,11 +71,17 @@ def robot(links: list[np.ndarray] | None = None) -> RobotModelNumpy:
 
 @dataclass
 class Sr0Solution:
-    """One IK solution, with the residual it was verified at."""
+    """One IK solution, with the residual it was verified at and whether the robot can reach it.
+
+    The pose check and the limit check are different questions (exp45 measured a pose where all eight
+    closed-form solutions lie outside the joint limits while every one of them satisfies the pose), so
+    both flags travel with the solution instead of being silently conflated.
+    """
 
     q: np.ndarray
     position_error: float
     rotation_error: float
+    within_limits: bool = True
 
     @property
     def error(self) -> float:
@@ -252,7 +258,12 @@ def solve(model: RobotModelNumpy, target: np.ndarray) -> list[Sr0Solution]:
             position = float(np.linalg.norm(pose[:3, 3] - target[:3, 3]))
             rotation = float(np.linalg.norm(_rotation_error(pose[:3, :3], target[:3, :3])))
             if max(position, rotation) < TOLERANCE:
-                solutions.append(Sr0Solution(np.asarray(q, dtype=float), position, rotation))
+                values = np.asarray(q, dtype=float)
+                admissible = bool(
+                    np.all(values >= np.asarray(model.lower_bounds))
+                    and np.all(values <= np.asarray(model.upper_bounds))
+                )
+                solutions.append(Sr0Solution(values, position, rotation, admissible))
     unique: list[Sr0Solution] = []
     for solution in solutions:
         if not any(
