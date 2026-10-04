@@ -19,9 +19,21 @@
 ## A. cuspidality / aspects（机器人学侧，和我们最贴近）
 
 1. **P. Wenger, "Cuspidal Robots"（综述章节）** — <https://ar5iv.labs.arxiv.org/html/1610.04080>
+   （PDF：<https://arxiv.org/pdf/1610.04080>；本课题已抓全文并逐节读完 §1–§4）
    取：aspect 的定义；"cuspidal = 某个 aspect 里多于一个逆解"；**特征曲面**的定义
-   `CS_i = f⁻¹(f(A_i*)) ∩ A_i`；唯一性域；cuspidal 臂"无法跟踪某些笛卡尔路径"。
+   `CS_i = f⁻¹(f(A_i*)) ∩ A_i`，其中 **`A_i*` 是 aspect `A_i` 的边界**（§11 原文；
+   我们早先引用时没写明，`day04-dsh.md` §1 已更正）；唯一性域；cuspidal 臂"无法跟踪某些笛卡尔路径"。
    **这份直接回答了本课题第一题的"两定义是否等价"**：等价 ⟺ aspect 就是唯一性域。
+   同章另外四条对本课题直接可用：
+   * `{CS_i}` 可以**空**；"对所有 aspect 都空 ⟺ **非** cuspidal"（与"某 aspect 内多于一个解"互为等价刻画）；
+   * `A_i \ CS_i` 的连通分量 `Ra_ij` 是**唯一性域**（Wenger 2004），`f` 在每个上**单射**；
+     极大唯一性域是 `Qu = A_i −̇ C(Ra_ij)`（去掉某一个 `Ra` 的闭包），彼此重叠；
+   * **可行路径域 = `f(Qu_i)`** = aspect 的像减去内部边界的若干段；非 cuspidal 臂上 aspect 本身就是
+     唯一性域、`f(A_i)` 就是可行域 —— **cuspidal 臂上这条不成立**（这正是我们 A→B 问题的答案所在）；
+   * §4.1 列出 7 条**非** cuspidal 的几何条件（前两轴平行/相交、后两轴平行/相交、…），
+     §4.2 给出三轴互正交族的**判别式判据**：`P(t) = a t⁴ + … + e`（`t = tan(θ3/2)`）有三重根
+     ⟺ cuspidal；分岔曲面 `C1–C4`（Baili et al. 2003）把参数空间分成 5 个域（0/2/4 个 cusp）。
+     我们的 `exp48` 用的就是这一族，实测 2 aspects、同 aspect 双解、四解内区 18%。
 2. **Borrel & Liégeois 1986, ICRA** — <https://www.semanticscholar.org/paper/f2adab4b16fe91cd466c8ce8f16103c51f05925e>
    取：aspect 概念的出处；以及"当年那个**错误的证明**"（断言换解必穿奇异）——历史教训值得引。
 3. **El Omri & Wenger 1995 / Wenger 1992** — 经上面综述转引。

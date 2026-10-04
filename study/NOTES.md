@@ -848,6 +848,126 @@ franka repository.  They do not, and the way the wrong claim got into this study
   own conventions -- *every claim with the command that produces it* -- since running the franka
   fingerprint would have shown 88 mm immediately.
 
+### 3.31 Uniqueness domains: the definition, corrected, and what it changes
+
+The study's `READING.md` (and the handover prompt, and both AIs' citations of it) wrote Wenger's
+characteristic surfaces as ``CS_i = f^-1(f(A_i*)) cap A_i`` without saying what ``A_i*`` is.
+The review says it plainly (arXiv:1610.04080 section 11, fetched as the arXiv PDF and read in full):
+
+> "Let `A_i*` be **the boundary of aspect `A_i`**. The characteristic surfaces `{CS_i}` associated
+> with `A_i` are `{CS_i} = f^-1(f(A_i*)) cap A_i` ... since an aspect is defined as an open set,
+> `A_i` does not contain its boundary i.e. `A_i* cap A_i = empty` thus `{CS_i}` might be empty
+> (note that if this is the case for all its aspects, **the robot is not cuspidal**)."
+
+So ``CS_i`` is the preimage of the image of *this* aspect's boundary, not "where the other aspects
+overlap". Three consequences, all of which the study uses from here on:
+
+1. ``CS_i \subset f^-1(Delta)`` with ``Delta = f(Sigma)``: **crossing a characteristic surface is a
+   pose landing on the discriminant image**, which is exactly the event a whole-fibre tracker can
+   see (two branches collide).
+2. "empty for every aspect" is an equivalent characterisation of *non*-cuspidality, next to the one
+   the study has been using ("an aspect holding two solutions of one pose").
+3. The components of ``A_i \ CS_i`` are uniqueness domains (`Ra_ij`), ``f`` is one-to-one on each
+   (Wenger 2004), and their images are the *regions of feasible paths*; the maximal ones are
+   ``Qu = A_i - C(Ra_ij)`` (aspect minus the closure of one ``Ra``). For a **non**-cuspidal robot
+   the aspects themselves are the uniqueness domains and ``f(A_i)`` are the feasible regions -- the
+   statement the study had been implicitly assuming for SR5.
+
+Corollary the SR5 measurement needs: if aspect ``A_i`` holds ``m`` solutions over a pose, those
+``m`` solutions lie in ``m`` *different* uniqueness domains (injectivity). So the 12-solution pose
+of exp19 is 2 aspects **and 6 uniqueness domains per aspect**, and "same aspect" does not imply
+"one trackable Cartesian region".
+
+### 3.32 A cuspidal arm that is solvable by radicals: exp46 repaired, witness measured
+
+`python3 -m study.exp48_cuspidal3r` (arm in `study/cuspidal3r.py`, position-task 3R orthogonal from
+Wenger's Fig. 1, MDH rows ``[d, alpha, a]``).
+
+exp46 failed for two independent reasons, both now repaired and both worth recording:
+
+* **The task was wrong.**  It built a 6-DOF pose from ``fk`` of a random configuration and ran a
+  pose-IK census on a 3-joint arm. A 3-joint arm's image is 3-dimensional in SE(3), so that pose
+  has a **one-point** fibre: the "census" measured nothing (0 solutions over the whole grid, which
+  exp46 read as a rank problem). The task must be the *position*.
+* **The family was degenerate**, exactly as exp46's own docstring diagnosed: ``Rx(-90)`` composed
+  with ``Rx(90)`` leaves joint 3's axis parallel to joint 2, so ``rank J = 2`` everywhere.
+* A third, silent one: ``RobotModelNumpy.build(param_type, solver, config)`` does **not** read
+  ``base``/``ee`` from the config mapping -- they are function arguments. Both exp46 and the first
+  version of the probe put them in the config and silently got the identity tool transform.
+
+Measured (all numbers from the run; the arm is `[d,alpha,a]` rows ``(0,0,0), (1,pi/2,1),
+(2,pi/2,0)`` with tool row ``(1.5,pi/2,0)``):
+
+| phase | measurement |
+|---|---|
+| rank | 200 random configurations: rank-3 fraction **1.00**, min rank **3**, worst ``sigma_min`` 5.16e-04 |
+| aspects | ``T^2 \ Sigma`` labelled by flood fill at 300x300: **exactly 2** components, cell counts 44700/44700, singular cells 0.0067 |
+| fibres | 40 poses: 25 with 2 solutions (per-aspect multiplicities (1,1)), 15 with 4 solutions (**2,2**) |
+| cuspidality | an aspect holds **two solutions of one pose** => cuspidal, by definition, with no planner and no budget |
+| workspace | 25x25 tool points: 4 solutions 110 (18%), 2 solutions 310 (50%), unreachable 205 (33%) |
+| radicals | the fibre's ``tan(q3/2)`` are the roots of a monic quartic whose coefficients agree to **4.2e-13** across three azimuths => the IK reduces to a quartic => solvable by radicals (Ferrari; the review cites Kholi & Spanos 1985 for the coefficients) |
+
+Two analytic facts used by the instrument, both verified numerically (residual 2.7e-09):
+``det J = -rho * det(Dg)``, where ``Dg`` is the Jacobian of the reduced map ``(q2,q3) -> (rho,z)``
+and ``rho`` is the tool's distance from the base axis; and the determinant does not depend on
+``q1``, which is why the aspect labelling is a two-dimensional problem.
+
+**Open (recorded, not resolved):** the arm's cusp was *not* localised. A census-based triple-root
+cluster sits near ``rho ~ 2.6, z ~ +-2.2`` (three solutions mutually within 0.14 rad), but the
+"spread of the three closest solutions" statistic is dominated by census noise and a pattern
+search did not drive it down. The instrument that should settle it is the discriminant of the
+quartic (a zero set in ``(rho^2, z)``) or the study's own augmented system -- not a census.
+
+### 3.33 Instrument failure 9: a fibre tracker without a step bound, and a witness pose rebuilt from a printed number
+
+Two failures from the same session, both caught by their own controls.
+
+* **Seeding Newton with the previous configuration is not continuation.**  The first version of
+  `study/taskspace.py` predicted nothing: each sample's corrector started from the previous
+  configuration. On a closed loop this produced ``min gap = 6e-15`` between two tracks (they merged
+  into one solution) and reported "21 of 125 loops permute the fibre, none identity" -- a whole
+  phase of numbers that were the tracker, not the arm. Fixes, now defaults: the predictor is the
+  **tangent** step ``dq = pinv(J) Delta target``; a correction further than ``jump_tolerance``
+  (0.3 rad) from the prediction is rejected; a **step longer than ``max_step``** (0.5 rad) is
+  rejected because near the discriminant ``pinv(J)`` is huge and an unbounded step is exactly how a
+  tracker leaves its branch while still reporting a tiny residual; two live tracks closer than
+  ``merge`` (1e-8) are flagged as a tracker fault, distinctly from a fold; and the degenerate loop
+  (all targets equal) is a standing control that must be the identity with zero collisions.
+  This is the same failure mode as Q17, reproduced from the other side -- and it is a reminder that
+  a tracker's *positive* results need a negative control more than its negative ones do.
+* **Do not reuse a printed number as an input.**  Phase 4/5 of the first exp48 rebuilt the witness
+  pose from its printed ``(rho, z)`` (three decimals). The rebuilt point sat on the discriminant
+  image -- a census found **0 solutions in 100 starts** there and Newton stalled at 3e-4 -- so the
+  entire measurement was about a pose with no solutions at all. The fix is procedural: keep the
+  full task vector, print only for reading.
+
+The same failure mode, one instrument later (`exp49`): on SR5 the whole-fibre lift of a witness
+loop tracked only 1 of 10 branches to the end, and the *diagnostic that distinguishes a fold death
+from a tracker death* -- ``sigma_min`` at the last configuration plus the distance to the nearest
+other live track -- says tracker: the stops sit at ``sigma_min`` 5e-3 to 1.7e-2 (healthy) with the
+nearest other branch 0.22 to 14 rad away, and **zero collision samples** in the whole loop
+(shortest gap 2.2e-1). A fold death is a pair that first collides and then vanishes; none of these
+did. The positive half of the same run is solid and is corroborated independently: the tracked
+branch arrives at a *different* solution of the same pose, with joint-space distance **0.0e+00**,
+along a joint path whose clearance stays at 5.25e-3 -- and a route from one solution to another is
+a valid lift of the loop, so arriving exactly at the second solution is not something a drifting
+tracker produces by chance. So "a prescribed Cartesian loop can change posture on SR5 without
+meeting a singularity" is measured; "the loop's image crosses the discriminant image" is *not*
+measured this round, and the fix direction is stated (the corrector's error must be
+``se3_error(fk(q), T_target)`` rather than a difference of two errors against a fixed reference,
+which is only a first-order approximation, plus a task-step controller on ``sigma_min``).
+
+The same ambiguity appears in `exp48` phase 4, where it is stated in the output rather than
+papered over: the certified route joins two solutions of one aspect, so the lift of its projection
+*must* permute them, and the tracker reports the identity. Since phase 2's cuspidality claim is a
+label count on the torus (no tracker involved), it stands; the lift does not.
+
+Also recorded: a flood fill that precomputes its list of start cells labels 3480 components on a
+two-component torus (the list is computed before any labelling, so every free cell starts a new
+component). Cheap to fix, invisible without a sanity check on the component count -- which is why
+the run prints the component count and the cell-count balance (44700/44700) rather than just the
+label field.
+
 ## 4. Finding 2: DH continuation
 
 ### 4.1 SR0 is exactly one parameter away, and the search says which one
