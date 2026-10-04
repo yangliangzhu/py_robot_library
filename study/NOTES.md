@@ -962,6 +962,29 @@ papered over: the certified route joins two solutions of one aspect, so the lift
 *must* permute them, and the tracker reports the identity. Since phase 2's cuspidality claim is a
 label count on the torus (no tracker involved), it stands; the lift does not.
 
+
+**The fix, and what it bought (same round).**  The residual must be measured *relative to the
+current pose*: ``se3_error(FK(q), T)`` is what ``homotopy.jacobian_q`` differentiates, whereas
+differencing two errors against a fixed reference pose is only a first-order approximation of it
+and leaves the correction direction wrong by a pose-dependent linear map.  With that change, a
+rigid-target interpolation for bisection (``taskspace.se3_interpolate``: slerp in rotation, linear
+in position, endpoints exact to 1e-16, orthonormality to 1e-16) and the max-step guard, the same
+``exp49`` run now *shows the crossing*:
+
+* **3 collision samples of 118** (samples 46, 47, 48), with two tracks merging to **9.12e-15 rad**
+  and dying together -- tracks 0 and 7, whose last accepted configuration has ``sigma_min`` 8.5e-3
+  with the nearest other branch 17.5 rad away.  A pair that collides and then vanishes *is* a fold,
+  i.e. the loop's image landing on the discriminant: the "two sheets die at a fold" signature,
+  measured rather than argued;
+* the tracked pair still arrives (track 1 -> solution 6, joint-space distance **0.0e+00**) and the
+  degenerate-loop control stays **10/10 arrivals, 0 collisions, 0 merged**.
+
+So on SR5: a prescribed Cartesian loop changes posture without meeting a singularity *and* its
+image crosses the discriminant image -- the posture change is a change of **uniqueness domain**, not
+of aspect.  What remains instrument-limited: six branches still stop at healthy clearance with no
+partner (tracks 2,4,5,8 at sample 41, 6 at 48, 3 at 0) -- tracker deaths, not folds, and the debt
+is stated rather than averaged into the result.
+
 Also recorded: a flood fill that precomputes its list of start cells labels 3480 components on a
 two-component torus (the list is computed before any labelling, so every free cell starts a new
 component). Cheap to fix, invisible without a sanity check on the component count -- which is why

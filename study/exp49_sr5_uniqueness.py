@@ -67,21 +67,23 @@ def rich_pose(model, rng, *, seeds: int, least: int = 10, tries: int = 8):
     return None, []
 
 
-def pose_task(links):
-    """Task map and Jacobian for the 6-DOF pose, in the study's own SE(3) convention.
+def pose_kinematics(links):
+    """Residual and Jacobian for the 6-DOF pose the way ``study.homotopy`` measures them.
 
-    ``task(q) = se3_error(T_ref, FK(q))`` for the fixed reference ``T_ref``; a target pose is
-    converted with the same function, so Newton inside :mod:`study.taskspace` is the corrector
-    ``study.homotopy`` already uses (and whose order of accuracy exp11 measured).
+    The residual must be *relative to the current pose* -- ``se3_error(FK(q), T)`` -- because that
+    is what :func:`study.homotopy.jacobian_q` differentiates.  The first version of this experiment
+    used a fixed reference pose and differenced two such errors, which is only a first-order
+    approximation: the correction direction was wrong by a pose-dependent linear map, and the
+    tracker stalled on 9 of 10 branches at healthy clearance (NOTES 3.33).
     """
 
-    def task_of(reference):
-        def task(q: np.ndarray) -> np.ndarray:
-            return homotopy.se3_error(reference, homotopy.fk_links(links, q))
+    def residual(q: np.ndarray, target: np.ndarray) -> np.ndarray:
+        return homotopy.se3_error(homotopy.fk_links(links, q), target)
 
-        return task
+    def jacobian(q: np.ndarray) -> np.ndarray:
+        return homotopy.jacobian_q(links, q)
 
-    return task_of
+    return residual, jacobian
 
 
 def main() -> int:
@@ -132,15 +134,12 @@ def main() -> int:
           f"{np.max(np.abs(poses[0] - poses[-1])):.1e}")
 
     print("\nphase 3: whole-fibre lift along the projected loop")
-    reference = poses[0].copy()
-    task_of = pose_task(links)(reference)
-    jacobian_of = lambda q: homotopy.jacobian_q(links, q)  # noqa: E731
-    targets = []
-    for index in range(poses.shape[0]):
-        targets.append(task_of(path[index]))
-    targets = np.array(targets)
+    residual_of, jacobian_of = pose_kinematics(links)
+    targets = poses
+    task_of = lambda q: homotopy.fk_links(links, q)  # noqa: E731 - only for the default error
     result = ts.lift_fiber(
-        task_of, jacobian_of, targets, solutions,
+        task_of, jacobian_of, targets, solutions, residual=residual_of,
+        interpolate=ts.se3_interpolate,
         sigma=lambda q: iks.sigma_min(model, q),
         sigma_floor=1e-9, collision=1e-2, merge=1e-6,
         distance=lambda a, b: iks.configuration_distance(a, b, circular),
@@ -192,9 +191,10 @@ def main() -> int:
               f"nearest other track {partner:.2e} rad, jumps rejected {item.jumps}")
 
     print("\nphase 4: controls")
-    degenerate = np.tile(targets[0], (targets.shape[0], 1))
+    degenerate = np.tile(targets[0], (targets.shape[0], 1, 1))
     control = ts.lift_fiber(
-        task_of, jacobian_of, degenerate, solutions,
+        task_of, jacobian_of, degenerate, solutions, residual=residual_of,
+        interpolate=ts.se3_interpolate,
         sigma=lambda q: iks.sigma_min(model, q),
         sigma_floor=1e-9, collision=1e-2, merge=1e-6,
         distance=lambda a, b: iks.configuration_distance(a, b, circular),

@@ -32,11 +32,55 @@ import numpy as np
 #: A task map: configuration -> task vector, and its Jacobian (task x dof).
 TaskMap = Callable[[np.ndarray], np.ndarray]
 TaskJacobian = Callable[[np.ndarray], np.ndarray]
+#: A residual: (configuration, target) -> error vector whose norm the corrector drives to zero.
+TaskResidual = Callable[[np.ndarray, np.ndarray], np.ndarray]
+#: A target interpolation: (target_a, target_b, fraction) -> target.
+TaskInterpolation = Callable[[np.ndarray, np.ndarray, float], np.ndarray]
+
+
+def se3_interpolate(target_a: np.ndarray, target_b: np.ndarray, fraction: float) -> np.ndarray:
+    """Interpolate two 4x4 poses along a rigid motion (slerp in rotation, linear in position).
+
+    Needed because a corrector that bisects a pose interval must *produce poses*: a linear
+    combination of two rotation matrices is not a rotation, and feeding it to a pose residual
+    makes the residual meaningless.  The rotation is composed from the world-frame rotation vector
+    that :func:`study.homotopy.se3_error` reports, so interpolation and residual agree, and at
+    ``fraction`` 1 the result is ``target_b`` exactly.
+    """
+    target_a = np.asarray(target_a, dtype=float)
+    target_b = np.asarray(target_b, dtype=float)
+    out = np.eye(4)
+    spin = target_b[:3, :3] @ target_a[:3, :3].T
+    cosine = float(np.clip(0.5 * (np.trace(spin) - 1.0), -1.0, 1.0))
+    angle = float(np.arccos(cosine))
+    if angle < 1e-12:
+        out[:3, :3] = target_a[:3, :3]
+    else:
+        axis = np.array([spin[2, 1] - spin[1, 2], spin[0, 2] - spin[2, 0],
+                         spin[1, 0] - spin[0, 1]]) / (2.0 * np.sin(angle))
+        out[:3, :3] = _exp_so3(axis * (fraction * angle))[:3, :3] @ target_a[:3, :3]
+    out[:3, 3] = target_a[:3, 3] + fraction * (target_b[:3, 3] - target_a[:3, 3])
+    return out
+
+
+def _exp_so3(rotation_vector: np.ndarray) -> np.ndarray:
+    """Rodrigues' formula as a 4x4 rotation."""
+    theta = float(np.linalg.norm(rotation_vector))
+    out = np.eye(4)
+    if theta < 1e-12:
+        return out
+    axis = np.asarray(rotation_vector, dtype=float) / theta
+    skew = np.array([[0.0, -axis[2], axis[1]], [axis[2], 0.0, -axis[0]],
+                     [-axis[1], axis[0], 0.0]])
+    rotation = np.eye(3) + np.sin(theta) * skew + (1.0 - np.cos(theta)) * (skew @ skew)
+    out[:3, :3] = rotation
+    return out
 
 
 def newton(
     task: TaskMap, jacobian: TaskJacobian, target: np.ndarray, q0: np.ndarray, *,
     iterations: int = 40, tolerance: float = 1e-10, damping: float = 1e-12,
+    residual: TaskResidual | None = None,
 ) -> tuple[np.ndarray, float]:
     """Damped Gauss-Newton on ``task(q) = target`` from a seed.
 
@@ -48,22 +92,32 @@ def newton(
         iterations: Maximum iterations.
         tolerance: Residual that counts as converged.
         damping: Tikhonov term for the normal equations.
+        residual: Error function ``(q, target) -> vector``.  When omitted the error is
+            ``target - task(q)``, which is only correct if the task map *is* the identity chart on
+            the task space (true for a position).  For poses the error must be measured *relative
+            to the current pose* (e.g. ``se3_error(FK(q), target)``), otherwise the correction
+            direction is wrong by a pose-dependent linear map and the tracker stalls.
 
     Returns:
         ``(q, residual)``, residual being the Euclidean task error.
     """
     target = np.asarray(target, dtype=float)
     q = np.asarray(q0, dtype=float).copy()
-    error = target - task(q)
+
+    def error_at(configuration: np.ndarray) -> np.ndarray:
+        if residual is not None:
+            return np.asarray(residual(configuration, target), dtype=float)
+        return target - task(configuration)
+
+    error = error_at(q)
     for _ in range(iterations):
-        residual = float(np.linalg.norm(error))
-        if residual < tolerance:
+        if float(np.linalg.norm(error)) < tolerance:
             break
         matrix = jacobian(q)
         normal = matrix @ matrix.T + damping * np.eye(matrix.shape[0])
         q = q + matrix.T @ np.linalg.solve(normal, error)
-        error = target - task(q)
-    return q, float(np.linalg.norm(target - task(q)))
+        error = error_at(q)
+    return q, float(np.linalg.norm(error_at(q)))
 
 
 @dataclass
@@ -95,7 +149,8 @@ def lift(
     task: TaskMap, jacobian: TaskJacobian, targets: np.ndarray, q0: np.ndarray, *,
     sigma: Callable[[np.ndarray], float] | None = None, sigma_floor: float = 0.0,
     tolerance: float = 1e-9, min_division: float = 1e-4, jump_tolerance: float = 0.3,
-    max_step: float = 0.5,
+    max_step: float = 0.5, residual: TaskResidual | None = None,
+    interpolate: TaskInterpolation | None = None,
 ) -> Lift:
     """Carry one solution along ``targets``, bisecting the task interval when a step fails.
 
@@ -111,6 +166,8 @@ def lift(
         jump_tolerance: Largest distance between the predicted and corrected configuration that
             still counts as following the branch rather than jumping to a neighbour.
         max_step: Largest joint-space step the corrector may take; longer proposals are bisected.
+        residual: Error function ``(q, target) -> vector``; see :func:`newton`.
+        interpolate: Target interpolation ``(a, b, fraction)``; see :func:`se3_interpolate`.
 
     Returns:
         The :class:`Lift`; ``finished`` is the certificate that the whole path was tracked.
@@ -123,7 +180,7 @@ def lift(
     for index in range(1, targets.shape[0]):
         q, ok, clearance, jumps = _interval(task, jacobian, targets[index - 1], targets[index],
                                             result.q, sigma, sigma_floor, tolerance, min_division,
-                                            jump_tolerance, max_step)
+                                            jump_tolerance, max_step, residual, interpolate)
         result.jumps += jumps
         if not ok:
             result.reason = (
@@ -133,7 +190,8 @@ def lift(
             return result
         result.q = q
         result.index = index
-        result.residual = float(np.linalg.norm(targets[index] - task(q)))
+        result.residual = float(np.linalg.norm(
+            targets[index] - task(q) if residual is None else residual(q, targets[index])))
         if clearance < result.min_sigma:
             result.min_sigma = clearance
             result.min_sigma_at = index
@@ -144,7 +202,8 @@ def lift(
 
 
 def _interval(task, jacobian, target_a, target_b, q_start, sigma, sigma_floor, tolerance,
-              min_division, jump_tolerance, max_step) -> tuple[np.ndarray, bool, float, int]:
+              min_division, jump_tolerance, max_step, residual=None, interpolate=None
+              ) -> tuple[np.ndarray, bool, float, int]:
     """Advance from ``target_a`` to ``target_b``, bisecting when the corrector cannot follow.
 
     The predictor is the **tangent** step ``dq = pinv(J) (target_b - target_a)``, not the previous
@@ -164,34 +223,40 @@ def _interval(task, jacobian, target_a, target_b, q_start, sigma, sigma_floor, t
     jumps = 0
     while hi - lo > min_division:
         mid = 0.5 * (lo + hi)
-        trial_target = target_a + mid * (target_b - target_a)
+        trial_target = (interpolate(target_a, target_b, mid) if interpolate is not None
+                        else target_a + mid * (target_b - target_a))
         matrix = jacobian(q)
-        error = trial_target - task(q)
+        if residual is None:
+            error = trial_target - task(q)
+        else:
+            error = np.asarray(residual(q, trial_target), dtype=float)
         predicted = q + matrix.T @ np.linalg.solve(
             matrix @ matrix.T + 1e-12 * np.eye(matrix.shape[0]), error
         )
         step_length = float(np.linalg.norm(predicted - q))
-        trial, residual = newton(task, jacobian, trial_target, predicted, tolerance=tolerance)
+        trial, residual_value = newton(task, jacobian, trial_target, predicted,
+                                       tolerance=tolerance, residual=residual)
         clearance = float(sigma(trial))
         drifted = float(np.linalg.norm(trial - predicted))
-        if (residual <= tolerance and clearance >= sigma_floor and drifted <= jump_tolerance
-                and step_length <= max_step):
+        if (residual_value <= tolerance and clearance >= sigma_floor
+                and drifted <= jump_tolerance and step_length <= max_step):
             lo = mid
             q = trial
-            best_residual = residual
+            best_residual = residual_value
             best_clearance = clearance
             continue
-        if residual <= tolerance and clearance >= sigma_floor:
+        if residual_value <= tolerance and clearance >= sigma_floor:
             jumps += 1
-        best_residual = min(best_residual, residual)
+        best_residual = min(best_residual, residual_value)
         best_clearance = min(best_clearance, clearance)
         hi = mid
     if lo <= 0.0:
         return q, False, best_clearance, jumps
     # finish the interval with the last accepted configuration carried to the far end
-    final, residual = newton(task, jacobian, target_b, q, tolerance=tolerance)
+    final, final_residual = newton(task, jacobian, target_b, q, tolerance=tolerance,
+                                   residual=residual)
     clearance = float(sigma(final))
-    if residual <= tolerance and clearance >= sigma_floor:
+    if final_residual <= tolerance and clearance >= sigma_floor:
         return final, True, clearance, jumps
     if lo < 1.0:
         return q, False, best_clearance, jumps
@@ -224,6 +289,7 @@ def lift_fiber(
     sigma: Callable[[np.ndarray], float] | None = None, sigma_floor: float = 0.0,
     tolerance: float = 1e-9, min_division: float = 1e-4, collision: float = 5e-3,
     merge: float = 1e-6, jump_tolerance: float = 0.3, max_step: float = 0.5,
+    residual: TaskResidual | None = None, interpolate: TaskInterpolation | None = None,
     distance: Callable[[np.ndarray, np.ndarray], float] | None = None,
 ) -> FiberLift:
     """Track every solution in ``starts`` along ``targets`` in lockstep.
@@ -246,6 +312,8 @@ def lift_fiber(
             two distinct branches cannot coincide away from the discriminant.
         jump_tolerance: Passed to the corrector's jump guard.
         max_step: Largest joint-space step the corrector may take.
+        residual: Error function ``(q, target) -> vector``; see :func:`newton`.
+        interpolate: Target interpolation ``(a, b, fraction)``; see :func:`se3_interpolate`.
         distance: Distance between configurations; Euclidean when omitted.
 
     Returns:
@@ -271,13 +339,15 @@ def lift_fiber(
                 q, ok, clearance, jumps = _interval(
                     task, jacobian, targets[index - 1], targets[index], item.q,
                     (lambda q: 0.0) if sigma is None else sigma, sigma_floor, tolerance,
-                    min_division, jump_tolerance, max_step)
+                    min_division, jump_tolerance, max_step, residual, interpolate)
                 item.jumps += jumps
                 if ok:
                     item.q = q
                     item.index = index
                     item.samples.append(q.copy())
-                    item.residual = float(np.linalg.norm(targets[index] - task(q)))
+                    item.residual = float(np.linalg.norm(
+                        targets[index] - task(q) if residual is None
+                        else residual(q, targets[index])))
                     item.min_sigma = min(item.min_sigma, clearance)
                 else:
                     item.reason = f"died between samples {index - 1} and {index}"
