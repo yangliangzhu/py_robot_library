@@ -2191,3 +2191,29 @@ complex path; the measurements above say how small that residue is in practice.
    SR0 solver, and continuation SR0 -> SR5 including branch switching at the discriminant.
 5. **exp06 — homotopy as a complete census**, i.e. the tool §3.1 says is missing: track the
    solutions found at one pose around a loop in the workspace and see whether new ones appear.
+
+**The Q26 result is now a runnable instrument, not a scratch script.**  ``exp54_cusp_discriminant``
+was rewritten around the validated quadratic (``A0 w^2 + 2 A2 w + A1 = 0``, ``w = tan^2(q3/2)``) and
+``python3 -m study.exp54_cusp_discriminant`` now exits 0 with:
+
+    phase 1: fibre 2, positive roots 1 (matched 1), worst |t^2| discrepancy 8.33e-17  [OK]
+             (2.00, -0.30): 2.00e-15 | (2.60, +0.90): 1.74e-11 | (3.20, +0.20): 2.36e-15
+             (4.00, -0.60): fibre 0, positive roots 0  [OK]
+    phase 2: C2(3.4601, +-1.4364) = -0.345637, Delta_w = +796.347
+    phase 3: no singular point of C2 = 0 (symbolic argument + 26x26 search: 0 found)
+    phase 4: verdict -- the boundary is smooth, the arm has no cusp, cuspidality does not need one
+
+so the claim of 3.50 is now reproducible by one command, and the model's own fibre confirms the IK to
+machine precision at every checked point.
+
+Two *comparison* faults were found and fixed while doing this, both of the family "the instrument
+misreads a correct result":
+
+* the quadratic's ``w``-roots include **negative** ones (complex ``t``, correctly absent from the
+  fibre); comparing the raw root list against the fibre's per-solution list charges the quadratic for
+  that root and reads as a **1.0e+02** discrepancy at ``(2.6, 0.9)`` -- the fibre's two solutions are
+  the ``+-t`` pair of **one** positive ``w``;
+* the ``+-`` pair's ``tan^2(q3/2)`` values differ at ~1e-9 (the fibre's own accuracy), so a
+  "distinct values" comparison needs a tolerance rather than rounding (with rounding to 12 decimals
+  one point still reported ``nan``).
+

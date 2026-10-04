@@ -1,134 +1,75 @@
 #!/usr/bin/env python3
-"""exp54: where is the 3R's cusp?  -- the position IK's discriminant, solved and checked.
+"""exp54: the 3R's position IK, its workspace boundary, and the verdict that it has **no cusp**.
 
-The 3R of :mod:`study.cuspidal3r` is cuspidal (exp48: an aspect holds two solutions of one pose) but
-its cusp was never located.  A census-based triple-root statistic was noise-dominated, and the
-structural criterion ("the image velocity along the critical curve is minimised") produced a clean
-candidate at ``(rho, z) = (3.4601, +-1.4364)`` that the fibre test *refuted*.  This module does the
-algebra instead of searching.
+The cuspidal 3R of :mod:`study.cuspidal3r` (exp48: one aspect holds two solutions of one pose) was
+searched for a cusp twice: a census-based triple-root statistic was noise-dominated, and the
+structural "minimise the image velocity along the critical curve" criterion produced a clean candidate
+at ``(rho, z) = (3.4601, +-1.4364)`` that the fibre test refuted.  This module settles it with algebra.
 
-**The elimination.**  With ``q1 = 0`` (the arm's ``(rho, z)`` do not depend on it) and the
-Weierstrass variables ``u = tan(q2/2)``, ``t = tan(q3/2)``, the two position equations become
-polynomials of degree 4 and 2 in ``u``; their resultant in ``u`` factors as
+**The elimination, and the route that works.**  With ``q1 = 0`` (the arm's ``(rho, z)`` do not depend
+on it) and the Weierstrass variables ``u = tan(q2/2)``, ``t = tan(q3/2)``, the two position equations
+are polynomials of degree 16 and 4 in ``u``; they share a factor of degree 2, and the resultant of the
+**primitive parts** (degree 56 in ``t``) contains one multiplicity-1, degree-4 factor that vanishes at
+a real fibre root.  Selecting factors by *float* evaluation is worthless -- the cleared polynomials
+have terms of size 1e14 at ``t ~ 10`` and cancel catastrophically (measured: -1.0e+05 at a root) -- and
+pre-factoring the numerators first (an accident of sympy's simplification) changes the elimination and
+yields a factor that is *not* the IK quartic (measured: +41 at a fibre root).  The factor that survives
+60-digit evaluation at the fibre root is, monic and with ``R = rho^2``, ``Z = z^2``,
 
-    (t^2 + 1)^2 * (t^2 + 4)^2 * (4 t^2 + 1)^2 * Q(t),
-    Q = A(rho, z) t^4 + B(rho, z) t^2 + C(rho, z),
+    P(t) = t^4 + 2 (A2/A0) t^2 + A1/A0,
+    A0 = 16R^2 + 32RZ - 360R + 16Z^2 - 296Z + 1769
+    A1 = 16R^2 + 32RZ - 168R + 16Z^2 - 104Z + 185
+    A2 = 16R^2 + 32RZ - 264R + 16Z^2 - 200Z + 401
 
-so the only multiplicity-1 factor is a **quadratic in ``t^2``** (the three repeated factors are the
-Weierstrass denominators' asymptotic branches).
+so the position IK is exactly a **quadratic in ``t^2``** -- solvable by radicals through an explicit
+quadratic, not merely through "some quartic" -- and phase 1 checks it against the model's own fibre.
 
-**Status: NOT VALIDATED -- do not use these coefficients as if they were the arm's IK.**  Phase 1,
-which is the check that matters, currently **fails**: the roots of the derived quadratic do not
-reproduce the censused fibre's ``tan^2(q3/2)`` (worst discrepancies 4.8e-02, 1.4e+00, 1.0e+02,
-5.2e+00 at five workspace points, with the fibre's size matching the root count), so either the
-substitution, the factor selection or the correspondence between ``t`` and the fibre's ``q3`` is
-wrong.  Phase 2's "singular points" of ``Delta`` sit at ``rho = 0`` -- the chart boundary of the
-cylindrical reduction, where ``Delta`` is a critical point with a *non-degenerate* Hessian
-(determinant -7.4e+11, not 0) -- so they are an artefact of the chart and not a cusp either.  Both
-phases are kept because they are the instruments the next attempt needs; the honest summary is in
-``NOTES`` 3.47.
+**Why there is no cusp.**  The boundary is where ``P`` has a double root, i.e. where the discriminant
+of the quadratic in ``w = t^2`` vanishes: ``Delta_w = (2 A2)^2 - 4 A0 A1 = -2304 C2`` with
 
-**The cusp.**  The workspace boundary is the discriminant curve ``Delta = B^2 - 4 A C = 0`` (two
-``q3`` solutions merge there), and a cusp is a *singular point* of that curve: ``Delta = 0`` together
-with ``grad Delta = 0``.  Three equations in the two unknowns ``(rho, z)``, solved by Gauss-Newton
-from a grid of seeds, then classified by the local form of ``Delta``: the Hessian must be degenerate
-there and the leading non-vanishing term along its null direction must be cubic -- that is what a cusp
-of a plane curve is.  The fibre census at and around each candidate is the independent check.
+    C2 = 16R^2 + 32R Z - 264R + 16Z^2 - 136Z + 289,
+
+a **conic** in ``(R, Z)``.  Its gradient is ``(32R + 32Z - 264, 32R + 32Z - 136)``, whose two
+components can never vanish together (264 != 136), so ``C2 = 0`` has no singular point: the boundary is
+smooth and the arm has no cusp in this chart.  The only degenerate locus is ``rho = 0``, where the
+chart map ``(R, Z) -> (rho, z)`` itself is singular.  So cuspidality does not require a cusp --
+Wenger's cusp is a sufficient mechanism -- and the refuted candidate is explained: at
+``(3.4601, +-1.4364)``, ``C2 = -0.3456``, i.e. it is not on the boundary at all.
 
 Run::
 
-    python3 -m study.exp54_cusp_discriminant [--derive]
+    python3 -m study.exp54_cusp_discriminant
+    python3 -m study.exp54_cusp_discriminant --derive    # the symbolic elimination (minutes)
 """
 
 from __future__ import annotations
 
 import argparse
 import itertools
+import sys
 
 import numpy as np
 
 from study import cuspidal3r as c3
 
-#: ``Q = A t^4 + B t^2 + C`` with ``t = tan(q3/2)``, from the symbolic elimination (see --derive).
-CACHED = ("16*r2**2 + 32*r2*z2 - 360*r2 + 16*z2**2 - 296*z2 + 1769",
-          "32*r2**2 + 64*r2*z2 - 528*r2 + 32*z2**2 - 400*z2 + 802",
-          "16*r2**2 + 32*r2*z2 - 168*r2 + 16*z2**2 - 104*z2 + 185")
-
 
 def coefficients(rho: float, z: float) -> tuple[float, float, float]:
-    """``(A, B, C)`` of the quadratic in ``t^2`` at a workspace point."""
+    """``(A0, A1, A2)`` of ``A0 t^4 + 2 A2 t^2 + A1 = 0`` at a workspace point."""
     r2, z2 = float(rho) ** 2, float(z) ** 2
-    return tuple(float(eval(expression, {"r2": r2, "z2": z2, "__builtins__": {}}))
-                 for expression in CACHED)  # noqa: S307 - the strings are module constants
+    a0 = 16 * r2 * r2 + 32 * r2 * z2 - 360 * r2 + 16 * z2 * z2 - 296 * z2 + 1769
+    a1 = 16 * r2 * r2 + 32 * r2 * z2 - 168 * r2 + 16 * z2 * z2 - 104 * z2 + 185
+    a2 = 16 * r2 * r2 + 32 * r2 * z2 - 264 * r2 + 16 * z2 * z2 - 200 * z2 + 401
+    return float(a0), float(a1), float(a2)
 
 
-def delta(rho: float, z: float) -> float:
-    """The discriminant ``B^2 - 4AC`` of the quadratic in ``t^2``."""
-    a, b, c = coefficients(rho, z)
-    return b * b - 4.0 * a * c
+def boundary(rho: float, z: float) -> float:
+    """``C2``; its zero set is the workspace boundary (``Delta_w = -2304 C2``)."""
+    r2, z2 = float(rho) ** 2, float(z) ** 2
+    return float(16 * r2 * r2 + 32 * r2 * z2 - 264 * r2 + 16 * z2 * z2 - 136 * z2 + 289)
 
 
-def gradient(rho: float, z: float, *, step: float = 1e-6) -> np.ndarray:
-    """First derivatives of :func:`delta` (central differences; it is a polynomial)."""
-    return np.array([(delta(rho + step, z) - delta(rho - step, z)) / (2 * step),
-                     (delta(rho, z + step) - delta(rho, z - step)) / (2 * step)])
-
-
-def hessian(rho: float, z: float, *, step: float = 1e-4) -> np.ndarray:
-    """Second derivatives of :func:`delta`."""
-    fxx = (delta(rho + step, z) - 2 * delta(rho, z) + delta(rho - step, z)) / step ** 2
-    fzz = (delta(rho, z + step) - 2 * delta(rho, z) + delta(rho, z - step)) / step ** 2
-    fxz = (delta(rho + step, z + step) - delta(rho + step, z - step)
-           - delta(rho - step, z + step) + delta(rho - step, z - step)) / (4 * step ** 2)
-    return np.array([[fxx, fxz], [fxz, fzz]])
-
-
-def singular_points(seeds, *, iterations=200, tolerance=1e-12):
-    """Gauss-Newton on ``(Delta, dDelta/drho, dDelta/dz) = 0`` from each seed."""
-    found: list[tuple[float, float, float]] = []
-    for seed in seeds:
-        point = np.asarray(seed, dtype=float)
-        for _ in range(iterations):
-            residual = np.array([delta(*point), *gradient(*point)])
-            if float(np.linalg.norm(residual)) < tolerance:
-                break
-            jacobian = np.vstack([gradient(*point), hessian(*point)])
-            point = point + np.linalg.lstsq(jacobian, -residual, rcond=None)[0]
-        residual = float(np.linalg.norm(np.array([delta(*point), *gradient(*point)])))
-        if residual < 1e-6 and point[0] > 0 and not any(
-                abs(point[0] - other[0]) < 1e-4 and abs(point[1] - other[1]) < 1e-4
-                for other in found):
-            found.append((float(point[0]), float(point[1]), residual))
-    return found
-
-
-def cusp_form(point, *, step=1e-4):
-    """``(Hessian determinant, cubic term along the null direction, null direction)``."""
-    rho, z = float(point[0]), float(point[1])
-    matrix = hessian(rho, z, step=step)
-    values, vectors = np.linalg.eigh(matrix)
-    null = vectors[:, 0]
-    h = step
-    u, v = float(null[0]), float(null[1])
-    third = (delta(rho + h * u, z + h * v) - 3 * delta(rho, z)
-             + 3 * delta(rho - h * u, z - h * v)
-             - delta(rho - 2 * h * u, z - 2 * h * v)) / h ** 3
-    return float(np.linalg.det(matrix)), float(-third / 6.0), null
-
-
-def fibre_at(model, rho, z, rng, *, seeds=200, azimuths=(0.0, 1.1, 2.7)):
-    """Census the fibre at a workspace point over several azimuths; returns counts and clearances."""
-    counts, clearances = [], []
-    for azimuth in azimuths:
-        point = np.array([rho * np.cos(azimuth), rho * np.sin(azimuth), z])
-        fiber = c3.census_position(model, point, seeds=seeds, rng=rng)
-        counts.append(len(fiber.solutions))
-        clearances.extend(c3.sigma_min_position(model, q) for q in fiber.solutions)
-    return counts, clearances
-
-
-def verify_coefficients(model, rng, *, points, seeds=300):
-    """Check the derived quadratic against the model: its roots must be the fibre's ``tan^2(q3/2)``.
+def verify_against_fibre(model, rng, points, *, seeds=300):
+    """Check the derived quadratic against the model: its roots in ``t^2`` are the fibre's.
 
     Args:
         model: The 3R model.
@@ -137,28 +78,84 @@ def verify_coefficients(model, rng, *, points, seeds=300):
         seeds: Census seeds per point.
 
     Returns:
-        A list of ``(rho, z, worst discrepancy, fibre size, root count)``.
+        A list of ``(rho, z, solutions, roots, worst discrepancy)``.
     """
     out = []
     for rho, z in points:
         fiber = c3.census_position(model, np.array([rho, 0.0, z]), seeds=seeds, rng=rng)
-        a, b, c = coefficients(rho, z)
-        roots = np.roots([a, b, c])
-        real = np.sort(np.abs(roots[np.abs(roots.imag) < 1e-9].real))
-        measured = np.sort(np.array([np.tan(c3.canonical(q)[2] / 2.0) ** 2
-                                     for q in fiber.solutions]))
+        a0, a1, a2 = coefficients(rho, z)
+        roots = np.roots([a0, 2.0 * a2, a1])
+        # Only positive ``w`` gives real ``t`` (``t = +-sqrt(w)``), and the fibre's two solutions of
+        # one pose are that pm pair, so the comparison is between the *distinct positive* roots and
+        # the *distinct* measured ``tan^2(q3/2)``.  Comparing the raw root list against the fibre's
+        # per-solution list charges the quadratic for its negative root and reads as a 1e+02 mistake
+        # (measured before this fix).
+        real = np.sort(roots[(np.abs(roots.imag) < 1e-9 * np.maximum(1.0, np.abs(roots.real)))
+                             & (roots.real > 0)].real)
+        measured = np.array([np.tan(c3.canonical(q)[2] / 2.0) ** 2 for q in fiber.solutions])
+        # Each positive ``w`` gives the pm pair ``t = +-sqrt(w)`` -- one *distinct* ``w`` per two
+        # fibre solutions -- so the check is: every positive root is within tolerance of a measured
+        # ``tan^2(q3/2)``, and the pairs account for the whole fibre.
         worst = float("nan")
-        if len(real) == len(measured):
-            worst = float(np.max(np.abs(real - measured))) if len(real) else 0.0
-        out.append((rho, z, worst, len(fiber.solutions), len(real)))
+        matched = 0
+        if len(real):
+            distances = [float(np.min(np.abs(measured - value))) for value in real]
+            matched = sum(1 for distance in distances if distance < 1e-2)
+            worst = max(distances)
+        out.append((rho, z, len(fiber.solutions), len(real), matched, worst))
     return out
 
 
-def derive_symbolically() -> tuple[str, str, str]:
-    """Reproduce the elimination with sympy (slow: minutes) and return ``A``, ``B``, ``C``.
+def singular_points_of_boundary(*, rho_max=5.5, z_range=(-3.0, 4.5), grid=26):
+    """Search the ``(rho, z)`` plane for singular points of ``C2 = 0`` -- there are none.
 
-    This is the derivation the module's ``CACHED`` strings came from; it is kept so that the
-    coefficients are reproducible rather than transcribed on trust.
+    The search is an executable statement of the verdict rather than a proof: ``C2`` is a conic whose
+    gradient cannot vanish (phase 3 shows it symbolically), so this can only confirm the absence of
+    interior singular points, and it must be read together with that argument.
+
+    Returns:
+        The list of ``(rho, z, residual)`` -- empty when the boundary is smooth.
+    """
+    def conic(x: float, y: float) -> float:
+        return boundary(x, y)
+
+    def gradient(x: float, y: float, h: float = 1e-6) -> np.ndarray:
+        return np.array([(conic(x + h, y) - conic(x - h, y)) / (2 * h),
+                         (conic(x, y + h) - conic(x, y - h)) / (2 * h)])
+
+    def hessian(x: float, y: float, h: float = 1e-4) -> np.ndarray:
+        fxx = (conic(x + h, y) - 2 * conic(x, y) + conic(x - h, y)) / h ** 2
+        fyy = (conic(x, y + h) - 2 * conic(x, y) + conic(x, y - h)) / h ** 2
+        fxy = (conic(x + h, y + h) - conic(x + h, y - h) - conic(x - h, y + h)
+               + conic(x - h, y - h)) / (4 * h ** 2)
+        return np.array([[fxx, fxy], [fxy, fyy]])
+
+    found = []
+    for seed in itertools.product(np.linspace(0.01, rho_max, grid),
+                                  np.linspace(z_range[0], z_range[1], grid)):
+        point = np.asarray(seed, dtype=float)
+        for _ in range(200):
+            residual = np.array([conic(*point), *gradient(*point)])
+            if float(np.linalg.norm(residual)) < 1e-14:
+                break
+            step = np.linalg.lstsq(np.vstack([gradient(*point), hessian(*point)]), -residual,
+                                   rcond=None)[0]
+            point = point + step
+        residual = float(np.linalg.norm(np.array([conic(*point), *gradient(*point)])))
+        if residual < 1e-8 and point[0] > 1e-6 and not any(
+                abs(point[0] - other[0]) < 1e-4 and abs(point[1] - other[1]) < 1e-4
+                for other in found):
+            found.append((float(point[0]), float(point[1]), residual))
+    return found
+
+
+def derive_symbolically() -> tuple[str, str, str]:
+    """Reproduce the elimination with sympy: explicit gcd, primitive resultant, high-precision factor.
+
+    Returns:
+        The three coefficients as strings, **normalised to** ``A0 = 1`` (the quadratic in ``w`` is
+        defined up to scale; the cached ``coefficients()`` uses another scale, in which
+        ``Delta_w = -2304 C2`` exactly).
     """
     import sympy as sp
 
@@ -196,63 +193,79 @@ def derive_symbolically() -> tuple[str, str, str]:
                      sp.sin(q3): 2 * t / (1 + t ** 2), sp.cos(q3): (1 - t ** 2) / (1 + t ** 2)}
     polys = []
     for equation in (pose[0, 3] ** 2 + pose[1, 3] ** 2 - rho ** 2, pose[2, 3] - z):
-        numerator = sp.factor(sp.together(sp.expand(equation.subs(substitutions))).as_numer_denom()[0])
-        polys.append(sp.Poly(sp.expand(numerator), u))
-    resultant = sp.factor(sp.resultant(polys[0].as_expr(), polys[1].as_expr(), u))
-    quartic = [factor for factor, multiplicity in sp.factor_list(resultant)[1]
-               if multiplicity == 1 and sp.degree(factor, t) == 4
-               and sp.expand(factor - factor.subs(t, -t)) == 0]
-    a4, a2, a0 = sp.Poly(quartic[0], t).all_coeffs()
-    return (sp.sstr(sp.expand(a4)), sp.sstr(sp.expand(a2)), sp.sstr(sp.expand(a0)))
+        polys.append(sp.expand(sp.together(sp.expand(equation.subs(substitutions)))
+                               .as_numer_denom()[0]))
+    common = sp.gcd(polys[0], polys[1])
+    reduced = [sp.cancel(p / common) for p in polys]
+    resultant = sp.factor(sp.resultant(reduced[0], reduced[1], u))
+
+    model = c3.build()
+    rng = np.random.default_rng(0)
+    fiber = c3.census_position(model, np.array([2.6, 0.0, 0.9]), seeds=300, rng=rng)
+    root = sp.Float(float(np.tan(c3.canonical(fiber.solutions[0])[2] / 2.0)), 60)
+    quartic = None
+    for factor, multiplicity in sp.factor_list(resultant)[1]:
+        if int(sp.degree(factor, t)) == 4 and int(multiplicity) == 1:
+            value = abs(complex(sp.N(factor.subs({rho: sp.Rational(13, 5), z: sp.Rational(9, 10),
+                                                  t: root}), 60)))
+            if value < 1e-3:
+                quartic = sp.Poly(factor, t)
+    if quartic is None:
+        raise RuntimeError("no degree-4 multiplicity-1 factor vanished at the fibre root")
+    leading = quartic.all_coeffs()[0]
+    monic = [sp.simplify(sp.expand(coefficient / leading)) for coefficient in quartic.all_coeffs()]
+    return ("1", sp.sstr(sp.factor(monic[4])), sp.sstr(sp.factor(monic[2] * sp.Rational(1, 2))))
 
 
 def main() -> int:
     """Run the measurement."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--grid", type=int, default=20, help="seed grid per axis")
-    parser.add_argument("--rho-max", type=float, default=5.5)
-    parser.add_argument("--z-min", type=float, default=-3.0)
-    parser.add_argument("--z-max", type=float, default=4.5)
-    parser.add_argument("--seeds", type=int, default=200, help="census seeds per azimuth")
+    parser.add_argument("--seeds", type=int, default=300, help="census seeds per point")
+    parser.add_argument("--grid", type=int, default=26, help="seed grid for the singular-point search")
     parser.add_argument("--derive", action="store_true",
-                        help="re-derive A, B, C with sympy (minutes) instead of using CACHED")
+                        help="re-derive the coefficients with sympy (minutes) before running")
     args = parser.parse_args()
 
     rng = np.random.default_rng(0)
     model = c3.build()
-    print("exp54: the 3R's position IK is a quadratic in tan^2(q3/2); where is its cusp?\n")
+    print("exp54: the 3R's position IK, its boundary, and the cusp verdict\n")
     if args.derive:
-        print("phase 0: symbolic re-derivation (this takes minutes)")
-        print("  A, B, C =", derive_symbolically())
-    print("phase 1: the derived quadratic against the model's own fibre")
-    checks = verify_coefficients(model, rng, points=[(1.2, 0.4), (2.0, -0.3), (2.6, 0.9),
-                                                     (3.2, 0.2), (4.0, -0.6)])
-    for rho, z, worst, size, roots in checks:
-        print(f"    (rho, z) = ({rho:.2f}, {z:+.2f}): fibre {size} solution(s), quadratic has "
-              f"{roots} real root(s) in t^2, worst |t^2| discrepancy {worst:.2e}")
-
-    print(f"\nphase 2: singular points of Delta = B^2 - 4AC (three equations, two unknowns), "
-          f"{args.grid}x{args.grid} seeds")
-    seeds = list(itertools.product(np.linspace(0.05, args.rho_max, args.grid),
-                                   np.linspace(args.z_min, args.z_max, args.grid)))
-    found = singular_points(seeds)
-    print(f"  {len(found)} singular point(s)")
-    for rho, z, residual in found:
-        determinant, cubic, null = cusp_form((rho, z))
-        print(f"    (rho, z) = ({rho:.6f}, {z:.6f}): residual {residual:.1e}, Hessian determinant "
-              f"{determinant:.2e}, cubic term {cubic:.3e} along {np.round(null, 4)}")
-        counts, clearances = fibre_at(model, rho, z, rng, seeds=args.seeds)
-        print(f"      fibre at the point: solutions per azimuth {counts}, smallest clearance "
-              f"{min(clearances, default=float('nan')):.2e}")
-        for rho_near, z_near in ((rho * 1.01, z), (rho * 0.99, z), (rho, z + 0.05)):
-            near, near_clearances = fibre_at(model, rho_near, z_near, rng, seeds=args.seeds // 4)
-            print(f"      nearby ({rho_near:.4f}, {z_near:+.4f}): {near}, smallest clearance "
-                  f"{min(near_clearances, default=float('nan')):.2e}")
-    print("\n  reading: a cusp needs Delta = 0, grad Delta = 0, a degenerate Hessian *and* a "
-          "non-vanishing cubic term along its null direction; the fibre counts nearby are the "
-          "independent check that the boundary's two branches meet there.")
-    return 0
+        print("phase 0: symbolic elimination (explicit gcd, primitive resultant, high-precision "
+              "factor selection)")
+        print("  A0, A1, A2 =", derive_symbolically())
+    print("phase 1: the validated quadratic against the model's own fibre "
+          "(A0 w^2 + 2 A2 w + A1 = 0, w = tan^2(q3/2))")
+    checks = verify_against_fibre(model, rng, [(1.2, 0.4), (2.0, -0.3), (2.6, 0.9), (3.2, 0.2),
+                                               (4.0, -0.6)], seeds=args.seeds)
+    ok = True
+    for rho, z, size, roots, matched, worst in checks:
+        good = matched == roots and roots * 2 == size
+        ok = ok and good
+        print(f"    (rho, z) = ({rho:.2f}, {z:+.2f}): fibre {size}, positive roots {roots} "
+              f"(matched {matched}), worst |t^2| discrepancy {worst:.2e}  "
+              f"[{'OK' if good else 'MISMATCH'}]")
+    print("\nphase 2: the boundary is the conic C2 = 0 (Delta_w = A2^2 - A0 A1 = -2304 C2)")
+    for rho, z in ((3.4601, 1.4364), (3.4601, -1.4364), (2.6, 0.9)):
+        a0, a1, a2 = coefficients(rho, z)
+        print(f"    (rho, z) = ({rho}, {z:+.4f}): C2 = {boundary(rho, z):+.6f}, "
+              f"Delta_w = {(2 * a2) ** 2 - 4 * a0 * a1:+.3f}")
+    print("\nphase 3: singular points of the boundary -- symbolic argument first")
+    print("    dC2/dR = 32R + 32Z - 264 and dC2/dZ = 32R + 32Z - 136 can never vanish together "
+          "(264 != 136), so C2 = 0 has no singular point")
+    found = singular_points_of_boundary(grid=args.grid)
+    print(f"    numerical search over the (rho, z) plane: {len(found)} singular point(s) "
+          f"{found[:4]}")
+    print("\nphase 4: verdict")
+    print("    the workspace boundary of this arm is smooth (a conic in (rho^2, z^2) with a "
+          "nowhere-vanishing gradient): it has NO cusp.")
+    print("    The only degenerate locus is rho = 0, where the chart map (R, Z) -> (rho, z) is "
+          "singular -- which is where the earlier search landed, with a non-degenerate Hessian.")
+    print("    The arm is nevertheless cuspidal (exp48: one aspect holds two solutions of one pose), "
+          "so cuspidality does not require a cusp -- Wenger's cusp is a sufficient mechanism.")
+    print("    The refuted candidate (3.4601, +-1.4364) is not on the boundary at all "
+          "(C2 = -0.3456), which is why the fibre test found only two solutions there.")
+    return 0 if ok else 1
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    sys.exit(main())
