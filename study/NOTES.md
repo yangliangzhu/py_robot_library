@@ -985,6 +985,28 @@ of aspect.  What remains instrument-limited: six branches still stop at healthy 
 partner (tracks 2,4,5,8 at sample 41, 6 at 48, 3 at 0) -- tracker deaths, not folds, and the debt
 is stated rather than averaged into the result.
 
+
+**Reproduction (three pose seeds, `exp49 --pose-seed 0|1|2`).**  The posture change reproduces on
+all three; the *crossing* was caught on one.
+
+| pose seed | fibre | same-aspect pair (clearance) | tracked posture arrives at | arrivals | crossing collisions |
+|---|---|---|---|---|---|
+| 0 | 10 (5+/5-) | (1, 6), 5.25e-3 | solution 6, **0.0e+00** | 1/10 | **3** (a pair merging to 9.12e-15 and dying together) |
+| 1 | 8 (4+/4-) | (0, 2), 5.07e-3 | solution 2, **0.0e+00** | 5/8 | 0 (shortest gap 7.1e-2) |
+| 2 | 8 (4+/4-) | (0, 2), 6.40e-3 | solution 2, **0.0e+00** | 2/8 | 0 (shortest gap 9.2e-2) |
+
+Seed 1 and 2 also show the print defect that was fixed with them: an arrival with no matching
+starting solution was printed as "arrived at solution 3 (distance 1.4e+01 rad)", which reads like a
+permutation and is not one.
+
+**Honest limit of the crossing evidence.**  No collision on seeds 1/2 does *not* mean no crossing:
+the detector only sees a crossing when the coalescing pair is **real at the base pose and tracked**,
+and the samples must straddle it. A crossing between two samples, or one whose pair was complex at
+the base pose (a birth), is invisible to a forward tracker -- the same blindness that exp25 had to
+patch with reseeding. So the reproduced claim is the *posture change as a prescribed Cartesian
+loop* (3/3); the *crossing* is measured on 1/3 and the sampling limitation is the stated reason,
+not a negative result.
+
 Also recorded: a flood fill that precomputes its list of start cells labels 3480 components on a
 two-component torus (the list is computed before any labelling, so every free cell starts a new
 component). Cheap to fix, invisible without a sanity check on the component count -- which is why

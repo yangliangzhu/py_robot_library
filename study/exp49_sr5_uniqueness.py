@@ -91,6 +91,9 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--pose-seed", type=int, default=0)
     parser.add_argument("--seeds", type=int, default=400)
+    parser.add_argument("--least", type=int, default=10,
+                        help="fewest solutions a pose must have to be used (8 is common on SR5)")
+    parser.add_argument("--tries", type=int, default=12, help="poses to try before giving up")
     parser.add_argument("--delta", type=float, default=5e-3)
     parser.add_argument("--waypoints", type=int, default=4)
     args = parser.parse_args()
@@ -102,7 +105,8 @@ def main() -> int:
 
     print("exp49: uniqueness domains on the SR5 -- whole-fibre lifts along witness loops\n")
     print("phase 1: a rich pose and its aspect partition")
-    target, solutions = rich_pose(model, rng, seeds=args.seeds)
+    target, solutions = rich_pose(model, rng, seeds=args.seeds, least=args.least,
+                                  tries=args.tries)
     if not solutions:
         print("  no pose with a rich fibre in this sample")
         return 0
@@ -153,14 +157,19 @@ def main() -> int:
             gap = iks.configuration_distance(start, q, circular)
             if gap < best:
                 best, index = gap, k
-        mapping.append((index, round(best, 6)))
+        # an arrival further than 1e-3 rad from every starting solution is not a match: printing
+        # the closest one anyway produced a "track 2 arrived at solution 3 (distance 1.4e+01 rad)"
+        # line, which reads like a permutation and is not one.
+        mapping.append((index if best < 1e-3 else -1, round(best, 6)))
     print(f"  arrivals {len(arrivals)}/{len(solutions)} (tracks that reached the end), "
           f"live counts {result.counts[0]} -> {result.counts[-1]}")
     for member in (i, j):
         if member in arrivals:
             slot = arrivals.index(member)
-            print(f"  track {member} arrived at solution {mapping[slot][0]} "
-                  f"(joint-space distance {mapping[slot][1]:.1e} rad)")
+            matched = mapping[slot][0]
+            print(f"  track {member} arrived at "
+                  f"{'solution ' + str(matched) if matched >= 0 else 'no starting solution'}"
+                  f" (closest joint-space distance {mapping[slot][1]:.1e} rad)")
         else:
             item = result.lifts[member]
             print(f"  track {member} did NOT arrive: stopped at sample {item.index} "
