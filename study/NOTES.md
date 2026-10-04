@@ -1191,6 +1191,46 @@ Lesson, fourth of its kind and worth the line: the failed reproduction was a **p
 the diagnosis was only possible because the probe printed which stage stopped it.  A probe that
 silently returns "no pair" would have read as a negative result about the arm.
 
+
+### 3.37 Q21 answered, and an earlier reading of mine corrected: every stop is a fold
+
+`python3 -m study.exp50_births_and_stops --pose-seed 0` (new module; the protocol registered as
+Q23).  It tracks the whole fibre along the witness loop, then asks the *fibre* about every stop: at
+the target where a track stopped, are there still real solutions within 0.2 rad of the stopped
+configuration?  Seeds are perturbations of that configuration (200 of them, 0.3 rad box), so the
+question is asked where the answer lives.
+
+| track | stopped at sample | ``sigma_min`` there | nearest other branch | solutions near it | at the *next* target | verdict |
+|---|---|---|---|---|---|---|
+| 1 | 31 | 1.19e-02 | 2.47e-01 | 1 | **0** | fold |
+| 2 | 45 | 1.39e-02 | 3.91e-01 | 1 | **0** | fold |
+| 5 | 45 | 1.46e-02 | 3.91e-01 | 1 | **0** | fold |
+| 7 | 31 | 1.16e-02 | 1.20e-13 | 1 | **0** | fold |
+| 8 | 45 | 1.18e-02 | 4.46e-01 | 1 | **0** | fold |
+| 9 | 31 | 1.16e-02 | 1.20e-13 | 0 | **0** | fold |
+
+**6 folds, 0 tracker drops.**  That is a different answer from the one recorded in 3.33/3.35, and
+the correction is the point: I had read "healthy ``sigma_min`` + no partner nearby" as *tracker
+death*, and that reading was wrong.  The branch is perfectly real at the sample where it stops; what
+is real at the *next* sample is nothing -- the pair coalesces and vanishes *between* the two samples,
+which is exactly why the last accepted configuration sits at ``sigma_min ~ 1e-2`` instead of at zero.
+The instrument that decides this is a local census at the next target, not the clearance at the stop.
+
+Two consequences, both registered:
+
+* **Q21 is closed**: the whole-fibre lift is not dropping branches; the branches die, and the six
+  "no partner" stops are folds whose coalescence the sampling straddles.  The remaining instrument
+  debt is not robustness at healthy clearance but *event resolution*, i.e. Q20.
+* **Q20 stays open and is sharpened**: the gap detector flags **30 of 167 samples** with a pairwise
+  gap below 1e-2 (branches approach each other over many samples around a fold), while the strict
+  signature -- two tracks colliding to ~1e-15 and then dying together -- is rare.  What a forward
+  tracker cannot see is a **birth** (a pair becoming real), which is why the seeds 1 and 2 runs
+  reported zero collisions: their crossings may be births rather than deaths.  The fix remains
+  per-sample reseeding (Q23 step 2), the one piece of exp50 not yet implemented.
+
+Controls in the same run: the degenerate loop gives 10/10 arrivals, 0 permutations, 0 collisions,
+0 stops -- the events belong to the arm.
+
 Also recorded: a flood fill that precomputes its list of start cells labels 3480 components on a
 two-component torus (the list is computed before any labelling, so every free cell starts a new
 component). Cheap to fix, invisible without a sanity check on the component count -- which is why
