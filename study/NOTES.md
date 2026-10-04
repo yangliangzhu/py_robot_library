@@ -1651,7 +1651,67 @@ posture index named posture 6 as the partner of 1 at the 31-32 fold, where the w
 3.40's table both say 7.  exp51 now prints both (subdivided-run track and original postures).
 
 
+### 3.43 The 118-sample loop re-measured: the "three collision samples" were a jump artefact, and the loop shows a drop and a birth instead
+
+The last piece of Q24: 3.34 read exp49's loop as crossing the discriminant at three collision samples
+(46/47/48, a pair merging to 9.12e-15 and dying together), and 3.40 showed that the same signature --
+a merge that *persists* -- is what a fold jump produces.  exp49 now takes the two repairs of 3.40
+(``--box-guard``, ``--prune-merged``) and a phase 5 (``--locate``) that brackets crossings with
+exp51's instrument instead of reading them off a gap threshold.  Both runs:
+``python3 -m study.exp49_sr5_uniqueness --pose-seed 0`` (unchanged instrument, logs
+``.scratch/exp49_asis_s0.log``) and ``... --box-guard --prune-merged --locate``
+(``.scratch/exp49_repaired_s0.log``).
+
+**The unchanged run reproduces the recorded numbers exactly**, and names the fault: arrivals 2/10,
+shortest gap 9.12e-15, 3 collision samples, **3 merged samples, one run, samples 46-48, by tracks
+[0, 7]** -- a three-sample merge, i.e. by 3.40's discriminator a tracker fault and not a
+coalescence.
+
+**With the repairs the collision signature is gone**: arrivals 1/10, live 8 -> 1, shortest gap
+**2.20e-01** (22 times the 1e-2 collision threshold), **0 collisions, 0 merged, 0 duplicates**.  The
+posture change survives, and this is the point of 3.34: **track 1 still arrives at solution 6 with
+joint-space distance 0.0e+00** -- a prescribed Cartesian loop that changes posture without touching a
+singularity -- and the degenerate control is still 10/10 with 0 collisions.  So the corrected
+statement is: the loop changes posture, and its crossings are **invisible to the collision detector**
+(the Q20 blind spot), not "detected at samples 46-48".
+
+**Phase 5 locates two crossings on this loop** (bracketed in task space, 64-substep march, 40
+bisections):
+
+| interval | tracks (signs) | crossing (sample) | pair gap | coalesced ``sigma_min`` | exponent | ``gap^2`` zero |
+|---|---|---|---|---|---|---|
+| 0 -> 1 | [3] / [9] (-1 / +1) | 0.342537 | 5.62e-04 | 5.86e-06 | 0.500 | 0.342537 |
+| 41 -> 42 | [2] / [5] (-1 / +1) | 41.288747 | 2.80e-06 | 1.26e-07 | 0.501 | 41.288747 |
+
+Same signatures as 3.41/3.42: opposite ``det J`` signs, two zero certificates, square-root vanishing,
+and the two independent position estimates agreeing to six decimals.  The augmented refinement does
+not converge here (residuals 9.5e-04 and 2.5e-01), which is reported as such.
+
+**What the fibre says about the other stops -- and it is neither "fold" nor "nothing".**  Every
+remaining stop was checked the same way (census at the next sample, continued back one sample):
+
+* **34 -> 35**: the tracker's track 7 has no continuation in the next fibre, yet that census finds
+  **8** solutions -- the same number the tracker held.  One root of the old fibre therefore vanished
+  *and* at least one new one appeared inside one sample interval: a death and a birth that cancel in
+  the count.  A detector built on "the live count drops" (or on gaps) can see neither.  Census
+  completeness at that sample is the usual caveat; recorded as 未决 in detail, measured in kind.
+* 43 -> 44 and 45 -> 46: the fibre **grows** (4 -> 6 and 3 -> 4 roots), i.e. births, while single
+  tracks stop -- again invisible to a death-based detector.
+* 48 -> 49: census 2 for 2 live tracks, with one dead root: a birth replacing the death.
+* 41 -> 42: the fibre drops by four (two folds); the tracker sees one pair ([2]/[5], located) and one
+  unpaired root [4] whose partner is the root left uncovered when track 7 stopped earlier -- which is
+  why an unpaired death is not automatically a tracker fault.
+
+So this 118-sample loop, which 3.34 read as "one crossing event", actually exhibits **two located
+crossings, one tracker drop, and at least two births**, and the collision counter that was used to
+find the crossing reads zero once the artefact is removed.  That is the strongest form of Q20's
+lesson so far: on a loop that demonstrably changes posture, the forward/collision instrument reports
+nothing at all.
+
+
 ## 4. Finding 2: DH continuation
+
+
 
 ### 4.1 SR0 is exactly one parameter away, and the search says which one
 

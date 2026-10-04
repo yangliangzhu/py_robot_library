@@ -96,8 +96,22 @@ def main() -> int:
     parser.add_argument("--tries", type=int, default=12, help="poses to try before giving up")
     parser.add_argument("--delta", type=float, default=5e-3)
     parser.add_argument("--waypoints", type=int, default=4)
+    parser.add_argument("--box-guard", action="store_true",
+                        help="reject corrections outside the joint box (a track can otherwise walk "
+                             "a limited joint past its stop); off by default so the recorded 3.34 "
+                             "numbers stay reproducible with the instrument that made them")
+    parser.add_argument("--prune-merged", action="store_true",
+                        help="retire a live track that coincides with an older one (two distinct "
+                             "branches cannot be the same configuration)")
     parser.add_argument("--max-step", type=float, default=0.5,
                         help="largest joint-space step the corrector may take (Q21 probe)")
+    parser.add_argument("--locate", action="store_true",
+                        help="phase 5: bracket every fold of this loop in task space (exp51's "
+                             "instrument), instead of reading crossings off a gap threshold")
+    parser.add_argument("--probe-seeds", type=int, default=300)
+    parser.add_argument("--subdivisions", type=int, default=64)
+    parser.add_argument("--bisections", type=int, default=40)
+    parser.add_argument("--ladder", type=int, default=10)
     args = parser.parse_args()
 
     rng = np.random.default_rng(args.pose_seed)
@@ -141,6 +155,13 @@ def main() -> int:
 
     print("\nphase 3: whole-fibre lift along the projected loop")
     residual_of, jacobian_of = pose_kinematics(links)
+    lower = np.asarray(model.lower_bounds, dtype=float)
+    upper = np.asarray(model.upper_bounds, dtype=float)
+
+    def in_box(q: np.ndarray) -> bool:
+        return bool(np.all(q >= lower - 1e-6) and np.all(q <= upper + 1e-6))
+
+    guard = in_box if args.box_guard else None
     targets = poses
     task_of = lambda q: homotopy.fk_links(links, q)  # noqa: E731 - only for the default error
     result = ts.lift_fiber(
@@ -148,7 +169,8 @@ def main() -> int:
         interpolate=ts.se3_interpolate,
         sigma=lambda q: iks.sigma_min(model, q),
         sigma_floor=1e-9, collision=1e-2, merge=1e-6, max_step=args.max_step,
-        distance=lambda a, b: iks.configuration_distance(a, b, circular),
+        distance=lambda a, b: iks.configuration_distance(a, b, circular), feasible=guard,
+        prune_merged=args.prune_merged,
     )
     arrivals = result.arrivals
     lifted = [result.lifts[k].q for k in arrivals]
@@ -179,6 +201,21 @@ def main() -> int:
     print(f"  shortest gap between live tracks {min(result.gaps):.2e}; "
           f"collision samples {len(result.collisions)} of {len(result.gaps)}; "
           f"merged (tracker fault) {len(result.merged)}")
+    fault_runs = []
+    for index in result.merged:
+        pair = result.closest[index - 1]
+        if fault_runs and index == fault_runs[-1][1] + 1 and pair == fault_runs[-1][2]:
+            fault_runs[-1][1] = index
+        else:
+            fault_runs.append([index, index, pair])
+    for first, last, pair in fault_runs:
+        verdict = ("one sample: consistent with a real coalescence"
+                   if last == first else
+                   "PERSISTENT merge: a tracker fault, not a fold")
+        print(f"  merged run samples {first}-{last} ({last - first + 1} sample(s)) by tracks "
+              f"{list(pair) if pair else None} -- {verdict}")
+    if result.duplicates:
+        print(f"  duplicates retired (sample, kept track, retired track): {result.duplicates}")
     if result.collisions:
         first = result.collisions[:6]
         print(f"  first crossing samples {first}; at those samples the loop's image is on the "
@@ -201,6 +238,78 @@ def main() -> int:
         print(f"    track {k}: stopped at sample {item.index}, sigma_min {sigma_here:.2e}, "
               f"nearest other track {partner:.2e} rad, jumps rejected {item.jumps}")
 
+    if args.locate:
+        # Imported here, not at module level: exp50 builds on rich_pose/pose_kinematics from
+        # this module, so a top-level import would close the cycle.
+        from study.exp50_births_and_stops import distinct_live, root_census
+        from study.exp51_event_resolution import (
+            dead_roots,
+            localise_crossing,
+            pair_dead_roots,
+            pair_roots,
+            refine_fold_pose,
+        )
+        from study.exp52_feasible_arcs import march_to_fold
+
+        print("\nphase 5: where does this loop cross the discriminant image?  (bracketed in task "
+              "space; the gap threshold above is not used)")
+        intervals = sorted({(item.index, item.index + 1) for item in result.lifts
+                            if not item.finished and item.index + 1 < targets.shape[0]})
+        located = 0
+        for before, after in intervals:
+            roots_before = distinct_live(result.lifts, before, circular)
+            census_after = root_census(model, links, targets[after], seeds=args.probe_seeds, rng=rng,
+                                       circular=circular)
+            dead = dead_roots(roots_before, census_after, links, targets[before], circular)
+            pairs, leftover = pair_dead_roots(roots_before, dead, model, circular)
+            print(f"    interval {before}->{after}: {len(roots_before)} live roots -> census "
+                  f"{len(census_after)}; dead {[list(roots_before[m][1]) for m in dead]}, unpaired "
+                  f"{[list(roots_before[m][1]) for m in leftover]}")
+            for a, b in pairs:
+                seeds_pair = [roots_before[a][0], roots_before[b][0]]
+                march_lo, march_hi, seeds_lo = march_to_fold(links, targets[before], targets[after],
+                                                             seeds_pair, steps=args.subdivisions)
+                width = march_hi - march_lo
+                pose_lo = ts.se3_interpolate(targets[before], targets[after], march_lo)
+                pose_hi = ts.se3_interpolate(targets[before], targets[after], march_hi)
+                lo, hi, gap, sigma, _roots = localise_crossing(links, model, pose_lo, pose_hi,
+                                                               seeds_lo,
+                                                               iterations=args.bisections)
+                base = before + march_lo
+                step = lo / 2.0 if lo > 0 else 0.0
+                ladder_raw = []
+                for k in range(args.ladder):
+                    offset = step * 0.5 ** k
+                    roots_step = pair_roots(links, ts.se3_interpolate(pose_lo, pose_hi,
+                                                                     max(lo - offset, 0.0)),
+                                            seeds_lo)
+                    if len(roots_step) < 2:
+                        continue
+                    ladder_raw.append((offset, min(iks.torus_distance(x, y)
+                                                   for x, y in itertools.combinations(roots_step, 2))))
+                exponent = float("nan")
+                tau_star = float("nan")
+                if len(ladder_raw) >= 3:
+                    offsets = np.array([item[0] for item in ladder_raw])
+                    gaps = np.array([item[1] for item in ladder_raw])
+                    exponent = float(np.polyfit(np.log(offsets), np.log(gaps), 1)[0])
+                    line = np.polyfit(base + lo * width - offsets * width, gaps ** 2, 1)
+                    if line[0] < 0:
+                        tau_star = float(-line[1] / line[0])
+                seed_mid = 0.5 * (np.asarray(seeds_lo[0]) + np.asarray(seeds_lo[1]))
+                tau_fold, _q, residual, det, sigma_fold = refine_fold_pose(
+                    links, model, pose_lo, pose_hi, seed_mid, lo, iterations=60)
+                located += 1
+                print(f"      pair (tracks {list(roots_before[a][1])} / "
+                      f"{list(roots_before[b][1])}, signs "
+                      f"{int(np.sign(iks.det_jacobian(model, seeds_pair[0]))):+d}/"
+                      f"{int(np.sign(iks.det_jacobian(model, seeds_pair[1]))):+d}): crossing at "
+                      f"sample {base + lo * width:.6f} (gap {gap:.2e}, sigma_min {sigma:.2e}), "
+                      f"exponent {exponent:.3f}, gap^2 zero {tau_star:.6f}, augmented "
+                      f"{base + tau_fold * width:.6f} (residual {residual:.1e}, det J {det:.1e})")
+        print(f"    located {located} crossing(s) on this loop; the collision counter reported "
+              f"{len(result.collisions)}")
+
     print("\nphase 4: controls")
     degenerate = np.tile(targets[0], (targets.shape[0], 1, 1))
     control = ts.lift_fiber(
@@ -208,7 +317,8 @@ def main() -> int:
         interpolate=ts.se3_interpolate,
         sigma=lambda q: iks.sigma_min(model, q),
         sigma_floor=1e-9, collision=1e-2, merge=1e-6,
-        distance=lambda a, b: iks.configuration_distance(a, b, circular),
+        distance=lambda a, b: iks.configuration_distance(a, b, circular), feasible=guard,
+        prune_merged=args.prune_merged,
     )
     moved = 0
     for k in control.arrivals:
