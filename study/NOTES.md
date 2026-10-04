@@ -1275,8 +1275,6 @@ die" cannot register them.  Turning these into *tracked* births (adding them to 
 following them forward, which is what exp25 did along the DH parameter) is the registered remainder.
 
 
-**Q23 step 2, minimally: per-sample reseeding, and what it finds.**  ``exp50 --pose-seed 0`` now also
-reseeds every sample from scratch (``--sample-seeds`` random restarts) and reports the solutions that
 **no carried branch occupies** -- the births a forward lift cannot see, which is Q20's blind spot in
 its purest form.
 
@@ -1290,6 +1288,18 @@ solutions appearing that no track follows, and a detector built only on "two liv
 die" cannot register them.  The instrument that can is this reseeding step; turning it into tracked
 births (adding them to the carried set and following them forward, which is what exp25 did in the DH
 parameter) is the remaining work, registered as Q23.
+
+
+**Bookkeeping hazard, recorded because it cost a duplicate commit.**  Two background recorder jobs
+ended up patching the same file: one was launched in a round whose shell call was moved to the
+background, so its "apply patch, then commit" ran *after* the same patch had already been applied
+and committed by the next round's call.  Result: a redundant commit with an identical message, and
+the same paragraph inserted twice into this file (both removed by the cleanup commit that carries
+this note).  The guards written into the patchers ("insert only if the heading is absent") did not
+catch it because the two versions of the patch used slightly different headings -- a guard keyed on
+the *content* rather than on the operation is the fix.  Practical rule for this study: a recorder
+must never run in the background; only measurements may, and a measurement job must write to its own
+log file and nothing else.
 
 Also recorded: a flood fill that precomputes its list of start cells labels 3480 components on a
 two-component torus (the list is computed before any labelling, so every free cell starts a new
