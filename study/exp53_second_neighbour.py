@@ -80,6 +80,40 @@ def candidates(baseline: list[np.ndarray]) -> dict[str, list[np.ndarray]]:
     return out
 
 
+def curved_path(twist0: float, direction: np.ndarray, amplitude: float,
+                target_angle: float | None = None):
+    """The straight twist path plus a bump in the link translations that vanishes at both ends.
+
+    A straight path in parameter space meets the discriminant for some branches, and there the
+    solution genuinely stops existing *along that path*; the discriminant has codimension one, so a
+    detour reaches the same endpoints by a different route (the trick of exp13, moved from the wrist
+    offset to the twist).  The bump is applied to the 18 translation components only, so the twist
+    interpolation -- the thing that makes the start arm Pieper-parallel -- is untouched.
+
+    Args:
+        twist0: The twist at ``s = 0``.
+        direction: An 18-vector, the bump's direction in link-translation space.
+        amplitude: Size of the bump, in metres.
+        target_angle: The twist at ``s = 1``; SR5's link 4 when omitted.
+
+    Returns:
+        A callable ``s -> link transforms`` for :func:`study.homotopy.track`.
+    """
+    end = twist_angle(link_transforms()[3]) if target_angle is None else float(target_angle)
+    base = [np.asarray(link, dtype=float).copy() for link in link_transforms()]
+    shaped = np.asarray(direction, dtype=float).reshape(6, 3)
+
+    def make(s: float) -> list[np.ndarray]:
+        links = [link.copy() for link in base]
+        links[3][:3, :3] = rot_x((1.0 - float(s)) * twist0 + float(s) * end)
+        bump = amplitude * float(np.sin(np.pi * float(s))) * shaped
+        for index in range(6):
+            links[index][:3, 3] += bump[index]
+        return links
+
+    return make
+
+
 def twist_angle(link: np.ndarray) -> float:
     """The twist of an ``Rx(alpha)`` link, read off the matrix (SR5's link 4 is ``Rx(-90 deg)``)."""
     matrix = np.asarray(link, dtype=float)
@@ -154,6 +188,12 @@ def main() -> int:
                         help="link 4's twist at the start of the homotopy (0 or pi)")
     parser.add_argument("--reference-seeds", type=int, default=400)
     parser.add_argument("--sigma-floor", type=float, default=2e-3)
+    parser.add_argument("--second-arm", action="store_true",
+                        help="also use the 180 deg parallel arm's starts (union of the two)")
+    parser.add_argument("--retries", type=int, default=0,
+                        help="curved-path retries per stopped start")
+    parser.add_argument("--amplitude", type=float, default=0.02,
+                        help="size of the curved path's bump, metres")
     args = parser.parse_args()
 
     rng = np.random.default_rng(0)
@@ -212,51 +252,66 @@ def main() -> int:
           "(it must not be blind where SR0 solves).")
 
     if args.homotopy:
-        print(f"\nphase 3: can the parallel arm *seed* SR5?  DH homotopy along link 4's twist "
-              f"{args.twist0:g} -> {np.degrees(twist_angle(link_transforms()[3])):.0f} deg "
-              f"(SR5's own twist), on the {len(blind_targets)} poses SR0 is blind on")
         from study.census import census as multi_start
         from study.census import make_lm_solver
         from study.homotopy import track
-        path = parallel_path(args.twist0)
-        start_model = build(path(0.0))
-        solver = make_lm_solver(start_model)
-        reference_solver = make_lm_solver(sr5_model)
-        recovered = total_reference = total_starts = total_arrivals = 0
+
+        angles = [args.twist0] + ([np.pi] if args.second_arm else [])
+        print(f"\nphase 3: can the parallel arm *seed* SR5?  DH homotopy along link 4's twist "
+              f"{' and '.join(f'{a:g}' for a in angles)} -> "
+              f"{np.degrees(twist_angle(link_transforms()[3])):.0f} deg (SR5's own twist), on the "
+              f"{len(blind_targets)} poses SR0 is blind on, {args.retries} curved retr"
+              f"{'y' if args.retries == 1 else 'ies'} per stopped start")
+        recovered = total_reference = total_starts = total_arrivals = total_retried = 0
         solved_poses = 0
         for index, target in enumerate(blind_targets):
-            reference = multi_start(sr5_model, target, solver=reference_solver,
+            reference = multi_start(sr5_model, target, solver=make_lm_solver(sr5_model),
                                     seeds=args.reference_seeds, rng=rng, dedupe_tol=1e-4,
                                     circular=circular)
-            starts = multi_start(start_model, target, solver=solver, seeds=args.seeds, rng=rng,
-                                 dedupe_tol=1e-4, circular=circular)
-            reached: list[np.ndarray] = []
-            arrivals = 0
-            for solution in starts.solutions:
-                result = track(path, target, np.asarray(solution, dtype=float),
-                               sigma_floor=args.sigma_floor)
-                if not result.finished:
-                    continue
-                arrivals += 1
-                q_final = np.asarray(result.q, dtype=float)
-                for known in reference.solutions:
-                    if iks.torus_distance(q_final, np.asarray(known, dtype=float)) < 1e-3:
-                        if not any(iks.torus_distance(q_final, other) < 1e-3 for other in reached):
-                            reached.append(q_final)
-                        break
-            total_reference += len(reference.solutions)
+            known = [np.asarray(q, dtype=float) for q in reference.solutions]
+            reached: list[int] = []
+            starts_total = arrivals_total = retried_total = 0
+            for angle in angles:
+                path = parallel_path(angle)
+                start_model = build(path(0.0))
+                starts = multi_start(start_model, target, solver=make_lm_solver(start_model),
+                                     seeds=args.seeds, rng=rng, dedupe_tol=1e-4, circular=circular)
+                starts_total += len(starts.solutions)
+                for solution in starts.solutions:
+                    q_start = np.asarray(solution, dtype=float)
+                    result = track(path, target, q_start, sigma_floor=args.sigma_floor)
+                    if not result.finished and args.retries:
+                        for _ in range(args.retries):
+                            direction = rng.normal(size=18)
+                            direction /= float(np.linalg.norm(direction))
+                            attempt = track(curved_path(angle, direction, args.amplitude), target,
+                                            q_start, sigma_floor=args.sigma_floor)
+                            retried_total += 1
+                            if attempt.finished:
+                                result = attempt
+                                break
+                    if not result.finished:
+                        continue
+                    arrivals_total += 1
+                    q_final = np.asarray(result.q, dtype=float)
+                    for slot, candidate in enumerate(known):
+                        if slot in reached:
+                            continue
+                        if iks.torus_distance(q_final, candidate) < 1e-3:
+                            reached.append(slot)
+                            break
+            total_reference += len(known)
             recovered += len(reached)
-            total_starts += len(starts.solutions)
-            total_arrivals += arrivals
-            solved_poses += int(bool(len(reference.solutions))
-                                and len(reached) == len(reference.solutions))
-            print(f"    pose {index + 1}: SR5 reference {len(reference.solutions)} solutions, "
-                  f"parallel starts {len(starts.solutions)}, arrived {arrivals}, "
+            total_starts += starts_total
+            total_arrivals += arrivals_total
+            total_retried += retried_total
+            solved_poses += int(bool(len(known)) and len(reached) == len(known))
+            print(f"    pose {index + 1}: SR5 reference {len(known)} solutions, starts "
+                  f"{starts_total}, arrived {arrivals_total} (after {retried_total} curved retries), "
                   f"distinct reference solutions reached {len(reached)}")
         print(f"    totals: {solved_poses}/{len(blind_targets)} blind poses fully recovered, "
               f"{recovered}/{total_reference} reference solutions reached from {total_arrivals} "
-              f"arrivals of {total_starts} starts")
-
+              f"arrivals of {total_starts} starts ({total_retried} curved retries)")
     return 0
 
 

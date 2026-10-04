@@ -151,6 +151,10 @@ def main() -> int:
     parser.add_argument("--delta", type=float, default=5e-3)
     parser.add_argument("--cluster", type=float, default=2e-2, help="component membership tolerance")
     parser.add_argument("--pairs", type=int, default=6, help="cross-component pairs to walk")
+    parser.add_argument("--steps", type=int, default=600,
+                        help="integration steps per direction; a component is only *counted* when "
+                             "its trace closes or stops at a real boundary, so a small budget "
+                             "over-counts (the recorded lower bound 13 came from 600)")
     parser.add_argument("--seed", type=int, default=0)
     args = parser.parse_args()
 
@@ -169,7 +173,8 @@ def main() -> int:
     for index, q in enumerate(solutions):
         if assigned[index]:
             continue
-        component = trace_component(model, q, target, delta=args.delta)
+        component = trace_component(model, q, target, delta=args.delta,
+                                      max_steps=args.steps)
         members = [
             other_index
             for other_index, other in enumerate(solutions)
@@ -195,6 +200,20 @@ def main() -> int:
               f"{component.min_sigma if component.min_sigma < np.inf else float('nan'):.2e}, "
               f"worst pose drift {component.worst_pose_error:.1e}, "
               f"end {component.end_reason}")
+
+    reasons: dict[str, int] = {}
+    for component, _members in components:
+        key = ("closed" if component.closed else component.end_reason or "unknown")
+        reasons[key] = reasons.get(key, 0) + 1
+    complete = sum(1 for component, _members in components
+                   if component.closed or "limit" in component.end_reason
+                   or "singular" in component.end_reason)
+    print(f"component count {len(components)} with a {args.steps}-step budget; "
+          f"{complete} of them closed or stopped at a real boundary (a truncated trace would "
+          f"over-count); end reasons {reasons}")
+    if complete < len(components):
+        print("  NOT a count: a trace that ran out of budget can leave part of its component to be "
+              "reported as another one -- raise --steps and rerun")
 
     # are different fibre components ever in one chamber?
     if len(components) > 1:

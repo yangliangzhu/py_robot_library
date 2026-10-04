@@ -1783,6 +1783,52 @@ the same as 3.x's: an endpoint must be *checked against the object it claims to 
 the construction.
 
 
+**Neither curved paths nor the second arm improve the *distinct* coverage -- and the reason is
+structural.**  ``python3 -m study.exp53_second_neighbour --poses 60 --seeds 200 --homotopy
+--reference-seeds 400 --retries 3 --second-arm`` (11m18s, log ``.scratch/exp53_curved.log``): 56
+starts (both parallel arms), **103 curved retries** along bumps in the 18 link translations that
+vanish at both ends (exp13's trick, moved to the twist path), **24 arrivals** -- against 16 arrivals
+from 28 straight starts -- and still **16 of 34 distinct reference solutions reached, 1 of 7 poses
+complete**.  Arrivals rose while distinct coverage did not: the extra arrivals land on solutions
+already reached.  The reason is visible in the census counts: at these poses the parallel arm has
+**4 real solutions** where SR5 has 8 (and 2-4 where SR5 has 4), so the remaining SR5 solutions have
+*no counterpart at* ``s = 0`` -- they must be **born** along the twist path, and a forward tracker
+cannot create a branch it does not carry.  That is Q23's lesson in parameter space instead of task
+space: the fix is to admit births along the DH homotopy (census each ``s`` sample and add the
+uncovered solutions), not to look for a better path.  Registered as the next step for Q25.
+
+Also recorded: the *reference* set is a sample, not a set -- with the rng stream consumed differently
+(``--second-arm`` doubled the start censuses), one pose's 400-seed reference changed from 3 solutions
+to 2, which is why the totals here read 34 where 3.44 read 35.  A reference that moves when unrelated
+code draws more random numbers is an instrument fragility worth remembering: the honest reading is
+"16 of about 34".
+
+
+### 3.45 The franka component count of 3.30 does not reproduce on today's model -- measured, unresolved
+
+Starting ④ (Q9: turn the lower bound 13 into a count) turned up a consistency problem that has to be
+recorded before any count is claimed.  ``python3 -m study.exp18_franka_redundant --robot franka
+--seeds 400`` (today, with the step budget made a flag, ``--steps``) gives:
+
+* **67 solutions** at seed 0's pose, not the 26 of 发现 3/3.30; the smallest pairwise gap between
+  them is **8.83e-03** rad and the clearances run 0.071 to 0.215, so they are not census twins -- the
+  fibre really is that large on today's model (``ModelFactory.create("franka", backend="casadi")``,
+  joint spans 6.109/4.712/5.411/6.109/6.109/6.109/6.109 rad);
+* **25 self-motion components** traced with a 4000-step budget, of which **8 never close and never hit
+  a joint limit** -- they run the full 4000 steps (~200 rad) and are truncated by the budget, so 25 is
+  an *upper* bound, not a count; with the recorded 600-step budget the same runs are more truncated
+  still.  The instrument now says so itself (the end-reason census prints "NOT a count" when any trace
+  is truncated);
+* the cross-component chamber walk connects 5 of 6 sampled pairs in ``Q\\Sigma``, as recorded.
+
+So either the franka model or the census changed since 发现 3 was written, or that record was made on a
+different pose; the two cannot both describe today's model, and no component count should be quoted
+until the fibre census, the joint limits and the trace budget are re-measured together.  Registered on
+Q9; the useful part of this round's probe is that the counting instrument now *refuses* to report a
+number it has not earned.
+
+
+
 ## 4. Finding 2: DH continuation
 
 
