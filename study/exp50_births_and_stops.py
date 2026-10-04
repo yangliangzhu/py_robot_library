@@ -95,6 +95,44 @@ def local_census(model, target, q_center, *, radius=0.2, seeds=200, spread=0.3, 
     return found
 
 
+def sample_births(tracked, poses, model, *, seeds, rng, merge=1e-3):
+    """Per-sample solutions that no tracked branch occupies -- the births a tracker cannot see.
+
+    A forward lift can only follow what it already carries, so a pair of branches that becomes real
+    *during* the path (a birth at a fold) leaves no trace in the live counts: this is exactly the
+    blindness Q20 records, and the cure is to reseed every sample from scratch and see what is there
+    that the carried tracks do not cover.
+
+    Args:
+        tracked: The :class:`study.taskspace.Lift` objects of the run.
+        poses: The ``(K, 4, 4)`` task path.
+        model: The arm.
+        seeds: Random restarts per sample.
+        rng: Generator.
+        merge: Torus distance below which two configurations are one solution.
+
+    Returns:
+        A list of ``(sample index, number of new solutions)`` for the samples that have any.
+    """
+    births: list[tuple[int, int]] = []
+    for index in range(poses.shape[0]):
+        live = [item.samples[index] for item in tracked if len(item.samples) > index]
+        fresh: list[np.ndarray] = []
+        for _ in range(seeds):
+            q, converged = solve_lm(model, rng.uniform(-np.pi, np.pi, model.num_dof),
+                                    poses[index])
+            if not converged:
+                continue
+            if any(iks.torus_distance(q, other) < merge for other in live):
+                continue
+            if any(iks.torus_distance(q, other) < merge for other in fresh):
+                continue
+            fresh.append(np.asarray(q, dtype=float))
+        if fresh:
+            births.append((index, len(fresh)))
+    return births
+
+
 def main() -> int:
     """Run the measurement."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
@@ -108,6 +146,8 @@ def main() -> int:
     parser.add_argument("--radius", type=float, default=0.2,
                         help="neighbourhood radius of the local-census stop test")
     parser.add_argument("--census-seeds", type=int, default=200)
+    parser.add_argument("--sample-seeds", type=int, default=120,
+                        help="random restarts per sample for the per-sample birth census (Q23 step 2)")
     args = parser.parse_args()
 
     rng = np.random.default_rng(args.pose_seed)
@@ -172,6 +212,13 @@ def main() -> int:
               f"target {len(there)} => {verdict}")
     print(f"  verdict counts: {folds} fold(s), {drops} tracker drop(s)")
 
+    print("\n  per-sample reseeding (Q23 step 2): solutions no carried track occupies")
+    births = sample_births(result.lifts, poses, model, seeds=args.sample_seeds, rng=rng)
+    print(f"    samples with unoccupied solutions: {len(births)} of {poses.shape[0]}; "
+          f"total {sum(count for _, count in births)}")
+    if births:
+        print(f"    first samples {[index for index, _ in births[:12]]} "
+              f"(a birth here is a pair becoming real, which the live counts cannot show)")
     print("\n  control: degenerate loop (all targets equal)")
     degenerate = np.tile(poses[0], (poses.shape[0], 1, 1))
     control = ts.lift_fiber(

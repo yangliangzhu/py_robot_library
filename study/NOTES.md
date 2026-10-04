@@ -1259,6 +1259,21 @@ measure Q20's blind spot consistently: seeds 1 and 2 report **zero** crossing ca
 (102 and 125 samples) even though their tracked pairs change sheet, so a gap threshold cannot find
 those events -- per-sample reseeding is the instrument that must.
 
+
+**Q23 step 2, minimal form, measured.**  ``exp50 --pose-seed 0`` now also reseeds **every sample**
+from scratch (``--sample-seeds``) and reports the solutions that **no carried branch occupies** --
+the births a forward lift cannot see, which is Q20's blind spot in its purest form:
+
+    samples with unoccupied solutions: 45 of 168; total 253
+    first samples 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134
+
+So along this loop the carried branches do **not** cover the fibre at those samples: solutions exist
+there for which the lift never had a track.  That is the mechanism Q20 names, now measured directly
+instead of inferred from a missing collision -- the same loop whose sheet change exp49 measures has
+solutions appearing that no track follows, and a detector built only on "two live tracks collide and
+die" cannot register them.  Turning these into *tracked* births (adding them to the carried set and
+following them forward, which is what exp25 did along the DH parameter) is the registered remainder.
+
 Also recorded: a flood fill that precomputes its list of start cells labels 3480 components on a
 two-component torus (the list is computed before any labelling, so every free cell starts a new
 component). Cheap to fix, invisible without a sanity check on the component count -- which is why
