@@ -1275,21 +1275,6 @@ die" cannot register them.  Turning these into *tracked* births (adding them to 
 following them forward, which is what exp25 did along the DH parameter) is the registered remainder.
 
 
-**no carried branch occupies** -- the births a forward lift cannot see, which is Q20's blind spot in
-its purest form.
-
-    samples with unoccupied solutions: 45 of 168; total 253
-    first samples 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134
-
-So along this loop the carried branches do **not** cover the fibre at those samples: solutions exist
-there which the lift never had a track for.  That is the mechanism Q20 names, measured directly
-rather than inferred from a missing collision: the sheet change exp49 measures is accompanied by
-solutions appearing that no track follows, and a detector built only on "two live tracks collide and
-die" cannot register them.  The instrument that can is this reseeding step; turning it into tracked
-births (adding them to the carried set and following them forward, which is what exp25 did in the DH
-parameter) is the remaining work, registered as Q23.
-
-
 **Bookkeeping hazard, recorded because it cost a duplicate commit.**  Two background recorder jobs
 ended up patching the same file: one was launched in a round whose shell call was moved to the
 background, so its "apply patch, then commit" ran *after* the same patch had already been applied
