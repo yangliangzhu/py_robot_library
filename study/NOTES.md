@@ -1062,6 +1062,17 @@ branches genuinely cease to be real inside a sample interval (a fold the samples
 corrector lands in a neighbouring basin whose residual happens to be near zero.  The instrument for
 that is Q20's birth reseeding plus a per-sample double-root test, not a bigger step bound.
 
+
+**The same table on two more poses (from the seed-1/seed-2 logs of the three-seed reproduction).**
+The per-posture feasible arc is not an artefact of the seed-0 pose: on seed 1 (8 solutions, 102
+loop samples) the tracked posture walks 102/102 = **100%** while the other branches stop at
+51-52/102 = 50-51%; on seed 2 (125 samples) the tracked posture is 125/125 = **100%** while the
+others stop between 10/125 = 8% and 70/125 = 56%.  Every stop is again at healthy clearance
+(``sigma_min`` 5.7e-3 to 2.2e-2) with the nearest other branch 7e-2 to 4.2e+01 rad away, i.e. the
+same instrument-limited class as in 3.35, not folds.  So the shape of the answer is stable across
+poses: **one posture owns the whole prescribed loop, every other posture owns a proper initial
+segment of it.**
+
 Also recorded: a flood fill that precomputes its list of start cells labels 3480 components on a
 two-component torus (the list is computed before any labelling, so every free cell starts a new
 component). Cheap to fix, invisible without a sanity check on the component count -- which is why
