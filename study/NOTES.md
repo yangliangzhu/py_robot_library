@@ -1916,6 +1916,44 @@ quartic may be hiding inside a squared factor, which would also explain the mism
 the ``Delta`` search to ``rho > 0`` and keep the Hessian-degeneracy and cubic-term tests as the cusp
 criterion; (d) then, and only then, cross-check against ``census_position`` at the candidate.
 
+### 3.48 The cusp derivation, audited: `Q` is not the IK quartic, and the float root check was void
+
+The next step written into 3.47 ("validate the substitution with a known fibre solution") was run, and
+it kills the previous paragraph's reading.  Scratch diagnostics (not modules; the commands are in
+this note because they are one-off checks):
+
+* **The geometry is validated.**  The symbolic FK of ``Tx(a) Rx(alpha) Tz(d) Rz(q)`` with the arm's
+  rows/tool matches ``cuspidal3r.position`` **bit for bit** at random configurations
+  (``diff = [0, 0, 0]``) and ``rho`` is invariant under ``q1`` (2.600000 both) -- so the substitution
+  and the parametrisation are right.
+* **The raw equation vanishes at a real fibre solution.**  At ``(rho, z) = (2.6, 0.9)`` a censused
+  solution ``q = [1.8878, -1.8851, -2.9428]`` gives ``u = -1.3766``, ``t = -10.0274`` and
+  ``px^2 + py^2 - rho^2 = -4.5e-14`` (and the same after the Weierstrass substitution: ``-4.5e-14``).
+* **But its cleared numerator does not evaluate to zero**: ``-1.0e+05`` (second solution:
+  ``-1.5e+08``).  The numerator is a degree-14-in-``t`` polynomial whose terms at ``t = -10`` are
+  enormous, so this is **catastrophic cancellation in float evaluation**, not a wrong identity --
+  which means 3.47's phase-1 comparison (roots of ``Q`` against the fibre's ``tan^2(q3/2)``, both
+  evaluated in double precision) **cannot decide anything**: it was void as an instrument, not a
+  refutation.  Lesson: a cleared polynomial must be compared in high precision (or symbolically) at
+  roots of magnitude ~10.
+* **The factorisation itself is wrong.**  Computed the way the prototype did it (factoring each
+  numerator before making the ``Poly``, which cancels a common factor and leaves degree 4 in ``u``),
+  the resultant factors as reported in 3.47.  Computed *without* that pre-factoring the two
+  polynomials have degrees 16 and 4 in ``u`` and their resultant is **identically zero** (sympy:
+  ``degree -oo``) -- they share factors.  And the multiplicity-1 even factor ``Q`` **does not vanish
+  at the fibre's root**: at ``(rho, z) = (2.6, 0.9)``, ``w = t^2 = 100.548`` and
+  ``A w^2 + B w + C = +41`` against terms of size 1.3e5 (relative 3e-4).  So ``Q`` is not the arm's IK
+  quartic, the "quadratic in ``t^2``" reading of 3.47 is **withdrawn**, and the coefficients stay
+  unvalidated.
+
+**What the next attempt must do (replaces 3.47's list).**  (a) Reduce the two polynomials in ``u``
+with an explicit ``gcd``/``primitive`` step and take the resultant of the *primitive* parts, so that
+the elimination is defined rather than accidental; (b) evaluate every candidate factor at a known
+fibre root **in high precision** (or symbolically with exact rational ``t``), and only accept the
+factor that actually vanishes; (c) then, and only then, redo the ``Delta``-singular-point search for
+``rho > 0`` with the Hessian-degeneracy and cubic-term tests, and cross-check against
+``census_position``.  Until (b) passes, no cusp claim of any kind is on the table.
+
 ## 4. Finding 2: DH continuation
 
 
