@@ -148,6 +148,10 @@ def main() -> int:
     parser.add_argument("--census-seeds", type=int, default=200)
     parser.add_argument("--sample-seeds", type=int, default=120,
                         help="random restarts per sample for the per-sample birth census (Q23 step 2)")
+    parser.add_argument("--merge", type=float, default=1e-3,
+                        help="torus distance below which two configurations count as one in the "
+                             "birth census; run 1e-2 against 1e-3 to separate genuine new solutions "
+                             "from census twins")
     args = parser.parse_args()
 
     rng = np.random.default_rng(args.pose_seed)
@@ -213,9 +217,18 @@ def main() -> int:
     print(f"  verdict counts: {folds} fold(s), {drops} tracker drop(s)")
 
     print("\n  per-sample reseeding (Q23 step 2): solutions no carried track occupies")
-    births = sample_births(result.lifts, poses, model, seeds=args.sample_seeds, rng=rng)
-    print(f"    samples with unoccupied solutions: {len(births)} of {poses.shape[0]}; "
-          f"total {sum(count for _, count in births)}")
+    births = sample_births(result.lifts, poses, model, seeds=args.sample_seeds, rng=rng,
+                           merge=args.merge)
+    runs = []
+    for index, _ in births:
+        if runs and index == runs[-1][1] + 1:
+            runs[-1][1] = index
+        else:
+            runs.append([index, index])
+    print(f"    samples with unoccupied solutions (merge {args.merge:g} rad): {len(births)} of "
+          f"{poses.shape[0]}; total {sum(count for _, count in births)}")
+    print(f"    contiguous runs of such samples: {len(runs)} "
+          f"{[tuple(pair) for pair in runs[:8]]}")
     if births:
         print(f"    first samples {[index for index, _ in births[:12]]} "
               f"(a birth here is a pair becoming real, which the live counts cannot show)")
