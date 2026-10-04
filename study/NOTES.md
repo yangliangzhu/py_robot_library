@@ -1007,6 +1007,38 @@ patch with reseeding. So the reproduced claim is the *posture change as a prescr
 loop* (3/3); the *crossing* is measured on 1/3 and the sampling limitation is the stated reason,
 not a negative result.
 
+
+### 3.34 The A→B answer in numbers: one prescribed loop, ten postures, ten different feasible arcs
+
+The fate table of exp49's seed-0 run *is* the answer to the planning question, read per posture: the
+same prescribed Cartesian loop (118 samples, the projection of a certified same-aspect path) is
+trackable in full by exactly one posture of the pair that the loop joins, and by nobody else.
+
+| posture | samples of the loop it can track | share |
+|---|---|---|
+| 1 (the tracked one, arrives at solution 6) | 118/118 | **100%** |
+| 0, 7 (a pair that collides at 9.12e-15 and dies together) | 48/118 | 41% |
+| 2, 6 | 45/118 | 38% |
+| 4, 5, 8 | 41/118 | 35% |
+| 3 | 0/118 | 0% |
+
+(track 0: 48/118 = 41%, track 1: 118/118 = 100%, track 2: 45/118 = 38%, track 3: 0/118 = 0%, track 4: 41/118 = 35%, track 5: 41/118 = 35%, track 6: 45/118 = 38%, track 7: 48/118 = 41%, track 8: 41/118 = 35%; command: `python3 -m study.exp49_sr5_uniqueness --pose-seed 0 --seeds 400`.)
+
+Read the table the way the theory says to read it: the loop's image is a *single* curve in the
+workspace, and each posture owns a different initial segment of it. So "the robot can follow this
+path" has no posture-free answer, and the useful statement for offline programming is exactly the
+per-posture one -- the *feasible arc*, whose end is where that posture's branch meets the
+discriminant image. Combined with the reproduction of the posture change (3/3, NOTES 3.33) this is
+the operational form of "the regions of feasible paths are the images of the uniqueness domains":
+the loop leaves the starting posture's feasible region at the sample where its branch dies, and it
+can only be completed by a posture change -- which is what the tracked pair does, non-singularly.
+
+Planning rule that follows (and that the instrument can test directly): for a prescribed Cartesian
+path and a chosen posture, track the whole fibre along the path; the posture is usable while its own
+track survives, and the events that end that are the collisions of two *other* branches with each
+other (a pair dying at a fold) -- the path's image crossing the discriminant image, i.e. leaving the
+uniqueness domain it started in.
+
 Also recorded: a flood fill that precomputes its list of start cells labels 3480 components on a
 two-component torus (the list is computed before any labelling, so every free cell starts a new
 component). Cheap to fix, invisible without a sanity check on the component count -- which is why
