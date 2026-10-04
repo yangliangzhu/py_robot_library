@@ -48,13 +48,16 @@ def torus_distance_complex(first: np.ndarray, second: np.ndarray) -> float:
 
 
 def make_s_path(s_from: float, s_to: float, avoid: list[float], *, r: float = 5e-4,
-                straight_step: float = 2e-3, arc_samples: int = 32) -> list[complex]:
+                straight_step: float = 2e-3, arc_samples: int = 32,
+                side: float = 1.0) -> list[complex]:
     """The real segment ``s_from -> s_to``, arcing around each avoided fold (upper half-plane).
 
     A plain real segment passes straight through a fold, where the two coalescing roots collide
     and a real Newton step cannot continue onto the complex pair -- measured: every death-fold
     track stalled with residual ~1e-2.  Arcing around the fold keeps the path regular and the
-    continuation smooth; the side (upper half-plane) is a convention, held fixed.
+    continuation smooth.  ``side`` selects the half-plane: +1 upper (default), -1 lower.
+    The convention matters for composed paths: an upper arc out and a lower arc back are
+    null-homotopic together, which is how exp45 keeps the approach path's net monodromy trivial.
     """
     direction = 1.0 if s_to > s_from else -1.0
     events = sorted(a for a in avoid if min(s_from, s_to) < a < max(s_from, s_to))
@@ -64,8 +67,9 @@ def make_s_path(s_from: float, s_to: float, avoid: list[float], *, r: float = 5e
         entry = a - direction * r
         count = max(2, int(abs(entry - cursor) / straight_step))
         points.extend(complex(v) for v in np.linspace(cursor, entry, count, endpoint=False))
-        # upper half-plane arc from entry to exit: theta sweeps so that Im >= 0 throughout
-        start_angle, sweep = (np.pi, -np.pi) if direction > 0 else (0.0, np.pi)
+        # half-plane arc from entry to exit; sweep sign picks upper or lower
+        start_angle = np.pi if direction > 0 else 0.0
+        sweep = -direction * side * np.pi
         thetas = start_angle + sweep * np.linspace(0.0, 1.0, arc_samples, endpoint=False)
         points.extend(a + r * np.exp(1j * thetas))
         cursor = a + direction * r
