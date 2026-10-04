@@ -1171,6 +1171,26 @@ the walk's incompleteness**.  Two consequences worth keeping:
   a walk failure as "未决" rather than as "not connected" -- which is what the study already does for
   the partition but not yet for the pair search inside the probes.
 
+
+**The two-way result reproduces on a second pose, once the pose pool is the one exp49 uses.**  The
+seed-1 attempt failed earlier for a stated reason (the probe's default ``least=10`` pool left the
+same-sign pair search with nothing the greedy walk could connect).  With the pool widened to what
+``exp49`` actually uses (``least=8, tries=14``) the probe runs and gives:
+
+| pose | direction | arrivals | collision samples | pair |
+|---|---|---|---|---|
+| 0 | forward / reversed | 4/10 / 2/10 | 30 / 43 | 0 -> 7 at 5.2e-12 / 7 -> 0 at 6.6e-12 |
+| 1 | forward / reversed | 5/8 / 3/8 | 0 / 0 | 0 -> 2 at 2.7e-12 / 2 -> 0 at 2.0e-12 |
+
+So the permutation is mutual-inverse to ~1e-12 on **two** poses (and the forward half agrees with
+the independent ``exp49`` run at seed 1, which reported track 0 -> solution 2).  Pose 1 also carries
+the honest limit forward: **0 collision samples in both directions** -- the crossing was not caught
+there, which is Q20's sampling blindness, not an absence of crossing.
+
+Lesson, fourth of its kind and worth the line: the failed reproduction was a **pool** artefact, and
+the diagnosis was only possible because the probe printed which stage stopped it.  A probe that
+silently returns "no pair" would have read as a negative result about the arm.
+
 Also recorded: a flood fill that precomputes its list of start cells labels 3480 components on a
 two-component torus (the list is computed before any labelling, so every free cell starts a new
 component). Cheap to fix, invisible without a sanity check on the component count -- which is why
