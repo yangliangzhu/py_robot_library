@@ -1331,22 +1331,6 @@ is what makes the table usable -- but the rule stands that only measurement jobs
 background and only into their own log (3.37's bookkeeping hazard).
 
 
-**Is the birth census real, or twins?  The merge discrimination.**  The reseeding census counts a
-solution as "unoccupied" when it is further than ``--merge`` from every carried configuration, so
-running it at the study's dedupe convention (1e-3) and at a loose 1e-2 separates genuine new
-solutions from census twins:
-
-| merge | samples with unoccupied solutions | total | contiguous runs |
-|---|---|---|---|
-| 1e-3 (default) | 45 of 168 | 253 | - |
-| 1e-2 | 45 of 168 | 253 | 1 ((123, 167)) |
-
-The count barely moves when the tolerance is loosened tenfold, so the unoccupied solutions are
-**not** twins of the carried branches: they are genuinely distinct real solutions of those samples'
-fibres that no track follows.  That is Q20's blind spot measured without reference to any collision
-event, and it is the object the remaining work has to carry forward (Q23's remainder: add them to
-the tracked set and follow them, exp25's recipe along the DH parameter).
-
 Also recorded: a flood fill that precomputes its list of start cells labels 3480 components on a
 two-component torus (the list is computed before any labelling, so every free cell starts a new
 component). Cheap to fix, invisible without a sanity check on the component count -- which is why
