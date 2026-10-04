@@ -1389,6 +1389,23 @@ that matter are the ones the live set cannot see.
 The next instrument therefore has to print the three families in one table (deaths, births, gap
 minima per sample) rather than comparing them across notes, which is what this entry had to do.
 
+
+**Is the 3R's workspace split grid-dependent?  Checked at twice the resolution.**  The three-region
+claim of 3.32 was measured on a 25x25 grid of tool points; at 40x40 (2.6x the
+samples per axis) it reads:
+
+| grid | 4 solutions (inner) | 2 solutions (outer) | unreachable |
+|---|---|---|---|
+| 25x25 | 110 (18%) | 310 (50%) | 205 (33%) |
+| **40x40** | **272 (17%)** | **823 (51%)** | **505 (32%)** |
+
+The same run reproduces phase 1 and 2 exactly (``rank J = 3`` on 200/200 with worst ``sigma_min``
+5.16e-04; **2 aspects** at 300x300 with cell counts 44700/44700 and 0.67% singular cells; the fibre
+histogram 25 poses of 2 solutions with multiplicities (1,1) and 15 poses of 4 with (2,2)), and the
+quartic-coefficient agreement across azimuths is 1.18e-13.  So the workspace
+split is a property of the arm at this resolution, not a grid artefact -- which is what the aspect
+labelling had already shown at three resolutions (3.32).
+
 Also recorded: a flood fill that precomputes its list of start cells labels 3480 components on a
 two-component torus (the list is computed before any labelling, so every free cell starts a new
 component). Cheap to fix, invisible without a sanity check on the component count -- which is why
