@@ -1131,6 +1131,28 @@ guess.  Next instrument: the discriminant of the quartic (a zero set in ``(rho^2
 structural on both sides, plus a triple-root test seeded *at* the candidate with the pair-tracking
 amplitude that exp27 measured (``c sqrt(eps)``).
 
+
+### 3.36 The posture change is two-way: the reversed loop maps the pair back, to 1e-12
+
+The A-to-B claim needs its other half: traversing the same prescribed loop backwards must take the
+partner posture back to the first.  Measured on the seed-0 pose (the pair search happens to pick
+(0, 7) here; the scratch probe reuses ``exp49``'s ``rich_pose`` and ``pose_kinematics`` verbatim):
+
+| direction | arrivals | collision samples | shortest gap | pair |
+|---|---|---|---|---|
+| forward | 4/10 | 30 | 7.60e-15 | track 0 -> **solution 7**, distance **5.2e-12** |
+| reversed | 2/10 | 43 | 4.97e-15 | track 7 -> **solution 0**, distance **6.6e-12** |
+
+So the loop is a genuine *permutation of the fibre* and not a one-way drift: the two lifts are
+mutual inverses to 1e-12, which is the signature a sheet exchange must have.  Two more things the
+control shows and that are worth keeping: the number of collision samples depends on the pair (30
+and 43 here against 3 for the (1, 6) pair of 3.33), i.e. *which* branch is being carried changes
+where the images cross the discriminant; and the deaths are direction-asymmetric in the expected
+way (forward, track 0 arrives and 7 stops at sample 31; reversed, 7 arrives and 0 stops at 44).
+
+Command (scratch, not a study module -- it reuses ``exp49``'s functions):
+``PYTHONPATH=<repo> python3 -u /home/yang/workspace/research/.scratch/reverse_probe.py``.
+
 Also recorded: a flood fill that precomputes its list of start cells labels 3480 components on a
 two-component torus (the list is computed before any labelling, so every free cell starts a new
 component). Cheap to fix, invisible without a sanity check on the component count -- which is why
