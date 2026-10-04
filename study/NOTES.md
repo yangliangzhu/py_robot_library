@@ -1244,6 +1244,21 @@ blind spot can be: this pose reports **zero** crossing candidates even though th
 changes sheet, so the death/birth events there are invisible to a gap threshold -- the reseeding
 step is what has to find them.
 
+
+**Seed-2 reproduction, and the three-pose tally.**  ``exp50 --pose-seed 2``: 8 solutions (4+/4-),
+pair (0, 2), 126-sample witness; the lift arrives 2/8 with live counts 8 -> 2, shortest gap
+**9.19e-02**, crossing candidates **0 of 125**, and the six stops are **6 fold(s), 0 tracker
+drop(s)** (tracks 1, 2, 3 have one real solution near them at the stop and none at the next target;
+tracks 4, 6, 7 have none at either).  Degenerate control: 8/8, no collisions, no stops.
+
+Three-pose tally of the stop verdict: **15 stops, 15 folds, 0 tracker drops** (6 + 3 + 6).  So the
+whole-fibre lift is not losing branches at any of the three measured poses, Q21's closure is
+reproducible, and the corrected reading in 3.37 stands: a stop at healthy clearance means the pair
+coalesces *between* samples, not that the corrector left the branch.  The same three runs also
+measure Q20's blind spot consistently: seeds 1 and 2 report **zero** crossing candidates at all
+(102 and 125 samples) even though their tracked pairs change sheet, so a gap threshold cannot find
+those events -- per-sample reseeding is the instrument that must.
+
 Also recorded: a flood fill that precomputes its list of start cells labels 3480 components on a
 two-component torus (the list is computed before any labelling, so every free cell starts a new
 component). Cheap to fix, invisible without a sanity check on the component count -- which is why
