@@ -1709,6 +1709,80 @@ lesson so far: on a loop that demonstrably changes posture, the forward/collisio
 nothing at all.
 
 
+### 3.44 A second Pieper neighbour: axes 2 || 3 || 4, measured, and it seeds the poses SR0 cannot
+
+Q25.  SR0 closes the *wrist* (zeroing link 5's y-offset makes axes 4, 5, 6 concurrent -- one of
+Pieper's two sufficient conditions) and leaves a seed gap: on some poses its position sub-problem has
+no real solution at all, so the continuation cannot start (3.x, exp13/exp43).  Pieper's *other*
+condition is the parallel one -- three consecutive axes parallel -- and SR5 already has axes 2 || 3,
+so a single twist change is enough: set link 4's rotation from ``Rx(-90 deg)`` to ``Rx(0)`` or
+``Rx(180 deg)`` and axes 2, 3, 4 are parallel.  ``python3 -m study.exp53_second_neighbour --poses 60
+--seeds 200 --homotopy --reference-seeds 400`` (10m31s; log ``.scratch/exp53_full.log``).
+
+**Structural certificates** (pairwise axis fingerprint; adjacent pairs are configuration-independent,
+and the rank test is 200 random configurations):
+
+| arm | angle(3,4) | dist(3,4) | wrist gap (4,6) | full rank | worst ``sigma_min`` |
+|---|---|---|---|---|---|
+| SR5 (unchanged) | 90.000 deg | 0.0500 m | 0.1360 m | 200/200 | 1.4e-04 |
+| SR0 (wrist closed) | 90.000 deg | 0.0500 m | **0.0000 m** | 200/200 | 1.8e-03 |
+| parallel, link 4 twist 0 deg | **0.000 deg** | 0.4031 m | 0.1360 m | 200/200 | 1.1e-04 |
+| parallel, link 4 twist 180 deg | **0.000 deg** | 0.4031 m | 0.1360 m | 200/200 | 3.4e-04 |
+
+So the parallel candidates satisfy Pieper's parallel condition *and* are different arms (the wrist
+offset of 0.136 m is untouched), and they are not degenerate (full rank everywhere sampled).
+
+**Coverage of SR0's seed gap** (60 poses drawn as ``fk`` of random in-limit configurations, so from
+the arm's own workspace; SR0 by its closed form ``study.sr0.solve``, the others by a 200-seed
+``solve_lm`` census):
+
+| candidate | both solve | SR0 only | **candidate only (covers the gap)** | neither |
+|---|---|---|---|---|
+| SR5 (census control) | 53 | 0 | 7 | 0 |
+| SR0 (reference) | 53 | 0 | 0 | 7 |
+| parallel, twist 0 deg | 53 | 0 | **7** | 0 |
+| parallel, twist 180 deg | 53 | 0 | **7** | 0 |
+
+SR0 is blind on **7 of 60 (12%)** here; the recorded 20-30% came from other samples of the same
+``fk`` construction (exp43: 4/20, 6/20), and with 7/60 the binomial interval overlaps it, so the two
+are not in conflict -- the point of this table is the *column*, not the rate.  Both parallel arms have
+real solutions on **all seven** blind poses, and the unmodified-SR5 row certifies the census does not
+under-detect (it is blind nowhere SR0 solves).
+
+**Can the parallel arm actually seed SR5?**  ``homotopy.track`` along link 4's twist
+0 deg -> -90 deg (SR5's own twist, read off the matrix), one track per parallel-arm solution, matched
+against a 400-seed SR5 census at the same pose:
+
+| blind pose | SR5 reference | parallel starts | arrived | reference solutions reached |
+|---|---|---|---|---|
+| 1 | 8 | 4 | 4 | 4 |
+| 2 | 2 | 4 | 1 | 1 |
+| 3 | 8 | 4 | 4 | 4 |
+| 4 | 8 | 4 | 4 | 4 |
+| 5 | 4 | 4 | 1 | 1 |
+| 6 | 3 | 4 | 0 | 0 |
+| 7 | 2 | 4 | 2 | **2 (complete)** |
+
+Totals: **1 of 7 blind poses fully recovered, 16 of 35 reference solutions reached from 16 arrivals
+of 28 starts**; 12 starts die on the way (the twist path crosses folds).  So the second neighbour
+*does* remove the "no seed at all" obstruction -- 7/7 of the poses SR0 cannot start on now have real
+solutions to start from -- but a straight twist path is not yet a complete solver: it recovers about
+half of SR5's solutions.  Registered next steps: curved paths in the parameter space (exp13's trick),
+the 180 deg variant as a second start set, combining SR0's seeds with the parallel ones, and writing
+the closed form for the parallel family (Pieper's parallel condition is a theorem, but a solver
+should exist before this is called a *closed-form* neighbour -- 未决).
+
+**Instrument fault found on the way (symptom / root cause / fix).**  The first version of the
+homotopy path interpolated link 4's twist to ``+90 deg`` -- the sign of the *stored* matrix -- while
+SR5's link 4 is ``Rx(-90 deg)``.  Symptom: all tracks "arrived" yet **0 of 14 endpoints matched any
+SR5 reference solution** at the same pose; a coincidence of two wrong numbers would have been needed
+to hide it, and the per-pose line showed arrived 2-4 with reached 0.  Root cause: the path's end was
+not the target arm.  Fix: read the twist off the target matrix (``arctan2(R[2,1], R[1,1])``) instead
+of writing the angle by hand; after the fix the same poses give 4/4 and 2/2 reached.  The lesson is
+the same as 3.x's: an endpoint must be *checked against the object it claims to be*, not assumed from
+the construction.
+
+
 ## 4. Finding 2: DH continuation
 
 
