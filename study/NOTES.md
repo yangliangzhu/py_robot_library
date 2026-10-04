@@ -1153,6 +1153,24 @@ way (forward, track 0 arrives and 7 stops at sample 31; reversed, 7 arrives and 
 Command (scratch, not a study module -- it reuses ``exp49``'s functions):
 ``PYTHONPATH=<repo> python3 -u /home/yang/workspace/research/.scratch/reverse_probe.py``.
 
+
+**A failed reproduction, and the reason is the planner, not the arm.**  Re-running the two-way probe
+(3.36) on pose seed 1 aborts before any lift: the same-sign pair search finds **no pair that the
+greedy clearance walk can connect**, so ``pair`` is ``None`` and the probe cannot start.  The cause
+is the pose pool, not the physics: the scratch probe calls ``rich_pose`` with its default
+``least=10``, while ``exp49`` reaches seed 1 only with ``--least 8 --tries 14`` (SR5 poses with ten
+solutions are rare).  The walk's failure is the same *planner* incompleteness exp19 recorded
+(waypoint budget, greedy stalls), which is why the 3R work replaced it with an exact label-grid
+route -- on SR5 no such exact route exists yet, so **every SR5 pair statement in this study inherits
+the walk's incompleteness**.  Two consequences worth keeping:
+
+* the two-way result of 3.36 stands for the pose it was measured on, and its reproduction on other
+  poses is **blocked by the pair search**, not shown to fail;
+* the fix is not a longer walk but the same structural move used on the 3R: resolve the pair with a
+  *certified* object (an exact route in a labelled region, or a collision-verified lift), and treat
+  a walk failure as "未决" rather than as "not connected" -- which is what the study already does for
+  the partition but not yet for the pair search inside the probes.
+
 Also recorded: a flood fill that precomputes its list of start cells labels 3480 components on a
 two-component torus (the list is computed before any labelling, so every free cell starts a new
 component). Cheap to fix, invisible without a sanity check on the component count -- which is why
