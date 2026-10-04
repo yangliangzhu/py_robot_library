@@ -1073,6 +1073,21 @@ same instrument-limited class as in 3.35, not folds.  So the shape of the answer
 poses: **one posture owns the whole prescribed loop, every other posture owns a proper initial
 segment of it.**
 
+
+**Grid-resolution check on the exact aspect count.**  ``exp48``'s cuspidality claim rests on
+labelling ``T^2 \ Sigma``, so the count must not be a grid artefact:
+
+| grid | aspects | cells per component | singular cells |
+|---|---|---|---|
+| 200 | **2** | 19798 / 19798 | 1.01% |
+| 300 | **2** | 44700 / 44700 | 0.67% |
+| 500 | **2** | 124500 / 124500 | 0.40% |
+
+Two components at three resolutions, with the two cell counts equal to each other to the cell (the
+arm is symmetric under ``q3 -> -q3``) and the singular share falling as the grid refines -- the
+signature of a *curve* of singular cells rather than a thickening.  Command:
+``python3 -c "from study import cuspidal3r as c3; m=c3.build(); print(c3.aspect_labels(m, grid=500)[0].max())"``.
+
 Also recorded: a flood fill that precomputes its list of start cells labels 3480 components on a
 two-component torus (the list is computed before any labelling, so every free cell starts a new
 component). Cheap to fix, invisible without a sanity check on the component count -- which is why
