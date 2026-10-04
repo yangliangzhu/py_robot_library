@@ -1286,6 +1286,19 @@ the *content* rather than on the operation is the fix.  Practical rule for this 
 must never run in the background; only measurements may, and a measurement job must write to its own
 log file and nothing else.
 
+
+**The merge discrimination: is the birth census real, or twins?**  The reseeding census calls a
+solution "unoccupied" when it is further than ``--merge`` from every carried configuration, so
+running it at the study's dedupe convention and at a loose 1e-2 separates genuine new solutions from
+census twins (deterministic given the seed, so the two runs agree):
+
+| merge | samples with unoccupied solutions | total | contiguous runs |
+|---|---|---|---|
+| 1e-3 (default) | 45 of 168 | 253 | - |
+| 1e-2 | 45 of 168 | 253 | 1 (123, 167) |
+
+数量几乎不变（45 -> 45）⇒ 那 253 个解**不是**被跟踪分支的孪生，而是这些采样纤维里货真价实、没有任何轨迹跟随的实解——**Q20 的盲区被独立证实**。  Command: ``python3 -m study.exp50_births_and_stops --pose-seed 0 --merge 1e-2``.
+
 Also recorded: a flood fill that precomputes its list of start cells labels 3480 components on a
 two-component torus (the list is computed before any labelling, so every free cell starts a new
 component). Cheap to fix, invisible without a sanity check on the component count -- which is why
