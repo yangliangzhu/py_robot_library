@@ -156,8 +156,10 @@ def main() -> int:
         s_c, q_c = y[6], y[:6]
         if any(abs(s_c - known) < 1e-4 for known in real_fold_s):
             continue
-        if any(abs(s_c - s_old) < 1e-4 and np.linalg.norm(q_c - q_old) < 0.05
+        if any(abs(s_c - s_old) < 1e-4 and torus_distance_complex(q_c, q_old) < 0.05
                for s_old, q_old in branch_points):
+            # torus-aware dedup: the first version used a plain norm and double-counted
+            # the fold at 1.047164, which is one point at two 2pi-shifted representatives
             continue
         branch_points.append((s_c, q_c))
         print(f"  branch point at s = {s_c.real:.6f}{s_c.imag:+.6f}i "
