@@ -1,5 +1,7 @@
 # IK 分支结构与 DH 延拓：研究汇总
 
+**零上下文读者请从 [`summary/README.md`](summary/README.md) 开始** —— 那是一套面向「完全不知道这个项目」的人写的收束文档（含图、代码与实测数字）；本文件以下的章节是历史积累。
+
 本目录是为了回答两个问题而建的探索代码，全部在 `py_robot_library` 的分支
 `study/ik-branch-and-continuation` 上。详细的英文实验日志（含每次数字与当时的推理）在
 [NOTES.md](NOTES.md)；本文件是收束版：**每个结论后面都跟着产生它的命令与测量**。
