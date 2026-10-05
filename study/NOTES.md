@@ -2262,3 +2262,34 @@ This is what the adversarial check was for, and it is a lesson of the same famil
 factorisation in hand is not the same as a factorisation used -- the full discriminant had three
 components from the beginning.
 
+
+### 3.52 The cusp is real: kimi measured the tangency, and the instance-level reading flips
+
+kimi's round 14 (``study/exp56_3r_tangency.py``, log ``/tmp/study_verify/exp56.log``) took the decisive
+step 3.51 asked for.  At the ``A0 = C2`` candidate ``(rho, z) = (3.5355, +1.3229)`` they traced the two
+boundary branches separately (3 fold points nearby, an elbow branch of 1193 points and the other of 830)
+and measured the tangents ``[0.5248, -0.8512]`` and ``[-0.5292, 0.8485]`` -- an angle of **0.30 deg**,
+i.e. tangential contact.  So the candidate is a genuine cusp, and the chain closes:
+
+1. the arm is cuspidal (exp48, aspect structure);
+2. "this arm has no cusp" was withdrawn (3.51: the full discriminant has three components
+   ``A0 * A1 * C2^2`` and only ``C2`` had been covered);
+3. the complete component analysis gives three pairwise tangencies, two of them on the reachable
+   boundary with the higher-order-root signature ``A2 = 0``;
+4. kimi's tangent measurement confirms one of them as real tangential contact
+   => **this 3R is an instance of "cuspidal *and* cusped"**.
+
+Our own analysis explains why the measurement had to come out that way: at any common point of two
+components their gradients are parallel (both depend on ``S = R + Z`` alone), so the tangency is exact
+and the 0.30 deg is the tracing residual, not a near miss.  What changes in the record: the
+*instance-level* sentence "cuspidality does not need a cusp (this arm is an example)" is withdrawn --
+the general implication remains "cusp => cuspidal" (sufficient, not necessary), and this arm sits on
+the cusped side.  The radical-solvability result is untouched: the position IK is still the explicit
+quadratic in ``t^2`` (a cusp changes the branch structure, not the solvability), so the orthogonality
+witness of 3.32 is if anything stronger -- cuspidal, cusped, and solvable by radicals.
+
+Residuals, recorded as kimi did: the ``A1 = C2`` candidate at ``(0.7071, +-1.3229)`` had only elbow
+seeds in the window ("not measured", not "transversal"), and ``(3.5355, -1.3229)`` had no fold seeds
+at all; the qualitative conclusion does not depend on them.  Also noted: the fibre census at the
+*rounded* candidate coordinates shows two solutions with nearest pairs 0.16/0.29 rad -- the exact
+intersection is at ``R = 1/2``, ``Z = 7/4``, so that is a rounding artefact, not a near-double root.
