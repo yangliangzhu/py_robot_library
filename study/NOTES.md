@@ -2217,3 +2217,48 @@ misreads a correct result":
   "distinct values" comparison needs a tolerance rather than rounding (with rounding to 12 decimals
   one point still reported ``nan``).
 
+
+### 3.51 kimi's K-6 objection is right: the 3R's boundary has cusp candidates, and 3.50's verdict is withdrawn
+
+kimi's round 13 (K-6, the adversarial check we asked for) reports that their fold curves do **not** lie
+on our ``C2 = 0`` (median ``|C2| ~ 240`` along them), with a concrete point: a certified fold
+(``det J ~ 1e-17``, a genuine double root in the fibre, elbow singularity ``q3 = 0``) where
+``C2 = -2.914``.  They are right, and the reason is visible in our *own* symbolic factorisation, which
+we then used only in part: the discriminant of the quartic **in ``t``** is
+
+    Disc_t = A0 * A1 * C2^2,
+
+three components, not one -- ``A0 = 0`` is the root at infinity (``q3 = pi``), ``A1 = 0`` the ``w = 0``
+double root (``q3 = 0``, the elbow), ``C2 = 0`` the shoulder-type double root.  3.50's "``grad C2``
+never vanishes" therefore covered only the shoulder component.
+
+**The gap closes, and it closes against us.**  Writing ``S = R + Z``:
+
+* every component's gradient has the form ``(8(4S - c1), 8(4S - c2))`` with ``c1 != c2``
+  (``A0``: 45/37, ``A1``: 21/13, ``A2``: 33/25, ``C2``: 33/17), so **no component has a singular
+  point** -- the smoothness part of 3.50 generalises;
+* but every gradient depends on ``S`` alone, so at any common point of two components their gradients
+  are **parallel**: *every* intersection of components is a tangency, and tangencies of discriminant
+  components are exactly the cusp candidates (there the IK polynomial acquires a higher-order root).
+  Solving the three pairs gives exactly three candidates:
+
+| pair | ``R = rho^2`` | ``Z = z^2`` | ``(rho, z)`` | other components there | fibre counts on a 3x3 grid (``d = 0.02``) |
+|---|---|---|---|---|---|
+| ``A0 = A1`` | 6.5 | 1.75 | (2.5495, +-1.3229) | ``A2 = -576``, ``C2 = -576`` | **2, 2, 2 / 2, 2, 2 / 2, 2, 2** -- unchanged |
+| ``A0 = C2`` | 12.5 | 1.75 | (3.5355, +-1.3229) | ``A2 = 0``, ``A1 = +1152`` | 2, 2, **0** / 2, 2, **0** / 2, **0**, **0** |
+| ``A1 = C2`` | 0.5 | 1.75 | (0.7071, +-1.3229) | ``A2 = 0``, ``A0 = +1152`` | **0, 0, 2 / 0, 2, 2 / 0, 2, 2** |
+
+So two of the three tangencies lie **on the reachable boundary** (the fibre count changes ``2 <-> 0``
+across them) *and* carry the extra degeneracy ``A2 = 0`` -- the signature of a higher-order root, i.e.
+of a cusp -- while the third (``A0 = A1``, ``A2 = -576 != 0``) is a tangency of two discriminant
+branches that does not bound the reachable set (the count stays 2 all around it).  **3.50's "this arm
+has no cusp" is therefore withdrawn**: the honest statement is that it has **cusp candidates at
+``(rho, z) = (0.7071, +-1.3229)`` and ``(3.5355, +-1.3229)``**, with the local tangent analysis (two
+boundary arcs meeting tangentially there, versus a smooth continuation) as the decisive test -- and
+kimi's independent detector plus our own bisection are the two instruments for it.  Recorded as the
+next step on Q26, which is reopened.
+
+This is what the adversarial check was for, and it is a lesson of the same family as 3.48: a
+factorisation in hand is not the same as a factorisation used -- the full discriminant had three
+components from the beginning.
+
