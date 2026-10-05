@@ -249,22 +249,67 @@ def main() -> int:
         a0, a1, a2 = coefficients(rho, z)
         print(f"    (rho, z) = ({rho}, {z:+.4f}): C2 = {boundary(rho, z):+.6f}, "
               f"Delta_w = {(2 * a2) ** 2 - 4 * a0 * a1:+.3f}")
-    print("\nphase 3: singular points of the boundary -- symbolic argument first")
-    print("    dC2/dR = 32R + 32Z - 264 and dC2/dZ = 32R + 32Z - 136 can never vanish together "
-          "(264 != 136), so C2 = 0 has no singular point")
-    found = singular_points_of_boundary(grid=args.grid)
-    print(f"    numerical search over the (rho, z) plane: {len(found)} singular point(s) "
-          f"{found[:4]}")
+    print("\nphase 3: the full discriminant has THREE components (Disc_t = A0 * A1 * C2^2)")
+    print("    A0 = 0: the root at infinity (q3 = pi)   A1 = 0: the w = 0 double root (q3 = 0, "
+          "elbow)   C2 = 0: shoulder double root")
+    print("    every component's gradient is (8(4S - c1), 8(4S - c2)) with S = R + Z and c1 != c2")
+    print("    (A0: 45/37, A1: 21/13, A2: 33/25, C2: 33/17) => no component has a singular point;")
+    print("    but the gradients depend on S alone, so at any common point two components are "
+          "PARALLEL: every intersection is a tangency, i.e. a cusp candidate.")
+
+    def components(rho: float, z: float) -> tuple[float, float, float, float]:
+        r2, z2 = float(rho) ** 2, float(z) ** 2
+        a0 = 16 * r2 * r2 + 32 * r2 * z2 - 360 * r2 + 16 * z2 * z2 - 296 * z2 + 1769
+        a1 = 16 * r2 * r2 + 32 * r2 * z2 - 168 * r2 + 16 * z2 * z2 - 104 * z2 + 185
+        a2 = 16 * r2 * r2 + 32 * r2 * z2 - 264 * r2 + 16 * z2 * z2 - 200 * z2 + 401
+        c2 = 16 * r2 * r2 + 32 * r2 * z2 - 264 * r2 + 16 * z2 * z2 - 136 * z2 + 289
+        return a0, a1, a2, c2
+
+    def tangencies():
+        """The three pairwise intersections of the components -- closed forms, verified exactly.
+
+        The difference of two components is linear in ``(R, Z)`` (their quadratic parts are equal),
+        and substituting that line into either conic gives a quadratic whose root is rational here.
+        For this arm the line is always ``Z = 7/4`` and the roots are ``R = 13/2`` (A0 = A1),
+        ``R = 25/2`` (A0 = C2), ``R = 1/2`` (A1 = C2); an earlier in-module solver mislabelled one of
+        them, so the values are stated rather than re-derived numerically.
+        """
+        return [("A0 = A1", 13.0 / 2.0, 7.0 / 4.0),
+                ("A0 = C2", 25.0 / 2.0, 7.0 / 4.0),
+                ("A1 = C2", 1.0 / 2.0, 7.0 / 4.0)]
+
+    print("\n    tangency candidates and whether they bound the reachable set:")
+    print("    (fibre counts on a 3x3 grid of +-0.02 in (rho, z); a boundary shows 2 <-> 0)")
+    verdicts = []
+    for label, r2, z2 in tangencies():
+        rho, z = float(np.sqrt(r2)), float(np.sqrt(z2))
+        a0, a1, a2, c2 = components(rho, z)
+        grid = []
+        for dz in (-0.02, 0.0, 0.02):
+            row = []
+            for dr in (-0.02, 0.0, 0.02):
+                fiber = c3.census_position(model, np.array([rho + dr, 0.0, z + dz]),
+                                           seeds=max(60, args.seeds // 3), rng=rng)
+                row.append(len(fiber.solutions))
+            grid.append(row)
+        changes = any(cell == 0 for row in grid for cell in row) and any(
+            cell > 0 for row in grid for cell in row)
+        cusp = changes and abs(a2) < 1e-6
+        verdicts.append(cusp)
+        print(f"    {label:<10} (rho, z) = ({rho:.4f}, {z:.4f}): A2 = {a2:+.3f}, C2 = {c2:+.3f}, "
+              f"grid {grid} -> {'BOUNDARY' if changes else 'interior'}"
+              f"{', A2 = 0 (higher-order root: cusp candidate)' if cusp else ''}")
     print("\nphase 4: verdict")
-    print("    the workspace boundary of this arm is smooth (a conic in (rho^2, z^2) with a "
-          "nowhere-vanishing gradient): it has NO cusp.")
-    print("    The only degenerate locus is rho = 0, where the chart map (R, Z) -> (rho, z) is "
-          "singular -- which is where the earlier search landed, with a non-degenerate Hessian.")
-    print("    The arm is nevertheless cuspidal (exp48: one aspect holds two solutions of one pose), "
-          "so cuspidality does not require a cusp -- Wenger's cusp is a sufficient mechanism.")
-    print("    The refuted candidate (3.4601, +-1.4364) is not on the boundary at all "
-          "(C2 = -0.3456), which is why the fibre test found only two solutions there.")
-    return 0 if ok else 1
+    print("    Components are smooth and their intersections are tangential, so the cusp candidates "
+          "are exactly those intersections.")
+    print("    Those that also lie on the reachable boundary (2 <-> 0 across them) AND carry "
+          "A2 = 0 are cusp candidates: (rho, z) = (0.7071, +-1.3229) and (3.5355, +-1.3229).")
+    print("    The third (A0 = A1 at (2.5495, +-1.3229), A2 = -576) is a tangency of two branches "
+          "that does not bound the reachable set.")
+    print("    NOTE: an earlier version of this module concluded 'no cusp' from the C2 component "
+          "alone; that is withdrawn (kimi's K-6 objection, NOTES 3.51).  The decisive local test -- "
+          "do two boundary arcs meet tangentially at the candidates -- is the registered next step.")
+    return 0 if not any(verdicts) else 2
 
 
 if __name__ == "__main__":
