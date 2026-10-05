@@ -32,7 +32,7 @@ from study import sr0
 from study.exp11_dh_continuation import link_transforms
 from study.exp37_complex_loop import newton_complex
 from study.exp38_monodromy_group import torus_distance_complex
-from study.exp40_complex_branches import err6_complex
+from study.exp40_complex_branches import err6_complex, make_s_path_complex
 
 
 def sr0_links() -> list[np.ndarray]:
@@ -54,8 +54,14 @@ def det_jac_complex(links: list[np.ndarray], q: np.ndarray, target: np.ndarray) 
 
 
 def refine_branch_pose(links: list[np.ndarray], target_at, q0: np.ndarray, u0: complex,
-                       *, iterations: int = 60, tolerance: float = 1e-12):
-    """Newton on [err6; det J] = 0 over complex (q, u) -- the pose-coordinate fold."""
+                       *, iterations: int = 60, tolerance: float = 1e-12,
+                       max_step: float = 0.2):
+    """Newton on [err6; det J] = 0 over complex (q, u) -- the pose-coordinate fold.
+
+    Trust region as in the loop tracker: the first version oscillated from random complex
+    seeds (measured: residual bouncing 0.07..0.5, |update| up to 1.7e3 on step one), because
+    an uncapped Newton step can leave the basin entirely.
+    """
     y = np.concatenate([np.asarray(q0, dtype=complex), [complex(u0)]])
 
     def augmented(z: np.ndarray) -> np.ndarray:
@@ -72,8 +78,9 @@ def refine_branch_pose(links: list[np.ndarray], target_at, q0: np.ndarray, u0: c
             step[column] = 1e-7
             jacobian[:, column] = (augmented(y + step) - augmented(y - step)) / 2e-7
         update = np.linalg.lstsq(jacobian, -value, rcond=None)[0]
-        if float(np.linalg.norm(update)) > 0.5:
-            break
+        size = float(np.linalg.norm(update))
+        if size > max_step:
+            update *= max_step / size
         y = y + update
     return y, float(np.linalg.norm(augmented(y)))
 
@@ -140,41 +147,60 @@ def main() -> int:
     fibre = [np.asarray(solution.q, dtype=float) for solution in sr0.solve(model, target0)]
     print(f"SR0 at the base pose: {len(fibre)} analytic solutions")
 
-    print("phase 1: branch points along the coordinate (pair-approach seeds, then refine)")
     branch_points: list[tuple[complex, np.ndarray]] = []
-    for root_index, q0 in enumerate(fibre):
-        samples = []
-        q = q0.copy()
-        for u in np.linspace(u0 - 0.12, u0 + 0.12, 241):
-            q, residual = newton_complex(links, q, target_at(u))
-            if residual > 1e-9:
+    for sign in (1.0, -1.0):
+        qs = [np.asarray(q, dtype=complex) for q in fibre]
+        dead: set[int] = set()
+        for step in range(1, 301):
+            u = u0 + sign * step * 0.001
+            alive = []
+            for index, q in enumerate(qs):
+                if index in dead:
+                    continue
+                q_new, residual = newton_complex(links, q, target_at(u))
+                if residual < 1e-9:
+                    qs[index] = q_new
+                    alive.append(index)
+            if len(alive) < 2:
                 break
-            samples.append((u, q.copy(),
-                            abs(det_jac_complex(links, q, target_at(u)).real)))
-        for k in range(1, len(samples) - 1):
-            if samples[k][2] > samples[k - 1][2] or samples[k][2] > samples[k + 1][2]:
-                continue
-            if samples[k][2] > 0.02:
-                continue
-            y, residual = refine_branch_pose(links, target_at, samples[k][1], samples[k][0])
-            if residual > 1e-8:
-                continue
-            u_star = y[6]
-            if any(abs(u_star - old_u) < 1e-4 for old_u, _ in branch_points):
-                continue
-            branch_points.append((u_star, y[:6]))
-            print(f"  root {root_index}: branch point u* = {u_star.real:.6f}"
-                  f"{u_star.imag:+.1e}i (residual {residual:.1e})")
+            close = None
+            for a, i in enumerate(alive):
+                for j in alive[a + 1:]:
+                    distance = torus_distance_complex(qs[i], qs[j])
+                    if close is None or distance < close[0]:
+                        close = (distance, i, j)
+            if close is not None and close[0] < 0.02:
+                mid = 0.5 * (qs[close[1]] + qs[close[2]])
+                y, residual = refine_branch_pose(links, target_at, mid, u)
+                if residual > 1e-8:
+                    break
+                u_star = y[6]
+                # the merged pair is dead for further tracking; the rest continue
+                dead.add(close[1])
+                dead.add(close[2])
+                if not any(abs(u_star - old_u) < 1e-4 for old_u, _ in branch_points):
+                    branch_points.append((u_star, y[:6]))
+                    print(f"  branch point u* = {u_star.real:.6f}{u_star.imag:+.1e}i "
+                          f"(residual {residual:.1e})")
     print(f"  {len(branch_points)} branch points")
 
     print("phase 2: a complex circle around each branch point, all eight roots tracked")
     generators: list[list[int]] = []
     for u_star, _ in branch_points:
+        # the approach must not cross the fold: arc around it in complex u (upper half-plane),
+        # and the circle starts on the side where the pair is real -- the exp45 lesson
+        base_u = u_star + args.radius
+        leg_out = [target_at(u) for u in
+                   np.fromiter(make_s_path_complex(u0, base_u, [u_star.real]), dtype=complex)]
         circle = [target_at(u_star + args.radius * np.exp(1j * t))
-                  for t in np.linspace(0, 2 * np.pi, 97)]
+                  for t in np.linspace(0, 2 * np.pi, 97)[1:]]
+        leg_back = [target_at(u) for u in
+                    np.fromiter(make_s_path_complex(base_u, u0, [u_star.real]),
+                                dtype=complex)[1:]]
+        full = leg_out + circle + leg_back
         images: list[int] = []
         for q0 in fibre:
-            q_end, ok = track_pose(links, q0, circle)
+            q_end, ok = track_pose(links, q0, full)
             if not ok:
                 images.append(-1)
                 continue
