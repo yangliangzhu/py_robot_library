@@ -96,6 +96,9 @@ def main() -> int:
             angle = float(np.degrees(np.arccos(np.clip(cosine, 0.0, 1.0))))
             print(f"  angle between the two strata's tangents: {angle:.2f} deg "
                   f"({'TANGENT CONTACT (cusp-like)' if angle < 5 else 'transversal (node)'})")
+            print("  note (DeepSeek's analytic backbone): all component gradients depend only "
+                  "on S = R + Z, so at a common point they are *parallel* -- tangency is "
+                  "necessary, and the measured 0.30 deg is tracker residual, not a near-miss")
 
         # local root structure at the exact candidate point
         fibre = c3.census_position(model, np.array([rho_c, 0.0, z_c]), seeds=300)
