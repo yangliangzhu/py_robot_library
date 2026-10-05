@@ -2293,3 +2293,13 @@ seeds in the window ("not measured", not "transversal"), and ``(3.5355, -1.3229)
 at all; the qualitative conclusion does not depend on them.  Also noted: the fibre census at the
 *rounded* candidate coordinates shows two solutions with nearest pairs 0.16/0.29 rad -- the exact
 intersection is at ``R = 1/2``, ``Z = 7/4``, so that is a rounding artefact, not a near-double root.
+
+**Residual resolved (kimi's round 15, `4bd915a`).**  The ``A1 = C2`` candidate at
+``(0.7071, +1.3229)`` was measured on the second attempt -- wider seed window, plus seeds taken from
+the other branch's fold spectrum -- and the two tangents there differ by **0.14 deg**: the second
+boundary candidate is tangential too.  So of the three component tangencies, **both boundary ones now
+have a measured tangency** (0.30 deg at ``(3.5355, +1.3229)``, 0.14 deg at ``(0.7071, +1.3229)``), and
+the analytic backbone (all component gradients depend on ``S = R + Z`` alone, hence are parallel at any
+common point) is printed in ``exp56``'s own output, so the measurement reads as "analytic fact,
+numerically confirmed" rather than as an isolated number.  What remains unmeasured is only the two
+``-z`` points (seed-window luck, recorded as "not measured", never as "transversal").
