@@ -2348,3 +2348,36 @@ reasons of its own.
 
 Recorded because it is the same lesson as 3.40 in a new setting: **a merge between tracked roots is
 evidence about the tracker first, and about the arm only after it has been ruled out**.
+
+### 3.54 Q8 with a root-identity tracker: the collapse is cured, and the "informative fold" was the collapse
+
+``study/exp58_sr0_fold_and_group.py`` (registered in QUESTIONS Q8) replaces kimi's complex tracker with
+the discipline the task-space instrument uses -- linear prediction from the last two accepted
+configurations, corrections seeded from the prediction, a **jump rejection** (correction further than
+0.3 from the prediction = basin jump, root marked untracked), a **merge guard**, and an **adaptive
+step** that halves whenever any root faults.  What it establishes:
+
+* **The collapse is gone.**  With the naive "correct from the previous configuration" scheme the eight
+  complex roots fell onto each other at ~1e-15 at nearly every step (3.53); with prediction + jump
+  rejection the same sweep runs 0.03 m with **8/8 roots alive and 0 faults**, and the closest pair stays
+  at 3.84 rad.  So 3.53's diagnosis is confirmed: those merges were the tracker's.
+* **No fold on any of 18 sampled lines.**  ``--seeds 6`` x the three position coordinates: the closest
+  approach of any pair over a 0.06 m span is **2.78 to 4.01 rad** in every case -- the eight roots stay
+  far apart, so none of these lines crosses a fold.  (Sweeping one pose coordinate moves the target by
+  centimetres; the workspace boundary is tens of centimetres away, which is why nothing is crossed.)
+* **The "+2.2 mm event" is not a pair coalescence.**  At kimi's own base pose (seed 0, coordinate 0) the
+  ``+u`` sweep stops at ``u = -0.006966``, i.e. **2.2 mm from the base** -- matching their observation
+  -- but with the fixed tracker the closest pair there is still **3.83 rad**, and what happens is that
+  **all eight roots fail the corrector together** (the adaptive step halves to 1e-7 and still fails).
+  So the "pair within 0.02" that their census used to call this an informative fold was produced by the
+  collapsing tracker, and the event itself is a reachability boundary of that pose in that direction,
+  not a real fold.
+
+**Honest status of Q8**: the instrument is now trustworthy for sweeps (that was the blocker), the
+prediction stands (three binary choices => elementary abelian 2-group), and the group measured so far
+is still **order 1** -- a lower bound that supports nothing.  The recipe that follows from the
+measurements above: sweep **radially** (0.3-0.6 m, not 0.03 m) so that the line must cross the
+workspace boundary where real pairs *do* coalesce, stop at the first dip in the pair gap, refine with
+the augmented system, and read the loop -- accepting a generator only when all eight root identities
+survive the loop.  That is one code change (a radial ``target_at``) plus a run, and it is the same
+"walk to the fold" pattern that ``exp52.march_to_fold`` already implements on the task side.
