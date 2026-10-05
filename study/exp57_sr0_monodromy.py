@@ -147,7 +147,7 @@ def main() -> int:
     fibre = [np.asarray(solution.q, dtype=float) for solution in sr0.solve(model, target0)]
     print(f"SR0 at the base pose: {len(fibre)} analytic solutions")
 
-    branch_points: list[tuple[complex, np.ndarray]] = []
+    branch_points: list[tuple[complex, np.ndarray, bool]] = []
     for sign in (1.0, -1.0):
         qs = [np.asarray(q, dtype=complex) for q in fibre]
         dead: set[int] = set()
@@ -173,26 +173,42 @@ def main() -> int:
                 mid = 0.5 * (qs[close[1]] + qs[close[2]])
                 y, residual = refine_branch_pose(links, target_at, mid, u)
                 if residual > 1e-8:
-                    break
+                    # Refinement can fail at a genuine fold (trust-region limit).  The transposition
+                    # is read from the *roots*, not from a refined point, so record the approximate
+                    # location and keep scanning instead of aborting the whole sweep: kimi's day17
+                    # lost the informative fold at u ~ -0.0072 here (its pair is real at the base
+                    # pose, which is exactly what makes the loop around it informative).
+                    if not any(abs(u - old_u) < 0.02 for old_u, _q, _r in branch_points):
+                        branch_points.append((complex(u), np.asarray(mid, dtype=complex), False))
+                        print(f"  approximate branch point u* ~ {u.real:.6f}{u.imag:+.1e}i "
+                              f"(refinement failed, residual {residual:.1e})")
+                    dead.add(close[1])
+                    dead.add(close[2])
+                    continue
                 u_star = y[6]
                 # the merged pair is dead for further tracking; the rest continue
                 dead.add(close[1])
                 dead.add(close[2])
-                if not any(abs(u_star - old_u) < 1e-4 for old_u, _ in branch_points):
-                    branch_points.append((u_star, y[:6]))
+                if not any(abs(u_star - old_u) < 1e-4 for old_u, _q, _r in branch_points):
+                    branch_points.append((u_star, y[:6], True))
                     print(f"  branch point u* = {u_star.real:.6f}{u_star.imag:+.1e}i "
                           f"(residual {residual:.1e})")
     print(f"  {len(branch_points)} branch points")
 
     print("phase 2: a complex circle around each branch point, all eight roots tracked")
     generators: list[list[int]] = []
-    for u_star, _ in branch_points:
-        # the approach must not cross the fold: arc around it in complex u (upper half-plane),
-        # and the circle starts on the side where the pair is real -- the exp45 lesson
-        base_u = u_star + args.radius
+    for u_star, _q_star, refined in branch_points:
+        # The circle has to *enclose* the fold.  An unrefined centre can sit closer to the fold than
+        # the default radius (measured: the informative fold near u ~ -0.0052 was detected ~2e-3
+        # away), so approximate centres get a radius that spans the detection distance -- and the
+        # loop's cycle type says whether it enclosed exactly one fold (a single transposition) or
+        # more.  The approach must not cross the fold: arc around it in complex u (upper half-plane),
+        # and the circle starts on the side where the pair is real -- the exp45 lesson.
+        radius = args.radius if refined else 1e-2
+        base_u = u_star + radius
         leg_out = [target_at(u) for u in
                    np.fromiter(make_s_path_complex(u0, base_u, [u_star.real]), dtype=complex)]
-        circle = [target_at(u_star + args.radius * np.exp(1j * t))
+        circle = [target_at(u_star + radius * np.exp(1j * t))
                   for t in np.linspace(0, 2 * np.pi, 97)[1:]]
         leg_back = [target_at(u) for u in
                     np.fromiter(make_s_path_complex(base_u, u0, [u_star.real]),
@@ -200,7 +216,18 @@ def main() -> int:
         full = leg_out + circle + leg_back
         images: list[int] = []
         for q0 in fibre:
-            q_end, ok = track_pose(links, q0, full)
+            try:
+                q_end, ok = track_pose(links, q0, full)
+            except np.linalg.LinAlgError:
+                # A step can leave the finite-difference domain (the complex Newton builds a
+                # Jacobian from a non-finite configuration and the SVD refuses).  That is an
+                # untracked root for this generator, not a reason to abort the measurement --
+                # with approximate (unrefined) branch points this happens for real.
+                images.append(-1)
+                continue
+            if not np.all(np.isfinite(np.asarray(q_end, dtype=complex))):
+                images.append(-1)
+                continue
             if not ok:
                 images.append(-1)
                 continue

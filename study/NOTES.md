@@ -2303,3 +2303,48 @@ the analytic backbone (all component gradients depend on ``S = R + Z`` alone, he
 common point) is printed in ``exp56``'s own output, so the measurement reads as "analytic fact,
 numerically confirmed" rather than as an isolated number.  What remains unmeasured is only the two
 ``-z`` points (seed-window luck, recorded as "not measured", never as "transversal").
+
+### 3.53 Q8 (SR0's monodromy group): kimi's one-line fix applied, and a tracker fault that makes the first reading untrustworthy
+
+Picking up kimi's day17 stop point (their budget ran out one line short).  The fix they prescribed
+(`break` → `continue` when the fold refinement fails, so the sweep keeps scanning) is in
+``study/exp57_sr0_monodromy.py``, together with two guards the run turned out to need:
+
+* a **refinement failure is now recorded as an approximate branch point** (the transposition is read
+  from the roots, not from a refined point) instead of aborting the sweep;
+* the phase-2 tracker catches ``LinAlgError``/non-finite configurations as "untracked root" instead of
+  killing the whole measurement, and approximate centres get a radius that spans the detection
+  distance (a 5e-4 circle around a centre ~2e-3 from the fold does not enclose it).
+
+**What the repaired sweep measures** (``python3 -m study.exp57_sr0_monodromy``): two candidates --
+the refined ``u* = -0.448423`` (residual 2.6e-14), whose complex loop reads the **identity** on all
+eight roots (reproducing kimi's first measurement), and an *approximate* point at
+``u ~ -0.005171`` whose refinement residual is **3.3e-01**, i.e. **not a fold**; its loop leaves roots
+untracked.  So no generator was obtained, and the informative fold (the one whose pair is real at the
+base pose) is still unmeasured.
+
+**The bigger finding: the tracker itself is not trustworthy here.**  A gap-minimisation probe along
+``u`` (0.5 mm steps over 0.03) shows the eight tracked complex roots collapsing **pairwise to ~1e-15
+at nearly every step**, with the collapsing pair changing from step to step
+(``(1,4) → (0,5) → (1,5) → (2,7) → (3,7) → …``) and the "alive" count fluctuating 7-8.  Two distinct
+solutions cannot coincide away from the discriminant, so this is the **persistent-merge signature**
+that the uniqueness-domain work (3.40) uses to flag a tracker fault -- the complex Newton here is
+losing root identity and coalescing neighbours, which also means the **identity reading of the
+``-0.4484`` loop cannot yet be believed**: a tracker that merges roots can read the identity for
+reasons of its own.
+
+**What Q8 needs next** (recipe, in the order that respects the study's own conventions):
+
+1. a complex tracker with **root-identity bookkeeping**: step small (the collapse appears with 5e-4
+   steps), reject a step whose corrected roots come closer than the known base-pose separation by
+   more than a factor, and flag any persistent merge as a fault (the ``merged`` field of
+   ``taskspace`` is the task-space version of exactly this guard);
+2. then re-read the two loops: the refined fold ``-0.448423`` and the genuine fold near
+   ``-0.0072`` (kimi's independent census), and only accept a generator when the root identities
+   survive the whole loop;
+3. the group so far is a **lower bound of order 1**: consistent with the predicted elementary abelian
+   2-group but supporting nothing -- the honest status of Q8 is "instrument not yet trustworthy",
+   not "identity measured".
+
+Recorded because it is the same lesson as 3.40 in a new setting: **a merge between tracked roots is
+evidence about the tracker first, and about the arm only after it has been ruled out**.
