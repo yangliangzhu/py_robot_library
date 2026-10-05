@@ -8,6 +8,37 @@ The C++ counterpart of this library lives in
 [robot-model-cpp](https://gitee.com/yangliangzhu_rob/robot-model-cpp); the two
 implement the same algorithms and are cross-checked against each other.
 
+> ### 🔎 The IK branch-structure study lives in [`study/`](study/)
+>
+> This repository is also the home of a long-running study of **how the inverse-kinematics solutions of a
+> 6R arm are connected to each other**, carried out on the ROKAE SR5/SR0 and on a 3R benchmark, and of the
+> instruments that make such claims measurable. It answers three questions and records every retraction:
+>
+> * **Which solutions are reachable from which?** — a two-tier certificate (`sign det J` is a strict
+>   one-way test; a clearance-witnessed walk proves connectivity), the classical shoulder/elbow/wrist
+>   labels measured to fail in both directions, and the engineering answer: for one prescribed Cartesian
+>   loop the ten starting postures can track **100% / 23.2% / 30.8% / 0.9%** of it — a feasible path is a
+>   property of a *uniqueness domain*, not of an aspect.
+> * **Why is there no closed form, and what does it cost to bypass it?** — the obstruction is the
+>   measurable **0.136 m** wrist offset; a solvable neighbour arm (SR0) plus parameter continuation
+>   recovers the real solutions, with the fold spectrum, the ±2 law, and the 16-solution bound all
+>   measured — including the boundary (**20-30%** of poses have no seed).
+> * **Can the inverse kinematics be written with radicals?** — **no**: the measured monodromy group of
+>   SR5 contains `S6` (two independent 6-element components, closure 720), so it is not solvable. The
+>   same instrument on SR0 measures a solvable (order-2) subgroup — the criterion separates the two arms
+>   exactly as the geometry says it should.
+>
+> **Start here:** [`study/summary/README.md`](study/summary/README.md) — a zero-context write-up in five
+> documents with five figures generated from the measurements (`python3 -m study.doc_figures`), plus a
+> glossary, a status ledger and the minimum reproduction command set. The academic version is
+> [`study/paper.pdf`](study/paper.pdf); the raw record (including the 17-entry instrument-fault archive
+> and the list of withdrawn claims) is [`study/NOTES.md`](study/NOTES.md) and
+> [`study/collab/QUESTIONS.md`](study/collab/QUESTIONS.md).
+>
+> The study does **not** modify the library: every experiment is a module under `study/` (outside
+> `testpaths`), run as `python3 -m study.<module>`, and every claim carries the command and the measured
+> numbers that produced it.
+
 ## Features
 
 - **DH parameters** — modified (MDH) and standard (SDH) conventions, with unit
@@ -235,6 +266,17 @@ py_robot_library/
 │   ├── common.py           # backwards-compatible aggregator
 │   └── configs/            # per-robot YAML descriptions
 ├── tools/                  # geometry helpers and standalone scripts
+├── study/                  # IK branch-structure study (see the callout above)
+│   ├── summary/            #   zero-context write-up: 5 documents + 5 measured figures
+│   ├── taskspace.py        #   lift a whole fibre along a task path (births, folds, guards)
+│   ├── chamber.py          #   clearance-witnessed walks in joint space
+│   ├── sr0.py              #   the solvable neighbour arm's closed-form solver
+│   ├── cuspidal3r.py       #   the 3R benchmark (cuspidal, and cusped)
+│   ├── exp*.py             #   the experiments, numbered and registered in collab/QUESTIONS.md
+│   ├── NOTES.md            #   the detailed log, retractions included
+│   ├── REPORT.md           #   the ten-minute Chinese brief
+│   ├── paper.typ/.pdf      #   the academic write-up
+│   └── collab/             #   the two-agent record: questions, round logs, letters
 ├── tests/                  # pytest suite
 └── test_data/              # geometry regression data
 ```
@@ -247,6 +289,10 @@ py_robot_library/
 - RPY angles are `[roll, pitch, yaw]` for the ZYX composition
   `R = Rz(yaw) @ Ry(pitch) @ Rx(roll)`.
 - Joint limits are always stored in radians, whatever the config file declares.
+- `study/` is exploration: it may import the library, but never edits it. Experiments are modules run as
+  `python3 -m study.<module>`, new experiment numbers are registered in `study/collab/QUESTIONS.md`
+  before use, and conclusions are written up in `study/NOTES.md` / `study/REPORT.md`. Failures and
+  retractions are recorded, not removed.
 
 ## Contributing
 
