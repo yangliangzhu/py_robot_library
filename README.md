@@ -1,128 +1,121 @@
 # py_robot_library
 
-Robot kinematics in Python: Denavit-Hartenberg parameters, forward and inverse
-kinematics, and geometry utilities, with interchangeable NumPy and CasADi
-backends.
+Python 机器人运动学库：DH 参数、正逆运动学、Jacobian 与几何工具，NumPy 与 CasADi 两套后端可互换。
 
-The C++ counterpart of this library lives in
-[robot-model-cpp](https://gitee.com/yangliangzhu_rob/robot-model-cpp); the two
-implement the same algorithms and are cross-checked against each other.
+本库的 C++ 对应实现是 [robot-model-cpp](https://gitee.com/yangliangzhu_rob/robot-model-cpp)，两者实现同一套算法、互为交叉校验。Gitee 上的 README 讲的是这套**库**；本仓库（GitHub）是**逆解分支结构研究**的主场，库本身在这里只作配角。
 
-> ### 🔎 The IK branch-structure study lives in [`study/`](study/)
+## 逆解分支结构研究（`study/`）
+
+> ### 🔎 本仓库的主线，是 6R 臂的逆解分支结构
 >
-> This repository is also the home of a long-running study of **how the inverse-kinematics solutions of a
-> 6R arm are connected to each other**, carried out on the ROKAE SR5/SR0 and on a 3R benchmark, and of the
-> instruments that make such claims measurable. It answers three questions and records every retraction:
->
-> * **Which solutions are reachable from which?** — a two-tier certificate (`sign det J` is a strict
->   one-way test; a clearance-witnessed walk proves connectivity), the classical shoulder/elbow/wrist
->   labels measured to fail in both directions, and the engineering answer: for one prescribed Cartesian
->   loop the ten starting postures can track **100% / 23.2% / 30.8% / 0.9%** of it — a feasible path is a
->   property of a *uniqueness domain*, not of an aspect.
-> * **Why is there no closed form, and what does it cost to bypass it?** — the obstruction is the
->   measurable **0.136 m** wrist offset; a solvable neighbour arm (SR0) plus parameter continuation
->   recovers the real solutions, with the fold spectrum, the ±2 law, and the 16-solution bound all
->   measured — including the boundary (**20-30%** of poses have no seed).
-> * **Can the inverse kinematics be written with radicals?** — **no**: the measured monodromy group of
->   SR5 contains `S6` (two independent 6-element components, closure 720), so it is not solvable. The
->   same instrument on SR0 measures a solvable (order-2) subgroup — the criterion separates the two arms
->   exactly as the geometry says it should.
->
-> **Start here:** [`study/summary/README.md`](study/summary/README.md) — a zero-context write-up in five
-> documents with five figures generated from the measurements (`python3 -m study.doc_figures`), plus a
-> glossary, a status ledger and the minimum reproduction command set. The academic version is
-> [`study/paper.pdf`](study/paper.pdf); the raw record (including the 17-entry instrument-fault archive
-> and the list of withdrawn claims) is [`study/NOTES.md`](study/NOTES.md) and
-> [`study/collab/QUESTIONS.md`](study/collab/QUESTIONS.md).
->
-> The study does **not** modify the library: every experiment is a module under `study/` (outside
-> `testpaths`), run as `python3 -m study.<module>`, and every claim carries the command and the measured
-> numbers that produced it.
+> 研究在珞石 SR5 / SR0 和一台 3R 基准臂上展开，问的是同一件事：**一台 6R 臂的多组逆解彼此如何连通**，以及要把这种话讲成可测量的结论，需要哪些仪器。下面三个问题各有答案，过程中的每一次推翻都留在记录里。
 
-## Features
+### 问题一：哪些解能互达（分支结构）
 
-- **DH parameters** — modified (MDH) and standard (SDH) conventions, with unit
-  conversion and per-robot YAML descriptions.
-- **Forward kinematics** — end-effector pose from joint positions, on both
-  backends.
-- **Jacobian and Hessian** — analytic on CasADi, and a NumPy implementation
-  checked against a numerical derivative in the test suite.
-- **Inverse kinematics** — four solvers: damped least-squares, a redundant-arm
-  null-space solver, a single-step servo solver, and an experimental QP solver.
-- **Manipulability** — the Yoshikawa measure and its gradient, used by the
-  redundancy subtask.
-- **Two backends** — `RobotModelNumpy` evaluates dense arrays on every call;
-  `RobotModelCasadi` compiles the kinematics, Jacobian and derivatives once.
-- **Geometry utilities** — rotation matrices, RPY angles, quaternions and
-  homogeneous transforms.
+判定用的是**两档证书**：`sign det J` 是严格的**单向**判据——异号必属不同分支；再用**保间隙的"见证走法"**做构造性证明，说明同号的两个解确实可以连通。工程上常用的**肩 / 肘 / 腕标签实测双向失效**：标签不同也能连通，标签相同也可能不连通。
 
-## Requirements
+落到工程上：同一条规定的笛卡尔闭环，十个起始姿势各自能跟踪 **100% / 23.2% / 30.8% / 0.9%**，弧的端点正是已定位的 fold 穿越点。换句话说，可行路径是**唯一性域**的性质，而不是 aspect 的性质。
+
+### 问题二：为什么没有闭式解、绕过它要付出什么代价
+
+障碍是**可测的 0.136 m 腕部偏置**——最后三根轴不共点，经典闭式解的前提不成立。把该偏置清零，得到一台"几乎一样"的可解邻机 **SR0**，再用**参数延拓**把解带回真机；这一步顺带量出了 fold 谱、实事件的 **±2 定律**和分裂指数 **0.39–0.48**，并实测 **16 解上界真的被达到**。代价写在适用边界上：**20–30%** 的位姿在 SR0 上根本没有种子（另有一个"三连续轴平行"的可解邻机，能覆盖这些盲位姿）。
+
+### 问题三：能不能用根号写出来
+
+**不能。** 让参数绕折点走一圈，把解与解之间的交换拼起来，得到的就是**单值化群**。SR5 的复单值化群实测含 **`S6`**（11 条对换边 ⇒ 连通分量 `[6,6,1,1,1,1]`，**两个 6 元分量各自闭包到阶 720 = |S6|**，构成双份独立证据）⇒ 群不可解 ⇒ 逆解无根式解。两条限定：这不排除闭式消元；且这是**复**侧的结论，与实侧分支结构**正交**。
+
+同一套仪器在 **SR0** 上测到第一个非恒等对换（四对换的对合，八条根身份全程存活），测得子群**阶 2、阿贝尔 ⇒ 可解**。判据正好把两台臂分在几何预言的两侧。
+
+### 入口与配套
+
+* [`study/summary/README.md`](study/summary/README.md) —— **零上下文导读**：五篇文档（总览 + 唯一性域 / A→B + 可解性与 cusp + 单值化群 + 仪器与未决），配 **5 张由实测数据生成的图**（脚本在 [`study/doc_figures.py`](study/doc_figures.py)，用 `python3 -m study.doc_figures` 重画），另含术语表、结论账本与最少复现命令集。
+* [`study/paper.pdf`](study/paper.pdf) —— 学术版（7 页）。
+* [`study/NOTES.md`](study/NOTES.md) —— 逐日详细日志，含被推翻的结论与 17 条仪器失误档案。
+* [`study/REPORT.md`](study/REPORT.md) —— 十分钟中文简报。
+* [`study/collab/QUESTIONS.md`](study/collab/QUESTIONS.md) —— 编号问题清单（状态 / 命令 / 数字）；[`study/collab/closing-exchange.md`](study/collab/closing-exchange.md) —— 收尾对谈。
+
+研究用的仪器（沿任务路径提升整条纤维、保间隙见证走法、SR0 闭式求解器、3R 基准）都在 [`study/`](study/) 里，可以单独取用。
+
+### 研究约定
+
+[`study/`](study/) **只 import 库、绝不修改库**；每个实验都是可运行的模块（`python3 -m study.<module>`，位于 pytest 的 `testpaths` 之外），新实验编号先在 [`study/collab/QUESTIONS.md`](study/collab/QUESTIONS.md) 注册，每个论断都附上产生它的命令与实测数字，**失败与撤回照记不删**。
+
+## 功能特性
+
+- **DH 参数** —— 改进型（MDH）与标准型（SDH）两种约定，支持单位换算与逐机器人 YAML 描述。
+- **正运动学** —— 由关节位置求末端位姿，两套后端都支持。
+- **Jacobian 与 Hessian** —— CasADi 后端解析求导；NumPy 实现则在测试套件里与数值导数对照校验。
+- **逆运动学** —— 四种求解器：阻尼最小二乘、冗余臂零空间求解器、单步伺服求解器，以及实验性的 QP 求解器。
+- **可操作度** —— Yoshikawa 指标及其梯度，供冗余子任务使用。
+- **两套后端** —— `RobotModelNumpy` 每次调用都现场计算稠密数组；`RobotModelCasadi` 把运动学、Jacobian 与各阶导数一次性编译好。
+- **几何工具** —— 旋转矩阵、RPY 角、四元数与齐次变换。
+
+## 环境要求
 
 - Python >= 3.9
 - [NumPy](https://numpy.org/) >= 1.21
 - [CasADi](https://web.casadi.org/) >= 3.6
 - [PyYAML](https://pyyaml.org/) >= 6.0
 
-## Installation
+## 安装
 
 ```bash
 git clone https://gitee.com/yangliangzhu_rob/py_robot_library.git
 cd py_robot_library
 
-# Editable installs use PEP 660, which needs pip >= 23.
+# 可编辑安装走 PEP 660，需要 pip >= 23。
 python -m pip install --upgrade pip
 pip install -e .
 ```
 
-For development, install the test and lint tooling as well:
+开发时把测试与代码检查工具一并装上：
 
 ```bash
 pip install -e ".[dev]"
 ```
 
-## Quick start
+## 快速开始
 
 ```python
 import numpy as np
 
 from model import IkType, ModelFactory
 
-# Build a 7-DOF ROKAE ER3 on the NumPy backend.
+# 在 NumPy 后端上构建一台 7 自由度珞石 ER3。
 robot = ModelFactory.create("er3", backend="numpy", ik_type=IkType.IK_STANDARD)
 print(robot.num_dof)  # 7
 
-# Forward kinematics and the geometric Jacobian.
+# 正运动学与几何 Jacobian。
 q = np.zeros(robot.num_dof)
 pose = robot.fk(q)
 jacobian = robot.jacobian(q)
 
-# Inverse kinematics: solve for a pose, starting from a seed configuration.
+# 逆运动学：给定目标位姿，从种子构型出发求解。
 target = robot.fk(np.radians([10, 20, -15, 30, 5, -25, 40]))
 solution, success = robot.ik(q, target)
 assert success
 print(np.allclose(robot.fk(solution), target, atol=1e-4))
 ```
 
-## Usage
+## 使用说明
 
-### Building a model
+### 构建模型
 
-`ModelFactory.create(name, backend=..., ik_type=...)` looks up a robot
-description in `model/configs/` and returns a configured model.
+`ModelFactory.create(name, backend=..., ik_type=...)` 会在 `model/configs/` 里查找机器人描述，返回一个配置好的模型。
 
-| Name | Robot | DOF | Parameters |
+| 名称 | 机器人 | 自由度 | 参数形式 |
 |------|-------|-----|------------|
 | `sr5` | ROKAE xMate SR5 | 6 | matrix |
-| `sr5_v2` | ROKAE xMate SR5, tightened limits | 6 | matrix |
+| `sr5_v2` | ROKAE xMate SR5，限位收紧 | 6 | matrix |
 | `er3` | ROKAE xMate ER3 | 7 | MDH |
-| `er3_v2` | ROKAE xMate ER3, expanded DH | 7 | MDH |
+| `er3_v2` | ROKAE xMate ER3，展开的 DH | 7 | MDH |
 | `er3_sdh` | ROKAE xMate ER3 | 7 | SDH |
 | `er3_plus` | ROKAE xMate ER3 Plus | 7 | MDH |
 | `nerv_er3` | nerv ER3 | 7 | MDH |
 | `aubo_c5` | AUBO C5 | 6 | MDH |
 | `franka` | Franka Emika Panda | 7 | MDH |
 
-Two backends are available:
+两套后端都可用：
 
 ```python
 from model import ModelFactory
@@ -131,11 +124,9 @@ numpy_robot = ModelFactory.create("er3", backend="numpy")
 casadi_robot = ModelFactory.create("er3", backend="casadi")
 ```
 
-Both produce the same kinematics to floating-point precision; the CasADi backend
-additionally provides exact derivatives and is faster once the compiled
-expressions are built.
+两者给出的运动学在浮点精度内一致；CasADi 后端另外提供精确导数，编译表达式构建完成后速度更快。
 
-### Describing a robot by hand
+### 手写机器人描述
 
 ```python
 import numpy as np
@@ -165,22 +156,20 @@ robot = RobotModelNumpy()
 robot.build("dh", IkType.IK_STANDARD, config)
 ```
 
-A robot is described by an ordered transform list
-`Ms = [base, link_1, ..., link_n, tool]`. `get_matrix_list` builds it from a DH
-table; the `"mat"` layout passes the link transforms directly.
+一台机器人由一条有序变换列表 `Ms = [base, link_1, ..., link_n, tool]` 描述。`get_matrix_list` 从 DH 表构造它；`"mat"` 布局则直接传入各连杆变换。
 
-### Inverse kinematics
+### 逆运动学
 
-| `IkType` | Behaviour |
+| `IkType` | 行为 |
 |----------|-----------|
-| `IK_STANDARD` | Damped least-squares with adaptive step back-off; constrains the full pose. |
-| `IK_NORMAL` | Same, but relaxes the tool yaw, which helps a 7-DOF arm converge. |
-| `IK_NULL` | Full pose, plus a redundancy subtask in the Jacobian null space that avoids joint limits and then maximises manipulability. |
-| `IK_NULL_NORMAL` | The relaxed-yaw variant of `IK_NULL`. |
-| `IK_NAIVE` | A single damped least-squares step; use it inside a servo loop. |
-| `IK_QP` | Experimental one-step QP formulation. |
+| `IK_STANDARD` | 带自适应步长回退的阻尼最小二乘；约束完整位姿。 |
+| `IK_NORMAL` | 同上，但放松工具偏航角，有助于 7 自由度臂收敛。 |
+| `IK_NULL` | 约束完整位姿，并在 Jacobian 零空间里加一个冗余子任务：先避开关节限位，再最大化可操作度。 |
+| `IK_NULL_NORMAL` | `IK_NULL` 的放松偏航角版本。 |
+| `IK_NAIVE` | 只做一步阻尼最小二乘；用在伺服回路里。 |
+| `IK_QP` | 实验性的单步 QP 形式。 |
 
-Every solver has the same call signature and returns `(joint_positions, success)`:
+所有求解器调用签名相同，返回 `(joint_positions, success)`：
 
 ```python
 from model import IkType, ModelFactory
@@ -189,116 +178,108 @@ robot = ModelFactory.create("er3", backend="casadi", ik_type=IkType.IK_NULL)
 solution, success = robot.ik(seed, target_pose)
 ```
 
-IK is iterative and seeded: pass a configuration near the expected solution.
-The `IK_NORMAL` and `IK_NULL_NORMAL` variants converge in position but
-deliberately do not match the target yaw.
+逆解是迭代且依赖种子的：请传入接近预期解的构型。`IK_NORMAL` 与 `IK_NULL_NORMAL` 两个变体只在位置上收敛，按设计不匹配目标偏航角。
 
-### Tool transforms
+### 工具变换
 
-`set_tool` mounts an interchangeable tool on the flange. It replaces the previous
-tool rather than accumulating on top of it.
+`set_tool` 在法兰上安装可互换工具。它替换上一件工具，而不是在其上叠加。
 
 ```python
 tool = np.eye(4)
-tool[2, 3] = 0.1  # 10 cm along the tool Z axis
+tool[2, 3] = 0.1  # 沿工具 Z 轴 10 cm
 robot.set_tool(tool)
-robot.set_tool(np.eye(4))  # remove it again
+robot.set_tool(np.eye(4))  # 再把它卸掉
 ```
 
-### Geometry utilities
+### 几何工具
 
 ```python
 import numpy as np
 
 from tools.geometry import nervCartToAffine, quat2rot, rot2quat, rot_x, rpy2rot
 
-rot_x(np.pi / 2)                      # 3x3 rotation about X
-rpy2rot([0.1, 0.2, 0.3])              # ZYX composition, radians
+rot_x(np.pi / 2)                      # 绕 X 轴的 3x3 旋转
+rpy2rot([0.1, 0.2, 0.3])              # ZYX 复合，弧度
 quat2rot([1, 0, 0, 0])                # [w, x, y, z] -> 3x3
 rot2quat(np.eye(3))                   # 3x3 -> [w, x, y, z]
 
-# nerv Cartesian poses are [x, y, z, rx, ry, rz] with millimetres and degrees.
+# nerv 笛卡尔位姿为 [x, y, z, rx, ry, rz]，单位是毫米与度。
 nervCartToAffine([100.0, 200.0, 300.0, 0.0, 0.0, 90.0])
 ```
 
-## Testing
+## 测试
 
-The test suite uses [pytest](https://pytest.org/):
+测试套件使用 [pytest](https://pytest.org/)：
 
 ```bash
 pip install -e ".[dev]"
 
-pytest                      # the whole suite
-pytest tests/test_ik.py     # one file
-pytest -k manip             # by name
+pytest                      # 全量套件
+pytest tests/test_ik.py     # 单个文件
+pytest -k manip             # 按名字筛选
 ```
 
-Model-level tests are parametrised over both backends, so a divergence between
-the NumPy and CasADi implementations fails the build. The Jacobian and the
-manipulability gradient are checked against numerical derivatives rather than
-against stored reference values.
+模型层测试在两套后端上都做了参数化，因此 NumPy 与 CasADi 实现一旦出现分歧，构建就会失败。Jacobian 与可操作度梯度都是与数值导数对照校验的，而不是与存档的参考值比较。
 
-Geometry regression data for the robot models lives in `test_data/*.npz`, and
-`tools/generate_test_data.py` regenerates it.
+各机器人模型的几何回归数据放在 `test_data/*.npz`，由 `tools/generate_test_data.py` 重新生成。
 
-## Linting
+## 代码检查
 
 ```bash
-ruff check .        # lint
-ruff check --fix .  # apply the safe fixes
+ruff check .        # 检查
+ruff check --fix .  # 应用安全修复
 ```
 
-## Project layout
+## 项目结构
 
 ```
 py_robot_library/
-├── model/                  # package: robot models and kinematics
-│   ├── __init__.py         # public API
-│   ├── dh_param.py         # DH tables and link transforms
-│   ├── ik_type.py          # IkType enum
-│   ├── ik_solver.py        # IK solvers + solver factory
-│   ├── ik_srs.py           # analytical IK for S-R-S 7-DOF arms
-│   ├── mrobotics.py        # screw-theoretic rigid-body helpers
-│   ├── robot_model_base.py # shared model configuration logic
+├── model/                  # 包：机器人模型与运动学
+│   ├── __init__.py         # 公开 API
+│   ├── dh_param.py         # DH 表与连杆变换
+│   ├── ik_type.py          # IkType 枚举
+│   ├── ik_solver.py        # IK 求解器 + 求解器工厂
+│   ├── ik_srs.py           # S-R-S 型 7 自由度臂的解析逆解
+│   ├── mrobotics.py        # 旋量法刚体辅助函数
+│   ├── robot_model_base.py # 共用的模型配置逻辑
 │   ├── robot_model_numpy.py
 │   ├── robot_model_casadi.py
 │   ├── model_factory.py
-│   ├── common.py           # backwards-compatible aggregator
-│   └── configs/            # per-robot YAML descriptions
-├── tools/                  # geometry helpers and standalone scripts
-├── study/                  # IK branch-structure study (see the callout above)
-│   ├── summary/            #   zero-context write-up: 5 documents + 5 measured figures
-│   ├── taskspace.py        #   lift a whole fibre along a task path (births, folds, guards)
-│   ├── chamber.py          #   clearance-witnessed walks in joint space
-│   ├── sr0.py              #   the solvable neighbour arm's closed-form solver
-│   ├── cuspidal3r.py       #   the 3R benchmark (cuspidal, and cusped)
-│   ├── exp*.py             #   the experiments, numbered and registered in collab/QUESTIONS.md
-│   ├── NOTES.md            #   the detailed log, retractions included
-│   ├── REPORT.md           #   the ten-minute Chinese brief
-│   ├── paper.typ/.pdf      #   the academic write-up
-│   └── collab/             #   the two-agent record: questions, round logs, letters
-├── tests/                  # pytest suite
-└── test_data/              # geometry regression data
+│   ├── common.py           # 向后兼容的聚合出口
+│   └── configs/            # 逐机器人 YAML 描述
+├── tools/                  # 几何辅助函数与独立脚本
+├── study/                  # 逆解分支结构研究（见上文对应章节）
+│   ├── summary/            #   零上下文导读：5 篇文档 + 5 张实测图
+│   ├── doc_figures.py      #   用实测数据重画 summary 的 5 张图
+│   ├── taskspace.py        #   沿任务路径提升整条纤维（诞生、fold、护栏）
+│   ├── chamber.py          #   关节空间里的保间隙见证走法
+│   ├── sr0.py              #   可解邻机的闭式求解器
+│   ├── cuspidal3r.py       #   3R 基准臂（cuspidal，且有 cusp）
+│   ├── exp*.py             #   各号实验，编号登记在 collab/QUESTIONS.md
+│   ├── NOTES.md            #   详细日志，含撤回
+│   ├── REPORT.md           #   十分钟中文简报
+│   ├── paper.typ/.pdf      #   学术版
+│   └── collab/             #   双人协作记录：问题清单、轮次日志、往来信件
+├── tests/                  # pytest 套件
+└── test_data/              # 几何回归数据
 ```
 
-## Conventions
+## 约定
 
-- Angles are in radians unless a function documents otherwise.
-- Rotation matrices are 3x3; homogeneous transforms are 4x4.
-- Quaternions are `[w, x, y, z]`.
-- RPY angles are `[roll, pitch, yaw]` for the ZYX composition
-  `R = Rz(yaw) @ Ry(pitch) @ Rx(roll)`.
-- Joint limits are always stored in radians, whatever the config file declares.
-- `study/` is exploration: it may import the library, but never edits it. Experiments are modules run as
-  `python3 -m study.<module>`, new experiment numbers are registered in `study/collab/QUESTIONS.md`
-  before use, and conclusions are written up in `study/NOTES.md` / `study/REPORT.md`. Failures and
-  retractions are recorded, not removed.
+- 除函数另有说明外，角度一律用弧度。
+- 旋转矩阵为 3x3；齐次变换为 4x4。
+- 四元数为 `[w, x, y, z]`。
+- RPY 角为 `[roll, pitch, yaw]`，对应 ZYX 复合
+  `R = Rz(yaw) @ Ry(pitch) @ Rx(roll)`。
+- 关节限位一律以弧度存储，不论配置文件里声明的是什么单位。
+- `study/` 属于探索区：可以 import 库，但绝不修改库。实验都是 `python3 -m study.<module>` 形式的模块，
+  新实验编号先到 `study/collab/QUESTIONS.md` 注册，结论写在 `study/NOTES.md` / `study/REPORT.md`。
+  失败与撤回照记不删。
 
-## Contributing
+## 贡献
 
-Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before
-opening a merge request.
+欢迎贡献。提合并请求之前，请先读 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
-## License
+## 许可证
 
 [MIT](LICENSE)
