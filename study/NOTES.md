@@ -2420,3 +2420,43 @@ The honest remainder: this is a **lower bound of order 2**, not the full group; 
 abelian 2-group (three binary choices) needs loops around the *complex* branch points (a census in the
 ``(u, v)`` plane, the SR0 analogue of ``exp40``), and only then can the closure be compared with the
 prediction.
+
+### 3.56 GPT/Astra's math review: two corrections accepted, one instrument defect delegated
+
+A third agent (GPT, ``study/collab/GPT_MATH_REVIEW_20261016.md``, Q27-Q29) reviewed the study and made
+two objections plus one instrument finding.  Verified here before accepting:
+
+**(a) The parameter-slice objection is correct, and it re-scopes conclusion C.**  ``exp37.links_at``
+moves the *mechanical parameter* (``links[4][1,3] = offset * s``) with the target ``T`` held fixed, so
+the measured permutations are monodromy of the **family in that parameter**, not of the fixed SR5 arm
+(fixed parameters, varying pose).  Their counterexample shows the naive transfer rule is false:
+``P(x; a, t) = x^5 - x - (a-1)t`` has S5 monodromy as ``a`` varies at ``t = 1``, while at ``a = 1`` the
+five roots are ``0, ±1, ±i`` -- distinct, simple, and **independent of t**, so that slice's group is
+trivial.  Accepted: what we have established is non-solvability **uniform in the mechanical parameter**
+(no radical formula valid across the family); transferring it to fixed SR5 needs the direct form --
+closed loops in the **pose space** at fixed parameters, whose generated subgroup, if non-solvable,
+makes the fixed arm's group non-solvable.  ``study/monodromy.py`` already does this on the real side;
+the **complex** pose-space loops are the missing instrument.  Registered as Q27, recorded in REPORT and
+in the summary documents.
+
+**(b) The 3R tangency is a tacnode, not a cusp -- verified independently.**  At ``(R, Z) = (1/2, 7/4)``
+(and ``(25/2, 7/4)``) SymPy reproduces Astra's expansions exactly:
+
+    A1 = -96x - 32y + 16(x+y)^2      C = -192x - 64y + 16(x+y)^2      C - 2*A1 = -16(x+y)^2
+    A0 =  96x + 160y + 16(x+y)^2     C =  192x + 320y + 16(x+y)^2     C - 2*A0 = -16(x+y)^2
+
+so both components are *smooth* branches through the point, tangent along ``y = -3x`` (respectively
+``y = -3x/5``), with **second-order contact**: the reduced union is an ordinary **tacnode**, not the
+single singular branch of a semicubical cusp.  Also re-confirmed: ``A2^2 - A0*A1 = -576*C`` exactly.
+Accepted: the tangency measurement (kimi's 0.30 deg / 0.14 deg) stands as a measurement of *tangency*,
+but the local **type** is tacnode; the earlier wording "this arm has a cusp" is withdrawn for the
+second time, this time on type rather than on existence.  ``cuspidal`` (exp48's (2,2) split within one
+aspect) is untouched, and no claim of "no cusp" is reinstated -- the source singularity type of the
+original FK is still open (Astra's task list, item 3).
+
+**(c) The tracker's success contract is broken.**  Astra reproduced it with an exact-root probe: true
+path ``q(s) = s``, requested targets ``[0, 1]``, ``max_step = 0.1`` -- ``track_path`` returns
+``q = 0.0625`` with ``ok = True``, because a shrunk span is accepted and the outer loop then advances to
+the next target without finishing the segment.  Delegated (task T1) to a teammate with the audit that
+matters: which callers verify the endpoint independently, and which recorded results could therefore be
+corrupted.  Nothing in the record is upgraded or downgraded until that audit reports.
