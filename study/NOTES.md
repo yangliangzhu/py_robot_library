@@ -2824,3 +2824,34 @@ S5 -- there is no need to chase S6 or S16.  One completeness item from the audit
 executor: the original NPZ lacked step-by-step root trajectories and failure-record arrays, so the next
 module must write per-step data (root trajectory at every parameter node, per-root residual, closest-pair
 gap, actual step) for EVERY loop including the control loops.
+
+### 3.68 T4 Gate A generators: the tree now covers four roots, and one more edge gives S5
+
+``study/exp66_gate_a_generators.py`` + ``study/exp66_gate_a_generators.npz`` (accepted here: ruff clean,
+pytest 217 passed, the full module run exit 0, 56/56 loop self-checks, 1041 raw arrays ~70 MB).  New
+complete permutations on the fixed SR5, all from the same base fibre and numbering as exp64:
+
+* **pure transposition (1 8)** -- +x slice, ``u* = +0.0466506`` (augmented residual 1.2e-10), isolated at
+  radius 1e-4 with minimum root separation 8.67e-2 along the loop;
+* net products at radius 5e-3: ``(1 8)(7 13)(9 14)(11 12)`` (+x), ``(1 8)(7 12)(9 15)(10 13)`` (-x,
+  ``u* = +0.226285``, residual 5.5e-11) with isolated ``(1 8)(9 15)``, and ``(0 14)(4 6)`` (-x,
+  ``u* = +0.794747``, residual 1.1e-9) with isolated ``(0 14)``;
+* the -y direction re-reads ``(1 6)`` -- exp64's permutation confirmed from a second direction.
+
+Consistency per loop: max per-root residual <= 1.0e-9, endpoint-to-image gap <= 3.7e-9, reverse = sigma,
+empty = identity, 96 -> 192 refinement = sigma.  The audit's completeness demand is met: every loop's
+per-node 16-root complex trajectories, per-root residual/correction/step, closest-pair gap and pairing,
+survival flags and failure JSON are all in the npz; shared critical values are recorded as ONE product
+permutation (the radius scan layers the cluster structure).
+
+**Tree state (for Gate B, not judged here):** edges ``{1,6}`` (exp64), ``{1,8}`` (pure), and the
+``(4 6)`` factor inside ``(0 14)(4 6)`` (not yet isolated) cover ``{1,4,6,8}`` -- **one more edge from
+this set to a fifth root would give the S5 tree**.
+
+**Undecided (6 items, T4-gate-a-generators.md section 6):** the -x seed pairs (2,6)/(0,1) disagree with
+the measured transpositions (spurious jump pairing / a "shadow" of complex root 14 after its continuation
+was killed by a birth fold); cluster members not individually refined; (4 6) not isolated on its own;
+the empty-loop probes found branch points within ~1e-3-5e-3 of the base in all four slices (e.g. the -x
+off-axis (14,15) at 2e-3..3.2e-3), which is why the protocol's empty-loop radius is fixed at 1e-4; and
+the +-x/+y sweeps terminated early at the step floor, so "no fold" was never claimed.  Boundary as
+stated: numerical permutations, machine_verified=False, S5 verdict = Gate B, certification = Gate C.
