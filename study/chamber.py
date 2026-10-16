@@ -15,15 +15,25 @@ somewhere else entirely.  Deciding "same chamber" needs a *path that is witnesse
 * :func:`resolve_pair` -- the pair-level answer, with "unresolved" as an honest third outcome:
   a greedy planner that fails has not proved anything, because the chamber may be connected by
   a route this planner is too crude to find.
+
+The sampled step check above is the default and is unchanged.  :func:`certified_clearance_path` is
+the **opt-in** upgrade of T5: it runs the same walk and then certifies every straight sub-segment
+with the global Lipschitz bound of `study/collab/GPT_MATH_ADVANCE_20261016.md` section B
+(:mod:`study.exp63_segment_certificate`), so ``walk.certified`` becomes a statement about the whole
+polyline instead of about its samples.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
 import numpy as np
 
 from study.ik_structure import circular_joints, shortest_representative, sigma_min
+
+if TYPE_CHECKING:  # pragma: no cover - import cycle: exp63 imports this module
+    from study.exp63_segment_certificate import PathCertificate
 
 
 def grad_sigma_min(model, q: np.ndarray, h: float = 1e-6) -> np.ndarray:
@@ -60,6 +70,10 @@ class ClearanceWalk:
     path: list[np.ndarray] = field(default_factory=list)
     #: Largest fraction of the way to the target the walk reached, in ``[0, 1]``.
     progress: float = 0.0
+    #: Opt-in whole-segment certificate (``study/exp63_segment_certificate.py``).  ``False`` means
+    #: "sampled only", which is what every walk built before exp63 is; only
+    #: :func:`certified_clearance_path` sets it, and it never changes ``min_sigma`` or ``path``.
+    certified: bool = False
 
 
 def clearance_path(
@@ -193,6 +207,48 @@ def resolve_pair(
         The :class:`ClearanceWalk`; ``connected`` is the certificate, anything else is open.
     """
     return clearance_path(model, q_a, q_b, delta=delta, **kwargs)
+
+
+def certified_clearance_path(
+    model,
+    q_from: np.ndarray,
+    q_to: np.ndarray,
+    *,
+    task=None,
+    certificate_kwargs: dict | None = None,
+    **kwargs: object,
+) -> tuple[ClearanceWalk, PathCertificate | None]:
+    """Run :func:`clearance_path` and certify every straight sub-segment of the walk it returns.
+
+    This is the **opt-in** upgrade path of T5: the default instrument, its numbers and its
+    recorded readings are untouched, and the whole-segment certificate of
+    :mod:`study.exp63_segment_certificate` is added on top.  The certificate replaces the sampled
+    step check with the global Lipschitz bound of `GPT_MATH_ADVANCE_20261016.md` B1-B3, so a
+    successful walk becomes a theorem about the *entire* polyline instead of a claim about the
+    sampled points.  The walk's own fields are not modified except for ``certified``.
+
+    Args:
+        model: Robot model (its ``Ms`` supplies the link lengths of the bound).
+        q_from: Start configuration, radians.
+        q_to: Target configuration, radians.
+        task: Optional task view for the Jacobians (e.g. ``study.cuspidal3r.PositionTask``).
+        certificate_kwargs: Forwarded to :func:`study.exp63_segment_certificate.certify_path`.
+        **kwargs: Forwarded to :func:`clearance_path`.
+
+    Returns:
+        ``(walk, certificate)``.  ``walk.certified`` is true only when the walk arrived *and*
+        every sub-segment certified ``sigma_min > 0``.  ``certificate`` is ``None`` when the walk
+        has fewer than two points.
+    """
+    walk = clearance_path(model, q_from, q_to, **kwargs)
+    if len(walk.path) < 2:
+        return walk, None
+    # imported here, not at module level: exp63 imports this module for its witness-path replays
+    from study.exp63_segment_certificate import certify_path
+
+    certificate = certify_path(model, walk.path, task=task, **(certificate_kwargs or {}))
+    walk.certified = bool(walk.connected and certificate.certified)
+    return walk, certificate
 
 
 def _segment_min_sigma(

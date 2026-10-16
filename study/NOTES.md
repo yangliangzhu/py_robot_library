@@ -2558,3 +2558,50 @@ rather than from exp61, including the "one branch of the real critical image is 
 claim) and **T5** (the certified segment-gap instrument built from GPT's link-length Lipschitz bound, to
 upgrade ``chamber``'s sampled witness paths to whole-segment certificates).  Neither is written into the
 record as a result until it reports.
+
+### 3.60 T5 lands: one witness path is certified, and the 3R's is falsified
+
+``study/exp63_segment_certificate.py`` (registered in Q22/Q26's context; accepted here: ``ruff`` clean,
+``pytest`` 217 passed, ``exp63`` 27/27 exit 0 in 1 min 29 s, and ``chamber.py`` is **purely additive** --
+56 insertions, no deletions, with the default numbers checked byte-identical by the module itself).
+
+**The instrument.**  GPT's section-B bound implemented verbatim
+(``ell_j = sum_{k>=j+2} ||trans(Ms[k])||``, ``b_j = a_j ell_j + sum_{k>=j} |d_k| ell_k``,
+``L = sqrt(sum_j (alpha^2 b_j^2 + beta^2 a_j^2))``, angular term dropped for position-only tasks); on a
+random SR5 segment ``L = 1.6144`` against a first-order bound ``L1 = 4.2932``, and finite differences
+reach only ``0.251 L`` (an indexing check, as B4 requires).  The floating-point part is handled by taking
+the larger of two *rigorous* lower bounds per sample -- B4's inverse route and a verified-SVD-residual
+route -- which matters: B4's route alone loses 24.8% on that segment, the second loses ``2.2e-14``, and
+the library's own evaluation error is carried explicitly as a ``numerical_allowance`` (~6e-13).  The
+label is honest: ``machine_verified=False`` (an interval backend is T5 phase 2, not implemented).
+
+**Upgrade.**  ``exp49`` seed 0, pair ``(1,6)`` -- the flagship "different poses, same aspect" witness of
+the uniqueness-domain work -- goes from a sampled ``5.25e-3`` (the number printed in the NOTES table) to a
+**certified ``4.9829e-3`` over 118/118 segments**, i.e. that connectivity claim is now a whole-polyline
+theorem rather than a sampling statement (5323 evaluations, 0.72 s).  Note the honest limit: the
+certified bound is *below* the round ``delta = 5e-3`` that the walk targeted, so "clears 5e-3" is not
+what got certified; "clears 4.9829e-3" is.
+
+**Falsification.**  ``exp48``'s 3R witness *route* -- recorded as non-singular with a minimum
+``sigma_min`` of about ``8e-5`` -- is **refused** by the certificate: certified lower bound 0, because
+sub-segment 1258 has ``det J`` flipping sign from ``-2.63e-3`` to ``+3.02e-4``, i.e. **the recorded route
+crosses Sigma between grid nodes**.  Consequences, stated at their exact scope:
+
+* the recorded reading "the 3R witness route is non-singular / minimum 8e-5" is **falsified** and must be
+  marked as such wherever it appears;
+* the 3R's **cuspidality** is *not* affected: it rests on the exact aspect labelling (2 components;
+  four-solution poses splitting (2,2), NOTES 3.46/REPORT), not on this route, and the quartic/IK results
+  (3.49-3.51) are untouched;
+* what is missing is a *valid numerical witness route* for the 3R -- the label-counting argument stands on
+  its own, and a repaired route (or a certified one) would be a nice-to-have, not a repair of a conclusion.
+
+**The instrument-fault lesson worth keeping.**  A manufactured crossing segment is called "clear" by
+9-point sampling *and* by this project's own ``chamber._segment_clears`` (``1.319e-3 > 0``), while a
+20001-point scan finds ``1.218e-17`` and the true crossing is bisected to ``|det J| = 2.15e-17``.  That is
+the cleanest demonstration yet of why the "two-tier certificate" discipline exists: sampling can certify a
+crossing as safe, and only a bound over the *whole* segment can refuse it.
+
+**未决**: ``exp49`` seeds 1/2 and ``exp48``'s "legs succeeded" branch were not replayed; whether
+sub-segment 1258 is transversal or tangential was not Newton-refined (the certificate refuses it either
+way); the machine-level interval backend (T5 phase 2) is not implemented; and the other thirteen
+"different poses, same aspect" pairs remain sampled rather than certified.
