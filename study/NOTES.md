@@ -2535,3 +2535,26 @@ samples).  Three items matter for the record:
 * **C (Q27)**: the fixed-SR5 loop is written as a concrete square system, with the important limitation
   that a simple source fold at the target does not exclude *another* source fold sharing that target --
   exactly the trap that would make a "loop around one fold" measurement lie.
+
+### 3.59 GPT's group-theory caveat checked, and quantified
+
+GPT's section D warns that a 5-cycle together with a double transposition need not generate A5 -- it can
+generate the solvable dihedral group of order 10.  Enumerated here over the whole class (24 five-cycles x
+15 double transpositions = 360 pairs, closure computed explicitly):
+
+    240 pairs -> order 60 (A5)          120 pairs -> order 10 (D5, solvable)
+    counterexample: <(0 1 2 3 4), (1 4)(2 3)> has order 10
+    (the pair that generates A5 in the same family: <(0 1 2 3 4), (1 2)(3 4)> -> 60)
+
+So the shortcut "a 5-cycle plus a double transposition is enough for A5" is false one third of the time,
+and any solvability verdict must come from an explicit closure -- which is what ``exp44`` does (it
+verifies order 720 = |S6| for the 6-element component, and its self-test includes a known non-solvable
+case), so no recorded verdict rests on the shortcut.  Recorded because a reader who takes our edge table
+and reaches for the shortcut would land on the wrong side of the question a third of the time.
+
+Two verifications are in flight with teammates: **T3** (independent confirmation of the A4 normal form
+``(theta, x, y) -> (theta, x, y^4 + x*y^2)`` for the four 3R candidates, derived from the original MDH
+rather than from exp61, including the "one branch of the real critical image is only half a parabola"
+claim) and **T5** (the certified segment-gap instrument built from GPT's link-length Lipschitz bound, to
+upgrade ``chamber``'s sampled witness paths to whole-segment certificates).  Neither is written into the
+record as a result until it reports.
