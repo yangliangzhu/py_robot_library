@@ -129,10 +129,10 @@ def sigma_min_sample_bounds(jacobian: np.ndarray) -> tuple[float, float]:
     * the SVD factors themselves: with ``J ~ U diag(s) V^T`` and *verified* residuals
       ``delta_R >= ||U diag(s) V^T - J||_2``, ``delta_U >= ||U^T U - I||_2``,
       ``delta_V >= ||V^T V - I||_2`` (all three computed in float with inflated bounds), one has
-      ``sigma_min(J) >= s_min (1 - (delta_U + delta_V)/2) - delta_R``.  The tall form of ``J`` is
-      used, because ``sigma_min`` of a wide matrix equals that of its transpose and only the tall
-      form has an orthonormal right factor.  This route is tight (deficit ~1e-15 relative) and does
-      not rely on the backward stability of the SVD algorithm, only on the verified residuals.
+      ``sigma_min(J) >= s_min sqrt((1 - delta_U)(1 - delta_V)) - delta_R``.  The tall form of ``J``
+      is used, because ``sigma_min`` of a wide matrix equals that of its transpose and only the
+      tall form has an orthonormal right factor.  This route is tight (deficit ~1e-15 relative) and
+      does not rely on the backward stability of the SVD algorithm, only on the verified residuals.
 
     Both are lower bounds of the same quantity, so their maximum is one too.  A singular or
     hopelessly ill-conditioned matrix returns ``s_lower = 0.0``.
@@ -162,7 +162,6 @@ def sigma_min_sample_bounds(jacobian: np.ndarray) -> tuple[float, float]:
 def _inverse_sigma_min_lower(matrix: np.ndarray) -> float:
     """B4's ``(1 - e)/M`` lower bound for ``sigma_min`` of ``matrix`` (0.0 when unusable)."""
     rows, columns = matrix.shape
-    size = min(rows, columns)
     if rows == columns:
         inverse = np.linalg.inv(matrix)
         residual = _inverse_residual_bound(inverse, matrix)
@@ -181,8 +180,11 @@ def _inverse_sigma_min_lower(matrix: np.ndarray) -> float:
     if residual is None:
         return 0.0
     e, magnitude = residual
-    # the Gram matrix itself is a float product: its exact value differs by at most this much
-    e = e + magnitude * _gamma(size) * _spectral_upper(absolute)
+    # the Gram matrix is itself a float product: its exact value differs by at most this much.
+    # Each entry is an inner product of the *longer* side of ``matrix`` (``AA^T`` for a wide ``A``
+    # sums ``columns`` terms, ``A^T A`` for a tall ``A`` sums ``rows`` terms), so the rounding
+    # bound uses ``max(rows, columns)``, not ``min(rows, columns)``.
+    e = e + magnitude * _gamma(max(rows, columns)) * _spectral_upper(absolute)
     if e >= 1.0 or magnitude <= 0.0:
         return 0.0
     return float(np.sqrt(max(0.0, (1.0 - e) / magnitude)))
@@ -200,23 +202,32 @@ def _svd_sigma_min_lower(
         right: Its right singular vectors, ``V^T``, shape ``(columns, columns)``.
 
     Returns:
-        ``s_min (1 - (delta_U + delta_V)/2) - delta_R``, or ``None`` when a residual cannot be
-        bounded below one.
+        ``s_min sqrt((1 - delta_U)(1 - delta_V)) - delta_R``, or ``None`` when a residual cannot
+        be bounded below one.
     """
     inner = singular[:, None] * right
     approximation = left @ inner
     rounding = 4.0 * _gamma(singular.size) * (np.abs(left) @ np.abs(inner))
     delta_r = _spectral_upper(np.abs(approximation - tall) + rounding)
     identity = np.eye(singular.size)
+    # ``U^T U`` is a Gram product of the *tall* side: each entry is an inner product of two length
+    # ``left.shape[0]`` columns of ``U``, so its rounding is bounded by gamma of that length (not
+    # ``singular.size``, which equals ``left.shape[1]`` and is smaller for a tall ``U``).
     delta_u = _spectral_upper(
-        np.abs(left.T @ left - identity) + _gamma(singular.size) * (np.abs(left).T @ np.abs(left))
+        np.abs(left.T @ left - identity)
+        + _gamma(left.shape[0]) * (np.abs(left).T @ np.abs(left))
     )
     delta_v = _spectral_upper(
         np.abs(right @ right.T - identity) + _gamma(singular.size) * (np.abs(right) @ np.abs(right).T)
     )
     if delta_u >= 1.0 or delta_v >= 1.0:
         return None
-    return float(singular[-1] * (1.0 - 0.5 * (delta_u + delta_v)) - delta_r)
+    # ``sqrt((1 - delta_U)(1 - delta_V))`` is the genuine lower bound of
+    # ``sigma_min(U) * sigma_min(V)``; ``1 - (delta_U + delta_V)/2`` is an *upper* bound of that
+    # square root (arithmetic-geometric mean) and would overstate the certificate.
+    return float(
+        max(0.0, singular[-1] * np.sqrt((1.0 - delta_u) * (1.0 - delta_v)) - delta_r)
+    )
 
 
 def _inverse_residual_bound(inverse: np.ndarray, matrix: np.ndarray) -> tuple[float, float] | None:
@@ -1119,6 +1130,93 @@ def _scaled_3r(scale: float):
 # --------------------------------------------------------------------------- #
 
 
+def phase_svd_regressions() -> dict:
+    """Phase 0: regression checks for the SVD lower bound (T5b, GPT_NEXT_GATE_20261017.md §2).
+
+    ``_svd_sigma_min_lower`` used ``1 - (delta_U + delta_V)/2``, which is an *upper* bound of
+    ``sqrt((1 - delta_U)(1 - delta_V))`` (arithmetic-geometric mean), so a nearly orthogonal factor
+    could be certified above its true ``sigma_min``.  These checks pin the corrected formula and
+    the corrected inner-product lengths of the tall/wide (non-square) paths.
+    """
+    print("\nphase 0: SVD lower-bound regressions (T5b)")
+    record: dict = {}
+
+    # issue 1: the formula.  GPT's exact 1x1 counterexample.
+    a = np.array([[np.sqrt(0.9)]])
+    bound = _svd_sigma_min_lower(a, a, np.array([1.0]), np.array([[1.0]]))
+    true = float(a[0, 0])
+    _check(
+        "1x1 counterexample is a valid lower bound (old code reported 0.95 > 0.94868)",
+        bound is not None and bound <= true + 1e-15 and abs(bound - true) < 1e-12,
+        f"bound {bound:.15e} vs true {true:.15e}",
+    )
+
+    # issue 1 in a tall factorisation: a (5x2) U with sigma_min(U) = sqrt(0.9).
+    tall_u = np.zeros((5, 2))
+    tall_u[0, 0] = np.sqrt(0.9)
+    tall_u[1, 1] = 1.0
+    singular2 = np.ones(2)
+    identity2 = np.eye(2)
+    tall_bound = _svd_sigma_min_lower(tall_u, tall_u, singular2, identity2)
+    _check(
+        "tall (5x2) SVD-factor counterexample is a valid lower bound (old code: 0.95)",
+        tall_bound is not None and tall_bound <= true + 1e-15 and abs(tall_bound - true) < 1e-12,
+        f"bound {tall_bound:.15e} vs true {true:.15e}",
+    )
+
+    # the full interface stays a valid lower bound on both non-square shapes.
+    rng = np.random.default_rng(3)
+    for name, matrix in (("tall 7x3", rng.normal(size=(7, 3))),
+                         ("wide 3x7", rng.normal(size=(3, 7)))):
+        s_float, s_lower = sigma_min_sample_bounds(matrix)
+        true_sigma = float(np.linalg.svd(matrix, compute_uv=False)[-1])
+        _check(
+            f"{name}: sigma_min_sample_bounds is a valid lower bound",
+            s_lower <= true_sigma + 1e-12,
+            f"lower {s_lower:.6e} <= true {true_sigma:.6e}",
+        )
+        record[name] = {"lower": s_lower, "true": true_sigma}
+
+    # issue 2: the U^T U rounding bound sums ``U.shape[0]`` terms, not ``singular.size``.  An
+    # exactly orthonormal (N x 2) U has ``|U^T U - I| = 0``, so delta_u is exactly the rounding
+    # allowance ``gamma(rows)``; the old ``gamma(singular.size) = gamma(2)`` overstates the bound.
+    rows = 100_000
+    orth = np.zeros((rows, 2))
+    orth[0, 0] = 1.0
+    orth[1, 1] = 1.0
+    singular_desc = np.array([2.0, 1.0])
+    length_bound = _svd_sigma_min_lower(orth @ np.diag(singular_desc), orth, singular_desc, np.eye(2))
+    rigorous_u = float(np.sqrt((1.0 - _gamma(rows)) * (1.0 - _gamma(2))))
+    _check(
+        "tall U^T U rounding uses U.shape[0], not singular.size",
+        length_bound is not None and length_bound <= rigorous_u + 1e-12,
+        f"bound {length_bound:.15e} <= rigorous {rigorous_u:.15e}",
+    )
+
+    # issue 3: the Gram rounding bound of the rectangular inverse route sums the *longer* side
+    # (``AA^T`` for a wide A sums ``columns`` terms, ``A^T A`` for a tall A sums ``rows`` terms),
+    # so it uses ``max(rows, columns)``.  A 1xN row of ones has ``sigma_min = sqrt(N)`` and an
+    # exactly-computable Gram ``AA^T = N``, making the allowance exactly ``gamma(N)``.
+    ones_wide = np.ones((1, rows))
+    ones_tall = np.ones((rows, 1))
+    rigorous_gram = float(np.sqrt(rows * (1.0 - _gamma(rows))))
+    inv_wide = _inverse_sigma_min_lower(ones_wide)
+    inv_tall = _inverse_sigma_min_lower(ones_tall)
+    _check(
+        "wide (1xN) Gram rounding uses max(rows, columns)",
+        inv_wide <= rigorous_gram + 1e-12,
+        f"bound {inv_wide:.15e} <= rigorous {rigorous_gram:.15e}",
+    )
+    _check(
+        "tall (Nx1) Gram rounding uses max(rows, columns)",
+        inv_tall <= rigorous_gram + 1e-12,
+        f"bound {inv_tall:.15e} <= rigorous {rigorous_gram:.15e}",
+    )
+    record["u_length"] = {"bound": length_bound, "rigorous": rigorous_u}
+    record["gram_length"] = {"wide": inv_wide, "tall": inv_tall, "rigorous": rigorous_gram}
+    return record
+
+
 def phase_bound(model, rng, *, probes: int = 48) -> dict:
     """Phase 1: the analytic bound of B1-B3, and a finite-difference indexing check.
 
@@ -1688,6 +1786,7 @@ def main() -> int:
     rng = np.random.default_rng(0)
     model = ModelFactory.create("sr5")
     record: dict = {"command": "python3 -m study.exp63_segment_certificate"}
+    record["svd_regressions"] = phase_svd_regressions()
     record["bound"] = phase_bound(model, rng)
     record["manufactured"] = phase_manufactured(
         model, rng, max_samples=args.max_samples, rel_tol=args.rel_tol, dense=args.dense

@@ -2699,3 +2699,20 @@ exact algebraic argument rather than by more sampling -- which is itself the les
 The correction is recorded here and in the retraction ledger; T6's full independent symbolic re-derivation
 is handed to a teammate together with the audit of ``exp48``'s labelling error, and T5b / T4-Gate-A are in
 flight.
+
+### 3.63 T5b lands: the SVD lower bound is fixed, and the SR5 certificate survives unchanged
+
+Accepted here (``ruff`` clean, ``pytest`` 217 passed, ``exp63`` 34/34 exit 0).  ``_svd_sigma_min_lower``
+now uses the correct factor ``sqrt((1 - dU)(1 - dV))`` (clamped >= 0) instead of ``1 - (dU+dV)/2``, which
+was an *upper* bound of the square root (AM-GM) and therefore invalid as a lower bound; the two
+product-length defects are fixed too (``U^T U`` inner products use ``U.shape[0]``, and Gram rounding uses
+``max(rows, cols)``).  GPT's counterexample now reads valid: true ``sqrt(0.9) = 0.9486832980505138``,
+reported lower ``0.9486832980505124`` (the old code printed ``0.9499999999999986``, above the true
+value).  ``machine_verified=False`` is kept.
+
+The SR5 re-run that matters: the certified lower bound for ``exp49`` seed 0 pair (1,6) is **unchanged**
+-- ``4.9829e-3`` at full precision ``4.9828928e-3``, 118/118 segments still CERTIFIED, ``delta_ok`` still
+False.  The two length defects are epsilon-level: for normal well-conditioned SVD/Gram they never changed
+a numeric bound (the reviewer says so honestly); only the 1x1/tall factor bug is observable at value
+level.  So no recorded conclusion changes -- this was a correctness-of-the-proof fix, not a correction of
+a measurement.

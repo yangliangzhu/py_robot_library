@@ -14,7 +14,11 @@
 
 **编号登记（T5，先登记再用）**：`exp63_segment_certificate.py` = 按 `GPT_MATH_ADVANCE_20261016.md` §B1–B4 实现「只用连杆长度」的整段 Lipschitz 界 `L` 与自适应细分的 segment certificate（三态输出 `certified / inconclusive / invalid`，解析界来自定理、采样点下界与浮点余量显式标注、失败不自动断言穿奇异），并用它复核 exp48/exp49 的见证路径（`chamber.clearance_path` 的有限采样 → 整段证书）。同一编号下附带 `chamber` 的**opt-in** 复核接口（默认行为与旧数字不变）。T5 不新增其他编号。
 
+**编号登记（T5b，先登记再用，复用 exp63，不新增编号）**：修正 `exp63_segment_certificate` 的 `_svd_sigma_min_lower` 下界公式（`1-(δU+δV)/2` → `sqrt((1-δU)(1-δV))`，前者是后者的**上界**）、`UᵀU` 舍入的内积长度（`U.shape[0]`，非 `singular.size`）与矩形逆路线 Gram 舍入界（`max(rows,columns)`，非 `min`）；补 1×1 反例与高/宽非方阵回归（`phase_svd_regressions`，phase 0）；保留 `machine_verified=False`。重跑原 SR5 路径：认证下界 `4.9829e-3` **不变**（全精度 `4.9828928e-3`，118/118 段），无结论变化。细节见 `T5b-svd-bound-fix.md`。
+
 **编号登记（T3，先登记再用）**：`exp62_germ_normal_form.py` = 独立复核 `GPT_MATH_ADVANCE_20261016.md` §A1–A4 的「四个 3R 候选点源映射正规形 `(θ,X,Y)→(θ,X,Y⁴+XY²)`」：从 `cuspidal3r.DEFAULT_ROWS/DEFAULT_TOOL` 的原 MDH 链**自行**推导 `(R,z)` 与 `(u,v)` 的关系、在四点各自验证非退化常数并**显式构造**坐标变换、给出临界集/临界像与「半支抛物线」限定的符号与数值对照（数值一律回到库 FK）。不依赖 exp61 的表达式，也不依赖 exp54 的消元结论。结论与范围见 `T3-germ-verification.md`。T3 不新增其他编号。　**结果（T3，2026-10-17）**：`python3 -m study.exp62_germ_normal_form` → **131/131 项检查通过、exit 0（约 60 s）**；`ruff` 干净、`pytest` 217 passed。**判定：GPT 的 A4 成立**（四点、源芽范围）：非退化常数 `B(z₀)=0`、`B'(z₀)=±√7/3`、`C₀=±3/4`、`r_c'(z₀)=±2√7/9`，`z_u=∓3/2≠0`；重数 **4**（cusp 是 3），辐角原理数原像 = 4.0；构造的恒等式 `V=Y⁴+XY²` 残差 ≤4.1e-48、变换 |det| ≥0.9458；库 FK 上 `R_fk = H(z_fk,(v−v₀)²)` 残差 ≤5.3e-15，branch II 的像 `X=−2Y²`、`V=−X²/4`、**X≤0**（残差 ≤5.2e-31），两支像相切（斜率差 ~4e-6，二阶间隙实测 ∓0.25901 vs 解析 ∓7/27）；纤维普查证实可达边界在切点换支（between 探针 0/4/0/2 与 `ε₁=sign C₀` 的预言全符）。未验证：**只**这四个源点与邻域（|dz|≤0.03），未证明整条 `C₂=0` 只有一半是实临界像（更远的分支未普查）；A4 文本的 `sqrt(|K|)`/`ε1(a+sY²)²` 符号记账需按 `K` 解析平方根（`C₀<0` 时为纯虚）改写，结论不变。
+
+**编号登记（T4 Gate A，先登记再用）**：`exp64_pose_loop_gate_a.py` = 固定 SR5 臂（参数固定、`links[4][1,3]=0.136 m`）的**位姿空间复回路**：取基位姿 `T0`（16 根全纤维，`exp38` 的确定性构造），沿一个合法复位姿坐标（单个位置坐标 `u` 复数化、姿态固定，GPT §C1 的 `d` 平移分量非零版）找简单源 fold（§C2 增广系统 `[err6; det J]=0`，未知 `(q,u)`），绕其做**一条**闭复环，带根身份记账（线性预测 + 跳盆拒收 + 合并护栏 + 未匹配=失败态），报全根集的一条完整置换，并做**环+逆环、空环、步长加密复跑**三组自检（GPT §3 Gate A）。只做 Gate A，不做 Gate B（非可解子群）/Gate C（认证）。结果见 `T4-gate-a.md`。
 
 ## 历史问题与裁决
 
