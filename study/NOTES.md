@@ -2631,3 +2631,35 @@ Two substantive confirmations beyond the normal form itself:
   multiplicity 4), Q26 now has both layers recorded, and both say the same thing at their own level:
   **tangency is real, "ordinary cusp" is not what this is**.  ``cuspidal`` remains untouched, and the
   "has a cusp" wording stays withdrawn.
+
+**3.61 addendum (T3's detail, and one new fact about Q27).**  The evidence behind the verdict, in the
+reviewer's numbers: the four points have **corank 1** (``sigma = (2.500000, 3.5e-11)`` and
+``(8.477912, 1.6e-9)``), the kernel direction ``k = -(0.6, -0.8)`` is **tangent to branch II**
+(``|k . t_II| = 1.000000``) and **transverse to branch I** (0.6) -- exactly the normal form's
+``d/dY``; the first non-zero Taylor term of ``R(z0, y)`` in ``y`` is at **order 4**, and the argument
+principle counts **4.0** local preimages at radii 0.12/0.2/0.4 (an ordinary cusp would give 3); the A4
+construction at 40 digits reaches Newton ``|H_r| <= 1.3e-44`` and identity residual ``<= 4.1e-48``;
+against the real model ``V = -X^2/4`` holds to ``5.2e-31`` with ``X <= 0``, branch I's image is
+two-sided and equals ``R = H(z, 0)`` to ``3.6e-15``, and the two branches' tangency slope difference is
+``~4e-6`` with curvature difference ``-0.25901`` against the exact ``-0.259259``.  The boundary really
+does **switch branches** at the tangency: probes at ``dz = +-0.03`` (the curves 2e-4 apart) follow the
+conic on one side and the other branch on the other, and the predicted reachable sides (``0/4/0/2``,
+decided by ``eps1 = sign C0``) match in every case.
+
+**One new fact that arms Q27.**  At the candidate point, **two source folds share that same critical
+value** on branch II (at ``dz = +0.01``, ``R = phi2 + 1e-5``: fibre 4 with ``det J = -8.0e-4`` and
+``-3.9e-4``).  That is GPT's section-C2 warning -- "a simple source fold does not guarantee that no
+*other* source fold shares the target" -- happening concretely on the 3R, so any fixed-arm loop design
+must either separate the shared source folds or account for their product in the permutation read.
+
+**Scope the reviewer explicitly did *not* claim**: the half-branch statement is **local** (the four source
+points, ``|dz| <= 0.03``, ``|y| <= 0.03``) -- it is *not* proved that only half of the whole ``C2 = 0`` is
+a real critical image; and no global identification is made between exp54's elimination discriminant and
+the FK critical image (only the local ``C2 <-> phi2`` and ``A1/A0 <-> phi1`` cross-checks).  GPT's sign
+bookkeeping in A4 is sloppy but harmless (``sqrt(|K|)``, ``eps1 (a + s Y^2)^2``; at the two ``C0 < 0``
+points ``K(z0,0)`` is purely imaginary and the strict form is ``k = sqrt(-(H - H_c))``, ``eps1 = -1``,
+with the same conclusion).
+
+*Process note: T3's registration line in ``QUESTIONS.md`` rode along in T5's commit (556be55) because the
+Lead staged that file for T5; T3's own module and findings were committed separately in facd300.  Nothing
+is lost and nothing needs reverting -- the two tasks' records are both in the tree.*
