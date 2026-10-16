@@ -2671,7 +2671,7 @@ model is NOT cuspidal**.  Independently checked here against the *library's* FK 
 reuse either exp61's closed form or GPT's snippet):
 
 * ``det J_position = (3/2) sin(v) * g`` with ``g = A + (3/2) cos v``, ``A = 2 sin u + (3/2) sin v cos u``
-  -- matched to ``3.11e-15`` over 400 random poses (so both factors vanish exactly on the singular set);
+  -- matched to ``3.11e-15`` over 400 random poses (so the singular set is the UNION {sin v = 0} U {g = 0} -- at least one factor vanishes there, and both only at their intersection);
 * the recovery ``P(w) = 18w^2 + 6Dw + D^2 + 4z^2 - 25 = 0``, ``P'(w) = 36w + 6D = 12g``, and the 2x2 for
   ``(sin u, cos u)`` with determinant ``4 + b^2 > 0`` hold numerically for every sampled pose;
 * the direct test of the theorem's conclusion -- **injectivity per sign label** -- over 2000 regular
@@ -2741,3 +2741,38 @@ the backbone of 1.), but it is not complete (equal sign can be two genuinely sep
 a sharper statement than the "equal sign can be connected or not" we already knew, and it is worth
 carrying over to the SR5 side as a standing caveat on any "the partition equals the sign partition"
 reading.
+
+### 3.65 GPT's follow-up accepted: the 3R becomes the analytic ground-truth benchmark; T7 and the (C*)^6 note recorded
+
+Wording corrections from GPT, applied: the singular set is the **union** ``{sin v = 0} U {g = 0}`` (at
+least one factor vanishes there; both only at the intersection) -- 3.62 had said "both vanish", which was
+wrong; and the 2000-pose injectivity scan is **numerical cross-validation** of a conclusion whose proof is
+algebraic (quadratic derivative sign + the u/q1 recovery), not the proof itself.
+
+**The 3R's new role (adopted as the record's position):** keep the current DEFAULT model, renamed in
+role to a four-fold **analytic ground truth** -- (a) an oracle for grid-connectivity algorithms (exp48's
+labelling provably merged components; any future algorithm must reproduce 4 aspects, each S^1 x (0,1)^2);
+(b) the "sign label -> unique inverse" oracle on regular fibres; (c) the degenerate example for the source
+germ ``(x,y)->(x,y^4+xy^2)``, the shared critical value, and the half-branch real critical image; (d) the
+"radical-solvable but NOT cuspidal" control.  DEFAULT_ROWS must not be overwritten to restore the old
+story; any new model gets a new name, parameters and records.
+
+**T7 (registered): select and verify a genuinely cuspidal model, as an independent branch that does not
+block T4.**  Acceptance criteria, from the doc: (1) take a model from the literature with explicit
+structure, DH convention, parameters and non-singular change-of-pose evidence, keeping the source; (2)
+independently verify the axis geometry and FK, then the standard/modified-DH, tool row and joint-zero
+conversion -- full rank alone is not proof; (3) deliver two distinct configurations at the same target
+position connected by a complete non-singular path (existence, same-position condition, configs in the
+same aspect); (4) confirm the path by an analytic bound or full certification, marking numerical-only
+evidence as such, and do not accept an "ordinary cusp" candidate from images alone; (5) radical
+solvability must come from an elimination/recovery formula valid for that model or a stated applicable
+theorem, not from "it is also a 3R"; (6) verify ONE candidate first, no large random screening, and if the
+geometry cannot be aligned, report the failure reason and stop that candidate.  A "solvable and cuspidal"
+example refutes "radical-solvable => non-cuspidal"; it does not by itself prove any global implication.
+
+**Structural reminder for T4 (their section 5), recorded because it shapes Gate A/B's claims:** the fixed
+SR5's complex joint space ``(C*)^6`` is irreducible, so if the FK is dominant and generically finite, the
+restriction to a non-empty Zariski-open ``U`` is a connected cover -- the measured subgroup need not be
+transitive (transitivity is not required), and one does not need all edges to prove non-solvability:
+a *certified non-solvable subgroup* already settles the main claim.  That is the cleanest statement of
+what Gate B must deliver.
