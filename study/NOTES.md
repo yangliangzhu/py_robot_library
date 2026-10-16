@@ -2776,3 +2776,31 @@ restriction to a non-empty Zariski-open ``U`` is a connected cover -- the measur
 transitive (transitivity is not required), and one does not need all edges to prove non-solvability:
 a *certified non-solvable subgroup* already settles the main claim.  That is the cleanest statement of
 what Gate B must deliver.
+
+### 3.66 T4 Gate A lands: the first fixed-arm pose-space loop permutation
+
+``study/exp64_pose_loop_gate_a.py`` (accepted here: ``ruff`` clean, ``pytest`` 217 passed, the module
+exit 0 with 8/8 self-checks, and the raw ``study/exp64_gate_a.npz`` holds the 16-root complex table with
+real+imaginary parts, the 669-point complex parameter trajectory, the four permutations, per-root
+endpoint residuals and gaps, and the failure records).  On the **fixed SR5** (``links[4][1,3] = 0.136``
+never swept), a complex pose-space loop (C1 coordinate ``p(u) = p0 + u*d`` with ``d = [0,0,-1]`` and the
+orientation fixed) around the augmented-system fold ``u* = +0.283606`` (residual 2.2e-10), arcing through
+the upper half-plane (Im = 0.05) to avoid the complex roots' real-axis birth folds, gives
+
+    sigma = (1 6)   [0, 6, 2, 3, 4, 5, 1, 7, ..., 15]   (16 roots: 10 real + 6 complex)
+
+with all four consistency loops agreeing (reverse = sigma, empty = identity, 96 -> 192 refinement =
+sigma, sigma . sigma^-1 = identity), endpoint residuals <= 2.0e-10 and gaps to the base image <= 3.4e-5.
+
+**What it is and is not.**  It is the first *fixed-arm* monodromy measurement -- the Q27 line's
+instrument now exists and produces a reliable complete permutation with root identity throughout.  It is
+**not** a solvability statement: a single transposition generates C2 (solvable), so Gate B (a certified
+non-solvable subgroup) and Gate C (path certification) remain.  The executor's four 未决 items are
+recorded in ``T4-gate-a.md`` section 6: the shared-critical-value separation at u* was not explicitly
+verified (the loop's net effect being one transposition is consistent with, but does not certify, a
+single enclosed branch point); the birth folds of the six complex roots (near u ~ 0.018 / 0.128 on the
+real axis) were avoided but not refined; the C2 non-degeneracy checks (``l^T G_lambda``, ``l^T D^2G[v,v]``)
+were not run, so "simple fold" is indirect (square-root gap + a single transposition read); and some
+complex roots carry 2*pi-unwrapped real parts (torus matching folds them back).  The next loop's target
+is GPT's call from the raw data -- the discipline now is exactly the one the record pins: first a trusted
+permutation, then decide where the next loop goes.
