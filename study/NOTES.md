@@ -2605,3 +2605,29 @@ crossing as safe, and only a bound over the *whole* segment can refuse it.
 sub-segment 1258 is transversal or tangential was not Newton-refined (the certificate refuses it either
 way); the machine-level interval backend (T5 phase 2) is not implemented; and the other thirteen
 "different poses, same aspect" pairs remain sampled rather than certified.
+
+### 3.61 T3 lands: GPT's A4 source normal form independently verified
+
+``study/exp62_germ_normal_form.py`` (accepted here: ``ruff`` clean, ``pytest`` 217 passed, the module
+131/131 checks, exit 0) and ``study/collab/T3-germ-verification.md``.  Verdict: **GPT's A4 holds**, in the
+scope A4 itself declares -- the **four candidate points** and their **source germs** only.
+
+What makes it an independent check rather than a re-run of ``exp61``: every model-side number comes back
+through the *library's* FK (``cuspidal3r.position`` / ``det_position``), not through the reviewer's own
+closed form; the eight exact identities behind A1 pass 8/8; the four points' exact data agree with GPT's
+table entry by entry; the construction of A4 is then executed step by step at 40-digit precision at all
+four points (the identity is algebraically automatic once the construction holds, so what is really being
+tested is the construction's hypotheses -- that ``r_c`` exists and is unique).
+
+Two substantive confirmations beyond the normal form itself:
+
+* **The local multiplicity is 4, not 3** -- i.e. this is not a cusp, independently of how the tangency
+  looks; the normal form's critical set is two **transverse smooth curves** (``Y = 0`` and ``X = -2Y^2``)
+  and its critical image is the line ``V = 0`` together with the **half** parabola ``V = -X^2/4`` for
+  ``X <= 0``.  So GPT's "a faithful boundary plot must keep the half-branch restriction" is confirmed,
+  and the mechanism is that the reachable boundary **switches branches** at the tangency (the fibre census
+  shows one side following the conic and the other following the other branch).
+* With 3.51/3.52 (discriminant-component union = tacnode) and this (source germ = ``(X, Y) -> (X, Y^4 + X Y^2)``,
+  multiplicity 4), Q26 now has both layers recorded, and both say the same thing at their own level:
+  **tangency is real, "ordinary cusp" is not what this is**.  ``cuspidal`` remains untouched, and the
+  "has a cusp" wording stays withdrawn.
