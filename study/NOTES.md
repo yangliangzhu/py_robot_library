@@ -2663,3 +2663,39 @@ with the same conclusion).
 *Process note: T3's registration line in ``QUESTIONS.md`` rode along in T5's commit (556be55) because the
 Lead staged that file for T5; T3's own module and findings were committed separately in facd300.  Nothing
 is lost and nothing needs reverting -- the two tasks' records are both in the tree.*
+
+### 3.62 GPT's non-cuspidality theorem for the 3R: verified, and it is the third retraction on this arm
+
+``study/collab/GPT_NEXT_GATE_20261017.md`` section 1 proves, from the original FK, that **the current 3R
+model is NOT cuspidal**.  Independently checked here against the *library's* FK (so the check does not
+reuse either exp61's closed form or GPT's snippet):
+
+* ``det J_position = (3/2) sin(v) * g`` with ``g = A + (3/2) cos v``, ``A = 2 sin u + (3/2) sin v cos u``
+  -- matched to ``3.11e-15`` over 400 random poses (so both factors vanish exactly on the singular set);
+* the recovery ``P(w) = 18w^2 + 6Dw + D^2 + 4z^2 - 25 = 0``, ``P'(w) = 36w + 6D = 12g``, and the 2x2 for
+  ``(sin u, cos u)`` with determinant ``4 + b^2 > 0`` hold numerically for every sampled pose;
+* the direct test of the theorem's conclusion -- **injectivity per sign label** -- over 2000 regular
+  poses: **0 violations**.  Each of the four sign labels ``(sign sin v, sign g)`` contains at most one
+  ``(u,v)`` solution of a fixed ``(R, z)``; distinct solutions therefore carry distinct labels, and since
+  the labels are invariant along any non-singular path (both factors of ``det J`` are non-zero there),
+  two distinct inverse solutions cannot be non-singularly connected.  Hence the arm has **at least four
+  aspects**, and ``exp48``'s "exactly 2 aspects, 4-solution poses split (2,2)" was a **measurement error**
+  (the aspect labelling merged components -- the same class of bug T5 later made concrete with the
+  crossing witness path).
+
+**What this retracts, and what it does not.**  Retracted: ``exp48``'s cuspidality conclusion and every
+downstream statement that the 3R is a "cuspidal and radical-solvable" positive witness for the
+orthogonality of solvability and branch structure (the "三性同台" phrasing collapses).  **Untouched**: the
+3R's radical solvability (the explicit quadratic in ``t^2``, verified to 8.3e-17 ... 1.7e-11), the four
+source germs ``(x,y) -> (x, y^4 + x y^2)`` and the tacnode (3.51/3.61), SR5's no-radical conclusion (a
+different arm; Q27 is the open fixed-arm step), SR0's non-cuspidality (separate), and the general
+literature statement "cusp => cuspidal" (which this arm was never an instance of).  The practical
+consequence: the positive orthogonality witness must be re-selected -- GPT's section 1 explicitly notes
+this and does not claim every orthogonal 3R is non-cuspidal; choosing a genuinely cuspidal model is a
+separate, follow-on task.
+
+This is the third time the 3R example has flipped (cusp -> tacnode -> now non-cuspidal), each time by an
+exact algebraic argument rather than by more sampling -- which is itself the lesson of this whole study.
+The correction is recorded here and in the retraction ledger; T6's full independent symbolic re-derivation
+is handed to a teammate together with the audit of ``exp48``'s labelling error, and T5b / T4-Gate-A are in
+flight.
