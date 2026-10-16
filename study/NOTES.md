@@ -2804,3 +2804,23 @@ were not run, so "simple fold" is indirect (square-root gap + a single transposi
 complex roots carry 2*pi-unwrapped real parts (torus matching folds them back).  The next loop's target
 is GPT's call from the raw data -- the discipline now is exactly the one the record pins: first a trusted
 permutation, then decide where the next loop goes.
+
+### 3.67 GPT's Gate A audit: (1 6) is a trustworthy numerical permutation; the generator hunt continues
+
+``study/collab/GPT_GATE_A_AUDIT_20261017.md`` + the replay ``study/exp65_gate_a_replay.py`` (accepted
+here: ruff clean, pytest 217 passed, replay exit 0, ``matches_archive`` true, permutation (1 6)).  GPT
+polished the base fibre from the archived root table and replayed all 669 parameter nodes: polished base
+FK residual 1.60e-14, endpoint-to-polished-base-image max distance 1.37e-9 rad, minimum pairwise root
+distance along the run 0.4582 rad, maximum actual adjacent step 0.03034 rad.  So the earlier 3.4e-5
+matching slack was mostly unpolished base roots, and the large 2*pi-unwrapped real parts caused no
+problem.  (The replay reuses the original Newton corrector -- it is a re-check of the *data*, not an
+independent algorithm verification or a path certification; ``machine_verified=False`` stands.)
+
+**Strategy for the next generators (adopted from the audit):** keep the SAME base pose, fibre and root
+numbering; sweep the translation directions +-x, +-y (and anything else that yields candidates) for new
+coalescence pairs *involving root 1 or 6*; loop each refined candidate under the Gate A protocol and
+report each complete permutation.  A connected tree of transpositions on five roots already generates
+S5 -- there is no need to chase S6 or S16.  One completeness item from the audit is also handed to the
+executor: the original NPZ lacked step-by-step root trajectories and failure-record arrays, so the next
+module must write per-step data (root trajectory at every parameter node, per-root residual, closest-pair
+gap, actual step) for EVERY loop including the control loops.
