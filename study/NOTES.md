@@ -2460,3 +2460,78 @@ path ``q(s) = s``, requested targets ``[0, 1]``, ``max_step = 0.1`` -- ``track_p
 the next target without finishing the segment.  Delegated (task T1) to a teammate with the audit that
 matters: which callers verify the endpoint independently, and which recorded results could therefore be
 corrupted.  Nothing in the record is upgraded or downgraded until that audit reports.
+
+### 3.57 T1 executed: the tracker contract is fixed, and the audit says which readings move
+
+The teammate's report is ``study/collab/T1-tracker-audit.md``; the numbers below were re-run by the Lead
+as acceptance (``ruff`` clean, ``pytest`` 217 passed, ``python3 -m study.exp60_tracker_contract`` 11/11,
+exit 0).
+
+**Fix.**  ``exp38.track_path`` now turns a shrunk step into a *substep* and iterates until the segment's
+goal is reached (``trial = goal - (remaining - span)`` so an accepted whole span lands exactly on the
+goal and never chords across a corner), with ``max_subdivisions=64``, ``min_span=1e-9``,
+``max_calls=20000``; exhausting the budget returns the parameter actually reached with ``ok=False``, the
+final parameter gets a residual and jump check, and the docstring states the new contract.
+``exp37.track_circle`` gets the same three pieces and advances by *unwrapped* angle; its third return
+value is now "angle not yet walked" and its single caller was updated.  The ``exp37`` negative control
+(GPT's second finding) now takes its roots from the new circle base's own fibre (s = 0.851, polished to
+< 1e-8) instead of reusing roots from the original fold.
+
+**Probe.**  GPT's command: before ``[0.0625+0.j] 0.0 True``, after ``[1.+0.j] 0.0 True``.  The new
+regression module covers corner polylines (a chord may not cut a corner), reversed paths, negative
+circle sense, a final segment needing subdivision, a persistently failing corrector (``ok=False`` and
+0.5000 returned), 8-sample circles, and **unwrapped swept angle** (the old code reported success after
+sweeping only +0.1560 rad of a 96-sample circle; now +6.2832 / -6.2832).
+
+**Caller audit** (who checks the endpoint independently, and what could be corrupted):
+
+| caller | endpoint checked? | recorded conclusion at risk |
+|---|---|---|
+| ``exp38`` phase A.3 | yes (residual < 1e-8 at s = 1) | 16-root fibre -- safe |
+| ``exp38`` phase B | no | fold edge table and components |
+| ``exp40`` phase 0 / 1 / 2 | no / partly (refiner has a 1e-9 gate, seeds from the tracker) / no | fibre / complex branch-point set / complex edges |
+| ``exp45`` | no | fibre; **the four adversarial re-check edges** |
+| ``exp46`` | no | kimi's (5,9) edge |
+| ``exp37`` main loop / control | no | Q15 transposition (not triggered) / "empty-circle control stays put" -- **void before, valid now** |
+
+No second occurrence of the same "shrink then break" pattern was found (homotopy.track, exp21/35/55/58/59,
+chamber, exp18/23 retry the step or return failure).
+
+**What actually moved.**  Unchanged to the digit: ``exp38`` (8 edges, ``[4,3,3,2,1,1,1,1]``),
+``exp46`` (``[5,9]``), ``exp40 --seeds 400`` (2 branch points), ``exp44`` (``[6,3,3,1,1,1,1]``, order
+25920).  ``exp37``'s positive reading ``[1,0]`` is unchanged.  **Instrumented replay of the old code**:
+``exp38`` halved **0** times in 22 calls -- the defect was mechanically not triggered there, which is why
+its numbers are stable; ``exp45`` halved **5522** times and left **27263** requested points unwalked
+(10380 of them inside calls that returned ``ok=True``, worst single call 1113 points).
+
+* ``exp45`` readings changed (the only movement): fold 0.655086 went from
+  ``[(0,10),(15,14)]/8`` to ``[(0,10)]/10`` **MATCH** -- the pseudo-edge ``(15,14)`` disappears; the other
+  three folds read empty (``[]/6``, ``[]/4``, ``[]/4``), i.e. they need the Q17 core rather than the
+  tracker.
+* ``exp37``'s "double control clean" claim is **withdrawn**: 3 of 4 control calls returned the input
+  unchanged and printed distance 0.0, which had been read as self-return.  With the fixed control the
+  reading is **12/12 self-return with distances <= 4.8e-13** -- a valid negative control replacing a void
+  one.
+* Two items stay **未决**: bisecting the day06 -> HEAD pairing change (the reviewer reproduced day06's
+  table on ``e3dbd0d`` item by item, so it is *not* T1), and exp45's three empty folds.
+
+### 3.58 GPT round 2 accepted: source germs for the four 3R candidates, a rigorous Lipschitz bound, and Q27 made concrete
+
+``study/collab/GPT_MATH_ADVANCE_20261016.md`` plus the runnable ``study/exp61_source_germs.py``
+(verified here: exit 0, all exact checks passed, numerical agreement with the library FK 6.87e-16 over 20
+samples).  Three items matter for the record:
+
+* **A (3R source classification)**: the four candidate points are classified from the *original* MDH
+  forward kinematics rather than from the elimination coefficients -- exact source configurations modulo
+  2*pi, the regular output ``z`` as a source coordinate, and a normal form rather than a fourth-order jet
+  (``det D(R,z) = (-6 sin u - 9 sin(v) cos(u)/2 - 9 cos(v)/2) sin v``).  Scope, as they state: this
+  classifies **those four points**, it does not claim the rest of the arm is cusp-free, and it does not
+  cancel the existing cuspidality result.  This is the right level for Q26: our tacnode correction is
+  about the discriminant-component union, theirs about the source map, and both are now recorded.
+* **B (certified clearance)**: a box-Lipschitz bound for a serial arm's Jacobian from link lengths alone,
+  with the unit-scaling caveat and the "do not miss a sample" floating-point warning -- the ingredient my
+  reply asked for to upgrade ``chamber``'s finite sampling into a whole-segment certificate.  They propose
+  it as hand-off task T5.
+* **C (Q27)**: the fixed-SR5 loop is written as a concrete square system, with the important limitation
+  that a simple source fold at the target does not exclude *another* source fold sharing that target --
+  exactly the trap that would make a "loop around one fold" measurement lie.

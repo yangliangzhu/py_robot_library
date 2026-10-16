@@ -81,27 +81,70 @@ def make_s_path(s_from: float, s_to: float, avoid: list[float], *, r: float = 5e
 
 def track_path(base_links, offset: float, target: np.ndarray, q0: np.ndarray,
                s_points: list[complex], *, max_step: float = 0.1,
-               tolerance: float = 1e-10) -> tuple[np.ndarray, float, bool]:
+               tolerance: float = 1e-10, max_subdivisions: int = 64,
+               min_span: float = 1e-9, max_calls: int = 20000
+               ) -> tuple[np.ndarray, float, bool]:
     """Carry one root along a given sequence of (complex) parameter values.
 
-    Adaptive halving as in exp37's loop tracker: big steps and residuals are refused.
+    Adaptive halving as in exp37's loop tracker: big steps and residuals are refused.  A refused
+    step is halved, but the halved step is only a *sub-step*: the segment is then iterated until
+    the requested parameter ``s_goal`` itself is reached, so the root always sits at the last
+    requested parameter -- never on an intermediate point that merely happened to be small
+    enough, and never on a chord cutting a corner of the polyline.  The step is not shrunk below
+    ``min_span``, and no more than ``max_subdivisions`` halvings per step or ``max_calls``
+    corrector calls per path are spent; exhausting either budget returns the parameter last
+    reached with ``ok = False``.  Success also requires a last corrector call at the final
+    parameter to confirm the endpoint residual and that the endpoint was not reached by a hop.
+
+    Args:
+        base_links: Link transforms of the family (unmodified; the offset is applied per call).
+        offset: The parameterised link offset at ``s = 1``.
+        target: The pose to keep solving for (fixed along the path).
+        q0: A solution at ``s_points[0]``.
+        s_points: The requested parameter path, in order; the first point is the start.
+        max_step: Largest accepted Newton step (a larger step may have hopped between sheets).
+        tolerance: Pose residual the corrector must reach for a step to count.
+        max_subdivisions: Largest number of halvings tried for one step.
+        min_span: Smallest parameter span that may be attempted -- the floor.
+        max_calls: Corrector-call budget for the whole path.
+
+    Returns:
+        ``(q, worst, ok)``: the root at the last parameter reached, the worst accepted residual,
+        and whether that parameter is the last requested one and its endpoint check passed.
     """
     q = np.asarray(q0, dtype=complex)
     worst = 0.0
-    s_prev = complex(s_points[0])
-    for s_goal in s_points[1:]:
-        span, accepted = s_goal - s_prev, False
-        for _ in range(8):
-            s_mid = s_prev + span
-            candidate, residual = newton_complex(links_at(base_links, offset, s_mid), q, target)
-            step = float(np.linalg.norm(candidate - q))
-            if step <= max_step and residual < tolerance:
-                q, worst, accepted = candidate, max(worst, residual), True
-                s_prev = s_mid
-                break
-            span *= 0.5
-        if not accepted:
+    cursor = complex(s_points[0])
+    calls = 0
+    for goal in (complex(point) for point in s_points[1:]):
+        while cursor != goal:
+            remaining = goal - cursor
+            span = remaining
+            accepted = False
+            for _ in range(max_subdivisions):
+                if calls >= max_calls:
+                    return q, worst, False
+                # with span == remaining this is exactly the goal, so a full step lands on it
+                trial = goal - (remaining - span)
+                candidate, residual = newton_complex(links_at(base_links, offset, trial), q,
+                                                     target)
+                calls += 1
+                step = float(np.linalg.norm(candidate - q))
+                if step <= max_step and residual < tolerance:
+                    q, worst = candidate, max(worst, residual)
+                    cursor, accepted = trial, True
+                    break
+                if abs(span) <= min_span:
+                    break
+                span *= 0.5
+            if not accepted:
+                return q, worst, False
+    if len(s_points) > 1:
+        end = complex(s_points[-1])
+        candidate, residual = newton_complex(links_at(base_links, offset, end), q, target)
+        if residual >= tolerance or float(np.linalg.norm(candidate - q)) > max_step:
             return q, worst, False
+        q, worst = candidate, max(worst, residual)
     return q, worst, True
 
 
