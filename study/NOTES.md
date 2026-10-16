@@ -2716,3 +2716,28 @@ False.  The two length defects are epsilon-level: for normal well-conditioned SV
 a numeric bound (the reviewer says so honestly); only the 1x1/tall factor bug is observable at value
 level.  So no recorded conclusion changes -- this was a correctness-of-the-proof fix, not a correction of
 a measurement.
+
+### 3.64 The 3R has EXACTLY four aspects, and exp48's error mechanism is now pinned
+
+``study/collab/GPT_FOUR_ASPECTS_20261017.md`` strengthens 3.62 from "at least four" to **exactly four**,
+each aspect diffeomorphic to ``S^1 x (0,1)^2``, labelled by ``(sign sin v, sign g)``.  The proof is
+coordinate-based and resolution-free: delete ``sin v = 0``, so ``v`` lives in two open intervals, and in
+the change of variables ``phi = u + theta(v)`` (``cos theta = 2/r``, ``sin theta = b/r``, ``r = sqrt(4+b^2)``)
+the function ``g`` becomes ``r(v) sin phi + (3/2) cos v``; because ``c(v) = -(3/2) cos v / r(v)`` satisfies
+``|c(v)| <= 3/4 < 1``, the two regions ``g > 0`` / ``g < 0`` are, for each ``v``, single non-empty open
+arcs in ``phi`` whose endpoints depend smoothly on ``v`` -- so all four regions are connected and any path
+between two of them must change the sign of one of the two non-vanishing factors, i.e. cross ``Sigma``.
+My grid check agrees (1 component per label, 4 total).  Their section 2 then shows the FK is a **global
+diffeomorphism on each aspect** (invertible Jacobian gives a local diffeo, and 3.62 gives global
+injectivity).
+
+**The mechanism of exp48's error is now identified.**  ``det J = (3/2) sin v * g``, so
+``sign(det J) = sign(sin v) * sign(g)`` takes only **two** values, whereas the true aspect count is four:
+the labels ``(+, +)`` and ``(-, -)`` are *distinct* aspects that share the sign of ``det J``.  exp48 used
+``sign(det J)`` as the aspect label and therefore merged the two, reading "exactly 2 aspects, 4-solution
+poses split (2,2)".  This is a direct, arm-specific counterexample to the idea that ``sign(det J)`` is a
+*complete* aspect invariant: it is one-way (opposite signs imply different aspects -- still true and still
+the backbone of 1.), but it is not complete (equal sign can be two genuinely separated aspects).  That is
+a sharper statement than the "equal sign can be connected or not" we already knew, and it is worth
+carrying over to the SR5 side as a standing caveat on any "the partition equals the sign partition"
+reading.
