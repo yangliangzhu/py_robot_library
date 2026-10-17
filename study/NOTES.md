@@ -2902,3 +2902,33 @@ contains S5, and S5 contains A5 (non-solvable), so:
 The remaining gap to the *strict* statement is Gate C: certification of the path lifts (roots are
 distinct and continuously lifted, the loops close, endpoints match) -- the certification target is now
 only the three base loops, and the data for it is already archived.
+
+### 3.71 Gate C: GPT's scheme is frozen, the exact model is in, and C1 (six base roots) is dispatched
+
+``study/exp69_exact_gate_c_model.py`` + ``study/exp69_exact_model.json`` (accepted here: ruff clean,
+pytest 217 passed, the module exit 0).  Three inputs the certification now stands on:
+
+* **Exact model frozen.**  The archived rotation, interpreted as exact floating coefficients, is not
+  exactly orthogonal; GPT built an exact rational replacement differing by **2.63e-16** (its ``R^T R = I``
+  and ``det R = 1`` checks pass), so the loops to certify run under this legal target with the old
+  trajectories as seeds.
+* **Generic finiteness is now a proved input**, not an assumption: a symbolic computation at a rational
+  complex configuration gives a non-zero 6x6 Jacobian minor (the module's "rank-six witness nonzero"
+  check).
+* **Certification shrinks to six roots.**  ``{1,4,6,8,10,13}`` is invariant under the three generators
+  ``a, d, h`` and its restriction action is non-solvable; the spec explains how the remaining roots'
+  critical values are handled and why a non-solvable *restriction image* suffices for the whole group's
+  non-solvability.
+
+The spec also pins down what a segment certificate must contain: the per-segment contraction criterion,
+the exact-representation centres/radii and constants B, eta, kappa with strict margins, the exclusion of
+rotation spurious roots, and the adjacent-box identity argument (boxes merely intersecting is not
+enough).  Section 8 is explicit that existing NPZ data are seeds and navigation, not error-bound
+certificates.
+
+**Dispatched (C1 only, one executor):** certify the six common-base roots one at a time -- the exact
+six-dimensional square system and analytic Jacobian, an interval backend with inclusion guarantees,
+B/eta/kappa and margins per root -- one root's re-checkable certificate first, then the batch.  C2
+(segment + splice), C3 (three paths x six roots) and C4 (independent checker + closure) follow only
+after C1; nothing beyond C1 may be claimed now, and the bridge to the true monodromy plus the final
+non-solvability wording remain GPT's.
