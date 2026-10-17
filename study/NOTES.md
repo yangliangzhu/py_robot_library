@@ -2855,3 +2855,24 @@ the empty-loop probes found branch points within ~1e-3-5e-3 of the base in all f
 off-axis (14,15) at 2e-3..3.2e-3), which is why the protocol's empty-loop radius is fixed at 1e-4; and
 the +-x/+y sweeps terminated early at the step floor, so "no fold" was never claimed.  Boundary as
 stated: numerical permutations, machine_verified=False, S5 verdict = Gate B, certification = Gate C.
+
+### 3.69 GPT's group computation: the S5 witness exists, and only h's controls are missing
+
+``study/exp67_group_witness.py`` + ``study/collab/GPT_GATE_B_WITNESS_20261017.md`` (accepted here: ruff
+clean, pytest 217 passed, the module exit 0).  Reading the exp66 archive directly:
+
+* the **seven fully-controlled permutations** generate order 5760 with orbits ``{0,9,14,15}`` (S4),
+  ``{1,4,6,8}`` (S4), ``{7,10,11,12,13}`` (D5, order 10 -- a transitive order-10 subgroup of S5 cannot be
+  cyclic since S5 has no element of order 10) and three fixed roots: **S4 x S4 x D5, still solvable**;
+* but **three** of them suffice: ``a = (1 6)``, ``d = (0 14)(4 6)``, and
+  ``h = (1 8)(4 10 13)(7 12)(9 15)`` -- the archived **-x, radius 0.015** scan result.  By conjugation
+  alone (no product generator is split): ``(1 6)``, ``h a h^-1 = (6 8)``, ``d a d^-1 = (1 4)``,
+  ``h d a d^-1 h^-1 = (8 10)`` -- four pure transpositions connecting the five roots ``{1,4,6,8,10}``,
+  whose explicit closure is verified at **order 120 = S5**, hence a **numerically supported non-solvable
+  subgroup witness**.
+
+**What is missing is only h's control protocol.**  ``a`` and ``d`` are fully controlled; ``h`` is a
+radius-scan reading (the module prints ``CONDITIONAL: h is a radius-scan result, not yet a fully
+controlled/certified loop``).  The reverse loop must read ``h^-1`` (h has a 3-cycle and is not an
+involution).  The h-verification is dispatched (exp68); when it passes, the numerically supported witness
+is complete and the certification target for Gate C shrinks to the three base loops ``a, d, h``.
