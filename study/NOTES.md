@@ -3011,3 +3011,26 @@ mismatch, z_j = 0 tube, tampered direction, tampered model sha256) are rejected 
 
 Boundary kept: no three-loop certification, no permutation claim, and zero ``path_certified`` tokens in
 either certificate.  C3 (three paths x six roots) and C4 (independent checker) remain.
+
+### 3.75 C3 staged: first measure the cost of one complete archived edge of the a-loop
+
+``study/collab/GPT_C3_EXECUTION_ADDENDUM_20261017.md``.  GPT reviewed C2's splice code and re-ran the
+verifier (exit 0: six roots, twelve tubes, six splices).  The obstacle now is **scale**, not method: the a
+loop's parameter polyline is about 0.437 long, so at the C2 step of ``2^-25`` the whole loop would need
+roughly **14.65 million segments**; C2 proved the method works, not that a whole loop is computable.
+
+Staged plan (the executor takes stage C3a only):
+
+1. certify **one complete archived edge** of the a loop (the parent-node interval, not just two small
+   pieces), all six roots, and record **adaptive step sizes, wall-clock time and certificate size** --
+   those three numbers are the stage's acceptance criteria, because they answer "is the whole loop
+   affordable";
+2. at each splice, additionally certify a **small endpoint root box** contained in both the previous and
+   the next tube's image so that **uniqueness** carries the root identity and the tubes do not have to
+   inflate along the path (the addendum's exact splice argument and interval-bound improvement);
+3. d and h are out of scope for this stage, as are permutations and ``path_certified``; no acceptance
+   threshold is loosened, and any adaptive stepping is reported.
+
+Also recorded from GPT's note: the **independent backend is C4's software-reliability assurance, not an
+extra mathematical premise of the contraction theorem** -- a clarification that matters for how the
+record describes the C1 certificates until C4 exists.
