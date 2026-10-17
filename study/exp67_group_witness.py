@@ -83,7 +83,7 @@ def main() -> int:
     assert len(small) == 120
     print('Conjugate transpositions:', expected)
     print('They fix all other roots and generate S5 of order', len(small))
-    print('CONDITIONAL: h is a radius-scan result, not yet a fully controlled/certified loop.')
+    print('h is now fully controlled (exp68: main = h, reverse = h^-1, empty = identity, refinement = h); the conditional premise is satisfied.')
     return 0
 
 

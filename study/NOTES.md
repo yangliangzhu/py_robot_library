@@ -2876,3 +2876,29 @@ radius-scan reading (the module prints ``CONDITIONAL: h is a radius-scan result,
 controlled/certified loop``).  The reverse loop must read ``h^-1`` (h has a 3-cycle and is not an
 involution).  The h-verification is dispatched (exp68); when it passes, the numerically supported witness
 is complete and the certification target for Gate C shrinks to the three base loops ``a, d, h``.
+
+### 3.70 T4 Gate A closes: a, d, h are all fully controlled, and the S5 witness is numerically complete
+
+``study/exp68_h_loop.py`` (accepted here: ruff clean, pytest 217 passed, the module exit 0 with 9/9
+checks; ``exp67`` still exit 0 and its CONDITIONAL line is updated -- the premise is satisfied).  h's
+four control loops: main = ``(1 8)(4 10 13)(7 12)(9 15)`` **bit-equal to the archived scan**, reverse =
+``h^-1`` (the 3-cycle inverted, *not* h), empty = identity, refinement = h.  Numbers: per-loop max
+residual <= 1.0e-9, endpoint residuals <= 9.4e-10, endpoint-to-image gaps <= 3.7e-9, and the along-path
+minimum root gap is 0.458212168 rad -- the frozen base table's own minimum, so the circle never brings
+roots closer than at the base.  The empty loop radius is 1e-4 by necessity (the -x slice has an off-axis
+(14,15) branch point 2e-3..3.2e-3 from base), and the guard is not vacuous: the live negative control
+``--empty-radius 5e-3`` honestly fails (roots 5/9 jump, partial (14 15)) with exit 1.  Raw data in
+``study/exp68_h_loop.npz`` (5.5 MB, 98 arrays, machine_verified=False).
+
+**State of the Q27 line.**  The three base loops ``a = (1 6)`` (exp64), ``d = (0 14)(4 6)`` (exp66) and
+``h`` (exp68) are now all measured under the full Gate A protocol on the **fixed SR5**, and the exact
+group computation (exp67) shows their conjugates ``(1 6), (6 8), (1 4), (8 10)`` generate S5 of order 120
+-- with no product generator ever split.  Hence the measured subgroup of the fixed arm's monodromy
+contains S5, and S5 contains A5 (non-solvable), so:
+
+    **numerically: the fixed SR5's monodromy group is non-solvable -- the inverse kinematics has no
+    radical solution for the fixed arm, with the evidence a certified-by-protocol set of three loops.**
+
+The remaining gap to the *strict* statement is Gate C: certification of the path lifts (roots are
+distinct and continuously lifted, the loops close, endpoints match) -- the certification target is now
+only the three base loops, and the data for it is already archived.
