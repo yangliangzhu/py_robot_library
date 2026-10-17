@@ -2957,3 +2957,26 @@ unaffected and strict.
 This is the first piece of Gate C: the base-root side of the certification exists, is re-checkable
 bit-for-bit (114/114), and claims nothing beyond C1.  Next per the spec: C2 (one segment + splice
 verification, including the deliberately swapped second-segment seeds), then C3, C4.
+
+### 3.73 GPT's C1 review: the boxes survive, the verifier has an integrity hole, and C2 gets an exact affine formula
+
+``study/collab/GPT_C1_REVIEW_C2_ADDENDUM_20261017.md``.  Review result: the six C1 certificates
+recompute (exit 0), and a source review of the interval arithmetic, the Jacobian realisation and the
+rotation-spurious-root exclusion found nothing that invalidates the boxes -- but this is source review
+plus reproduction, **not** an independent-backend verification.
+
+**The defect it did find is real and ours:** ``exp70 --verify`` returns PASS even when the certificate
+JSON's ``roots`` array is emptied, and ``inconclusive`` entries do not fail verification.  The six boxes
+are not invalidated, but the verifier must be fixed so that verification passes only when **all six
+specified roots {1,4,6,8,10,13} are present and each is certified**, with negative tests (empty roots,
+one root removed, one marked inconclusive) that must each fail.  Dispatched as part 1 of C2.
+
+**C2 shortcut (exact, hence cheap):** for a fixed orientation and a linear translation parameter the
+Jacobian is parameter-independent, and the preconditioned residual at a fixed centre is **affine in the
+parameter**, so the whole-segment residual bound is obtained exactly from the two endpoint evaluations;
+combined with the Jacobian bound over the box this proves whole-segment contraction.  The addendum also
+fixes the splice argument (the adjacent-box criterion can prove the same root, mere intersection cannot)
+and the valid negative control (deliberately swapped second-segment seeds must be rejected).
+
+C2 is dispatched with the boundary kept tight: one segment for all six roots plus one splice -- no
+three-loop certification, no permutation claims, no ``path_certified``.
