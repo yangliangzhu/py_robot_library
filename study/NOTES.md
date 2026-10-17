@@ -2932,3 +2932,28 @@ B/eta/kappa and margins per root -- one root's re-checkable certificate first, t
 (segment + splice), C3 (three paths x six roots) and C4 (independent checker + closure) follow only
 after C1; nothing beyond C1 may be claimed now, and the bridge to the true monodromy plus the final
 non-solvability wording remain GPT's.
+
+### 3.72 Gate C1 lands: all six common-base roots certified with exact rational interval arithmetic
+
+``study/exp70_gate_c1_roots.py`` + ``study/exp70_gate_c1_certificate.json`` (accepted here: ruff clean,
+pytest 217 passed, the ``--verify`` re-check 114/114 exit 0, and the certificate JSON contains no
+``path_certified`` or permutation fields).  On the exp69 frozen exact model, the six roots
+``{1,4,6,8,10,13}`` are each enclosed in a strict contraction box of radius ``2^-40 ~ 9.09e-13`` with
+per-root constants (eta, kappa, margin as a fraction of r, trace bound): root 1 eta 5.02e-16 kappa
+3.32e-9 margin 99.94%; root 4 9.11e-16 / 1.19e-9 / 99.90%; root 6 5.78e-16 / 2.75e-9 / 99.94%; root 8
+1.48e-15 / 2.00e-8 / 99.84%; root 10 9.68e-15 / 2.33e-8 / 98.94% (min |z_j|^2 = 0.299); root 13
+3.42e-15 / 5.24e-8 / 99.62% (min |z_j|^2 = 0.276).  All strict checks of spec sections 4/5 pass (kappa <
+1/2 and eta + kappa_i r <= r/2 per row, the trace bound < 4 excludes rotation spurious roots, z_j != 0 on
+each box, det B != 0 and ||I - B Df(c0)|| <= 8.2e-14, and the six boxes are pairwise disjoint -- the 15
+gaps stored as exact rationals).  Every certificate constant is an exact rational: the backend is
+self-implemented Fraction interval arithmetic with no floating rounding in any certificate constant, and
+only the frozen float inputs (centres and B) enter per the spec.
+
+**Honest caveat, recorded as 未决:** the *informational* max-radius extension ladder fails for root 13 at
+``2^-16`` (interval dependency blow-up, kappa 0.88 -- the spec's section 8 warning made real), while roots
+1/6 extend to ``2^-14``, root 4 to ``2^-12``, roots 8/10 to ``2^-16``; the certified ``2^-40`` boxes are
+unaffected and strict.
+
+This is the first piece of Gate C: the base-root side of the certification exists, is re-checkable
+bit-for-bit (114/114), and claims nothing beyond C1.  Next per the spec: C2 (one segment + splice
+verification, including the deliberately swapped second-segment seeds), then C3, C4.
