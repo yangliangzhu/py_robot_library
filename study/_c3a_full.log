@@ -1,0 +1,19 @@
+exp72: Gate C3a -- the first complete archived edge of the a loop
+
+phase 0: model provenance
+    PASS  link matrices: YAML config == manifest  (exact rational equality)
+    PASS  source sha256 model/configs/rokae_sr5.yaml  (recorded 3a99796a0ac078e01482b7d8b271db7e13e96f32e5dbc07f3940b0bfc430a24c, actual 3a99796a0ac078e01482b7d8b271db7e13e96f32e5dbc07f3940b0bfc430a24c)
+    PASS  source sha256 study/exp68_h_loop.npz  (recorded 2577cecb9fd1c3a348ae6c1aa8e5cd71a4aa45b1e801530860b6d86a824228e0, actual 2577cecb9fd1c3a348ae6c1aa8e5cd71a4aa45b1e801530860b6d86a824228e0)
+    PASS  source sha256 study/exp66_gate_a_generators.npz  (recorded 95c14837ba146a0e383ac967c75ed57a61699aa7f42b6408dc4e3b3067b678d3, actual 95c14837ba146a0e383ac967c75ed57a61699aa7f42b6408dc4e3b3067b678d3)
+    PASS  R* exactly orthogonal with det 1  (exact sympy equality)
+    PASS  tracked indices {1,4,6,8,10,13}  ([1, 4, 6, 8, 10, 13])
+    edge: lambda in [0, i * 44fc3a34d11c9/2^61...] (~5.263e-04), direction (0,-1,0)
+
+    [root 8] planning ...
+    [root 4] planning ...
+    [root 13] planning ...
+    [root 1] planning ...
+    [root 6] planning ...
+    [root 10] planning ...
+    20 certification chunks, 12 workers
+

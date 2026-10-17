@@ -3034,3 +3034,20 @@ Staged plan (the executor takes stage C3a only):
 Also recorded from GPT's note: the **independent backend is C4's software-reliability assurance, not an
 extra mathematical premise of the contraction theorem** -- a clarification that matters for how the
 record describes the C1 certificates until C4 exists.
+
+### 3.76 Pause checkpoint: C3a stopped mid-pilot, state on disk, cost question quantified
+
+Execution of C3a was stopped on request (a software update is imminent).  Where it stands:
+``study/exp72_gate_c3a_edge.py`` exists (the C3a module, 1152 lines, with ``--verify``/``--roots``/
+``--limit``); the first run died at "20 certification chunks, 12 workers" (15:43) and the second
+(resumed for a single-root pilot, root 13) produced ``study/_c3a_ckpt/planner_13.json`` (1.2 MB, 16:52)
+and **one** finished chunk ``chunk_13_4400.json`` (2.75 MB, 129 accepted / 0 rejected, 16:59) before being
+stopped again.  No certificate JSON and no ``T4-gate-c3a.md`` exist.
+
+The pilot already answers the feasibility question at the pilot scale: **~7 min and 2.75 MB per
+root-chunk**, so one edge (12 chunks x 6 roots) would be ~8.4 h and ~200 MB, and the a loop (~830 edges)
+thousands of hours and ~166 GB -- the "scale, not method" obstacle GPT predicted, now measured.  Nothing
+was committed as a result, no threshold was loosened, and the scratch (``_c3a_ckpt/``, the two logs) is
+untracked on disk.  Resume recipe: re-read ``GPT_C3_EXECUTION_ADDENDUM_20261017.md``, finish the pilot's
+cost report (the interrupted agent had gathered the data and was writing it), then decide between the
+preconditioning/compression route and the long-interval global-bound route before running any full edge.
