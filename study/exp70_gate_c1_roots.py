@@ -591,6 +591,45 @@ def box_intervals(x: XVector, radius: Fraction) -> tuple[CInterval, ...]:
         for joint in range(6))
 
 
+def interval_df_matrix(
+    jacobian: list[list[Laurent]],
+    x: XVector,
+    radius: Fraction,
+) -> tuple[list[list[RInterval]], list[Fraction]]:
+    """Interval realified Jacobian over the box, shared by C1 bounds and C2 enclosures.
+
+    Row ``2k`` is the Re-projection of J_k and row ``2k+1`` the Im-projection, with
+    the holomorphic blocks ``[Re J, -Im J; Im J, Re J]`` per ``(k, j)``.
+
+    Args:
+        jacobian: The 6x6 holomorphic Jacobian of the square system.
+        x: The exact box centre (12 rationals).
+        radius: The exact box radius.
+
+    Returns:
+        ``(df_interval, z_lower)``: the 12x12 interval Jacobian and the per-joint
+        lower bound of ``|z_j|^2`` on the box.  Raises ValueError if a joint box
+        contains the origin (division impossible).
+    """
+    box = box_intervals(x, radius)
+    cache: dict[Exponents, CInterval] = {}
+    z_lower = []
+    for joint in range(6):
+        squared = ri_add(ri_mul(box[joint].re, box[joint].re),
+                         ri_mul(box[joint].im, box[joint].im))
+        z_lower.append(squared.lo)
+    df_interval: list[list[RInterval]] = [
+        [ri_point(ZERO) for _ in range(12)] for _ in range(12)]
+    for k in range(6):
+        for joint in range(6):
+            value = lp_eval_interval(jacobian[k][joint], box, cache)
+            df_interval[2 * k][2 * joint] = value.re
+            df_interval[2 * k][2 * joint + 1] = ri_neg(value.im)
+            df_interval[2 * k + 1][2 * joint] = value.im
+            df_interval[2 * k + 1][2 * joint + 1] = value.re
+    return df_interval, z_lower
+
+
 def contraction_bounds(
     jacobian: list[list[Laurent]],
     b_matrix: list[list[Fraction]],
@@ -609,24 +648,7 @@ def contraction_bounds(
         ``(kappa_row, kappa, z_lower)``: per-row upper bounds, their maximum, and the
         per-joint lower bound of ``|z_j|^2`` on the box (each must be positive).
     """
-    box = box_intervals(x, radius)
-    cache: dict[Exponents, CInterval] = {}
-    z_lower = []
-    for joint in range(6):
-        squared = ri_add(ri_mul(box[joint].re, box[joint].re),
-                         ri_mul(box[joint].im, box[joint].im))
-        z_lower.append(squared.lo)
-    # Interval realified Jacobian: row 2k = Re J_k, row 2k+1 = Im J_k with blocks
-    # [Re J, -Im J; Im J, Re J] per (k, j).
-    df_interval: list[list[RInterval]] = [
-        [ri_point(ZERO) for _ in range(12)] for _ in range(12)]
-    for k in range(6):
-        for joint in range(6):
-            value = lp_eval_interval(jacobian[k][joint], box, cache)
-            df_interval[2 * k][2 * joint] = value.re
-            df_interval[2 * k][2 * joint + 1] = ri_neg(value.im)
-            df_interval[2 * k + 1][2 * joint] = value.im
-            df_interval[2 * k + 1][2 * joint + 1] = value.re
+    df_interval, z_lower = interval_df_matrix(jacobian, x, radius)
     kappa_row: list[Fraction] = []
     for row in range(12):
         row_sum = ZERO
@@ -1016,15 +1038,61 @@ def build_payload(manifest: dict, records: dict[str, dict],
     }
 
 
-def verify_certificate(path: Path) -> int:
-    """Recompute every stored certificate number from the frozen inputs, exactly.
+def _validate_record(root_index: str, record: dict,
+                     report: object) -> bool:
+    """Shape-validate one stored root record; print explicit rejects.
 
-    The verifier trusts nothing inside the JSON: it re-derives the model from the YAML
-    config, re-builds the system, re-checks the source hashes, re-runs the interval
-    evaluations from the stored centres and B, compares every stored rational exactly,
-    and re-checks every strict inequality.
+    Args:
+        root_index: The record key (archive root index).
+        record: The stored per-root dict.
+        report: The verifier's reporting callable ``(name, passed, detail)``.
+
+    Returns:
+        True iff the record is structurally valid.
     """
-    stored = json.loads(path.read_text())
+    ok = True
+    if not isinstance(record, dict):
+        report(f"  root {root_index}: record is not an object", False, type(record).__name__)
+        return False
+    for field in ("seed_q", "centre0", "centre"):
+        values = record.get(field)
+        valid = (isinstance(values, list) and len(values) == 12
+                 and all(isinstance(value, str) for value in values))
+        ok &= valid
+        if not valid:
+            report(f"  root {root_index}: malformed {field} (12 rational strings required)",
+                   False, f"got {type(values).__name__} length "
+                          f"{len(values) if isinstance(values, list) else '?'}")
+    b_rows = record.get("B")
+    valid_b = (isinstance(b_rows, list) and len(b_rows) == 12
+               and all(isinstance(row, list) and len(row) == 12 for row in b_rows))
+    ok &= valid_b
+    if not valid_b:
+        report(f"  root {root_index}: malformed B (12x12 rational strings required)",
+               False, "dimension check failed")
+    radius_k = record.get("radius_k")
+    valid_radius = isinstance(radius_k, int) and not isinstance(radius_k, bool) and radius_k >= 0
+    ok &= valid_radius
+    if not valid_radius:
+        report(f"  root {root_index}: malformed radius_k (non-negative integer required)",
+               False, repr(radius_k))
+    verdict = record.get("verdict")
+    valid_verdict = verdict in ("certified", "inconclusive")
+    ok &= valid_verdict
+    if not valid_verdict:
+        report(f"  root {root_index}: unknown verdict", False, repr(verdict))
+    return ok
+
+
+def verify_payload(stored: dict, required_roots: list[int], mode_label: str) -> int:
+    """Recompute a certificate payload from the frozen inputs, exactly, and check it.
+
+    Completeness contract (addendum repair): the roots object must have exactly the
+    required keys, every required record must be structurally valid and carry verdict
+    ``certified``, and all recomputed numbers must match the stored rationals exactly
+    and satisfy every strict inequality.  ``mode_label`` is printed so a single-root
+    re-check cannot be confused with full C1 acceptance.
+    """
     all_ok = True
 
     def report(name: str, passed: bool, detail: str = "") -> None:
@@ -1034,7 +1102,19 @@ def verify_certificate(path: Path) -> int:
         suffix = f"  ({short})" if detail else ""
         print(f"    {'PASS' if passed else 'FAIL'}  {name}{suffix}")
 
-    print(f"verify: {path}")
+    print(f"verify: {mode_label}")
+    required = [str(index) for index in required_roots]
+    roots = stored.get("roots")
+    if not isinstance(roots, dict):
+        report("roots object present", False, f"got {type(roots).__name__}")
+        print("FAIL: verification failed")
+        return 1
+    key_set_ok = sorted(roots.keys()) == sorted(required)
+    report(f"roots keys exactly {required}", key_set_ok, f"got {sorted(roots.keys())}")
+    if not key_set_ok:
+        print("FAIL: verification failed (root set incomplete or extraneous)")
+        return 1
+
     manifest, provenance = check_model_provenance()
     for name, passed, detail in provenance:
         report(name, passed, detail)
@@ -1057,10 +1137,16 @@ def verify_certificate(path: Path) -> int:
         fibre = data["fibre_real"] + 1j * data["fibre_imag"]
 
     certified_pairs = []
-    for key, record in stored["roots"].items():
-        root_index = int(key)
+    for root_index in required:
+        record = roots[root_index]
         print(f"  root {root_index}:")
-        seed_q = fibre[root_index]
+        if not _validate_record(root_index, record, report):
+            continue
+        if record["verdict"] != "certified":
+            report("  verdict is certified", False,
+                   f"got {record['verdict']!r} -- incomplete certificates are rejected")
+            continue
+        seed_q = fibre[int(root_index)]
         stored_seed = parse_xvector(record["seed_q"])
         derived_seed = tuple(Fraction.from_float(part)
                              for z in seed_q for part in (z.real, z.imag))
@@ -1084,35 +1170,35 @@ def verify_certificate(path: Path) -> int:
                centre == parse_xvector(record["centre"]))
         eta = inf_norm(matvec(b_matrix, eval_f(equations, centre)))
         report("  eta matches stored", frac_str(eta) == record["eta"], frac_str(eta))
-        if record["verdict"] == "certified":
-            radius_k = int(record["radius_k"])
-            radius = Fraction(1, 2**radius_k)
-            report("  radius = 2^-k matches stored", frac_str(radius) == record["radius"])
-            kappa_row, kappa, z_lower = contraction_bounds(jacobian, b_matrix, centre, radius)
-            trace_bound, s_bound = exclusion_bounds(s_matrix, centre, radius)
-            margins = [radius - eta - kappa_row[row] * radius for row in range(12)]
-            report("  kappa_row matches stored",
-                   [frac_str(value) for value in kappa_row] == record["kappa_row"])
-            report("  kappa matches stored",
-                   frac_str(kappa) == record["kappa"], frac_str(kappa))
-            report("  margin_row matches stored",
-                   [frac_str(value) for value in margins] == record["margin_row"])
-            report("  margin matches stored",
-                   frac_str(min(margins)) == record["margin"], frac_str(min(margins)))
-            report("  trace bound matches stored and |trace S - 3| < 4",
-                   frac_str(trace_bound) == record["trace_bound"]
-                   and trace_bound < Fraction(4), frac_str(trace_bound))
-            report("  ||S - I||_inf bound matches stored",
-                   frac_str(s_bound) == record["s_minus_i_inf_bound"], frac_str(s_bound))
-            report("  z_modulus_squared_lower matches stored and > 0",
-                   [frac_str(value) for value in z_lower] == record["z_modulus_squared_lower"]
-                   and all(value > 0 for value in z_lower))
-            report("  strict contraction re-checked",
-                   kappa < ONE and min(margins) > 0,
-                   f"kappa {frac_str(kappa)} < 1, margin {frac_str(min(margins))} > 0")
-            certified_pairs.append((root_index, centre, radius))
-        else:
-            report("  recorded verdict is inconclusive (certificate not loosened)", True)
+        radius_k = int(record["radius_k"])
+        radius = Fraction(1, 2**radius_k)
+        report("  radius = 2^-k matches stored", frac_str(radius) == record["radius"])
+        kappa_row, kappa, z_lower = contraction_bounds(jacobian, b_matrix, centre, radius)
+        trace_bound, s_bound = exclusion_bounds(s_matrix, centre, radius)
+        margins = [radius - eta - kappa_row[row] * radius for row in range(12)]
+        report("  kappa_row matches stored",
+               [frac_str(value) for value in kappa_row] == record["kappa_row"])
+        report("  kappa matches stored",
+               frac_str(kappa) == record["kappa"], frac_str(kappa))
+        report("  margin_row matches stored",
+               [frac_str(value) for value in margins] == record["margin_row"])
+        report("  margin matches stored",
+               frac_str(min(margins)) == record["margin"], frac_str(min(margins)))
+        report("  trace bound matches stored and |trace S - 3| < 4",
+               frac_str(trace_bound) == record["trace_bound"]
+               and trace_bound < Fraction(4), frac_str(trace_bound))
+        report("  ||S - I||_inf bound matches stored",
+               frac_str(s_bound) == record["s_minus_i_inf_bound"], frac_str(s_bound))
+        report("  z_modulus_squared_lower matches stored and > 0",
+               [frac_str(value) for value in z_lower] == record["z_modulus_squared_lower"]
+               and all(value > 0 for value in z_lower))
+        report("  strict contraction re-checked",
+               kappa < ONE and min(margins) > 0,
+               f"kappa {frac_str(kappa)} < 1, margin {frac_str(min(margins))} > 0")
+        report("  C1 selection policy re-checked (kappa < 1/2 and margin >= r/2)",
+               kappa < HALF and min(margins) >= radius / 2,
+               f"kappa {frac_str(kappa)} < 1/2, margin {frac_str(min(margins))} >= r/2")
+        certified_pairs.append((int(root_index), centre, radius))
 
     for (index_a, centre_a, radius_a), (index_b, centre_b, radius_b) in itertools.combinations(
             certified_pairs, 2):
@@ -1120,8 +1206,86 @@ def verify_certificate(path: Path) -> int:
         report(f"  boxes {index_a},{index_b} disjoint",
                ok_pair, f"coordinate {coord}, gap {frac_str(gap)}")
 
-    print("PASS: certificate fully re-checked" if all_ok else "FAIL: verification failed")
+    if all_ok:
+        if set(required) == set(map(str, TRACKED_INDICES)):
+            print("PASS: certificate fully re-checked "
+                  "(full C1: 6/6 roots {1,4,6,8,10,13} certified)")
+        else:
+            print(f"PASS: certificate re-checked for required roots {required} "
+                  "(single-root mode; NOT full C1 acceptance)")
+    else:
+        print("FAIL: verification failed")
     return 0 if all_ok else 1
+
+
+def _self_test_verify(stored: dict) -> None:
+    """Negative regressions for the verifier completeness repair.
+
+    Each mangled payload below must be rejected (nonzero); the unmodified payload
+    itself is checked by the caller.  Run before every ``--verify`` so the repair is
+    reproducible, not a one-off claim.
+    """
+    import copy as _copy
+
+    def rejected(name: str, payload: dict) -> None:
+        # Suppress the expected FAIL chatter; only the outcome matters.
+        import contextlib
+        import io
+        buffer = io.StringIO()
+        with contextlib.redirect_stdout(buffer):
+            code = verify_payload(payload, list(TRACKED_INDICES), name)
+        assert code != 0, f"negative control {name} was accepted (exit 0)"
+        print(f"    PASS  negative control rejected as required: {name}")
+
+    canonical = isinstance(stored.get("roots"), dict) and set(stored["roots"]) == set(
+        map(str, TRACKED_INDICES))
+    if not canonical:
+        print("    NOTE  negative self-tests skipped: the payload is already malformed "
+              "(the real check below must reject it)")
+        return
+
+    rejected("empty roots", {**_copy.deepcopy(stored), "roots": {}})
+    missing = _copy.deepcopy(stored)
+    missing["roots"] = {key: value for key, value in missing["roots"].items() if key != "6"}
+    rejected("missing root 6", missing)
+    inconclusive = _copy.deepcopy(stored)
+    inconclusive["roots"]["6"]["verdict"] = "inconclusive"
+    rejected("root 6 marked inconclusive", inconclusive)
+    unknown = _copy.deepcopy(stored)
+    unknown["roots"]["6"]["verdict"] = "banana"
+    rejected("unknown verdict", unknown)
+    malformed = _copy.deepcopy(stored)
+    malformed["roots"]["6"]["centre"] = malformed["roots"]["6"]["centre"][:-1]
+    rejected("malformed centre dimension", malformed)
+    malformed_b = _copy.deepcopy(stored)
+    malformed_b["roots"]["6"]["B"] = [row[:-1] for row in malformed_b["roots"]["6"]["B"]]
+    rejected("malformed B dimension", malformed_b)
+    extra = _copy.deepcopy(stored)
+    extra["roots"]["99"] = extra["roots"]["6"]
+    rejected("extra root key", extra)
+
+
+def verify_certificate(path: Path, required_roots: list[int] | None = None) -> int:
+    """Load a certificate and re-check it exactly (see :func:`verify_payload`).
+
+    Args:
+        path: The certificate JSON.
+        required_roots: Root indices that must be present and certified.  Defaults to
+            the full C1 set {1,4,6,8,10,13}; a different set is single-root mode.
+
+    Returns:
+        0 iff every check passed; nonzero otherwise (including any malformed or
+        incomplete root set).
+    """
+    stored = json.loads(path.read_text())
+    required = list(TRACKED_INDICES) if required_roots is None else list(required_roots)
+    mode = (f"full C1 ({path}, required roots {required})"
+            if required == list(TRACKED_INDICES)
+            else f"single-root mode ({path}, required roots {required})")
+    print("verifier negative self-tests:")
+    _self_test_verify(stored)
+    print()
+    return verify_payload(stored, required, mode)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -1135,11 +1299,16 @@ def main(argv: list[str] | None = None) -> int:
                         help="preferred box radius 2^-k")
     parser.add_argument("--verify", type=Path, default=None,
                         help="re-check an existing certificate JSON exactly")
+    parser.add_argument("--verify-roots", type=str, default=None,
+                        help="comma-separated required root set for --verify; default is "
+                             "the full C1 set 1,4,6,8,10,13 (single-root mode is explicit)")
     parser.add_argument("--no-max-search", action="store_true",
                         help="skip the informational max-certified-radius ladder")
     args = parser.parse_args(argv)
     if args.verify is not None:
-        return verify_certificate(args.verify)
+        required_roots = ([int(value) for value in args.verify_roots.split(",")]
+                          if args.verify_roots is not None else None)
+        return verify_certificate(args.verify, required_roots)
     if args.root is not None and args.root not in TRACKED_INDICES:
         raise ValueError(f"--root must be one of {list(TRACKED_INDICES)}, got {args.root}")
 

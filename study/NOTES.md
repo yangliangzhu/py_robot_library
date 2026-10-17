@@ -2980,3 +2980,34 @@ and the valid negative control (deliberately swapped second-segment seeds must b
 
 C2 is dispatched with the boundary kept tight: one segment for all six roots plus one splice -- no
 three-loop certification, no permutation claims, no ``path_certified``.
+
+### 3.74 C2 lands: the verifier hole is closed, and two certified segments splice with the root identity proved by inclusion
+
+``study/exp71_gate_c2_segment.py`` + ``study/exp71_gate_c2_certificate.json`` (accepted here: ruff clean,
+pytest 217 passed, ``exp71 --verify`` exit 0 -- "6/6 roots, 12/12 tubes, 6/6 splices, 6/6 negative
+controls", 309 PASS / 0 FAIL -- and, checked externally by the Lead, a **tampered copy of the C1
+certificate with ``roots`` emptied now exits 1** with "roots keys exactly ... got []", so the integrity
+hole GPT found is genuinely closed; the original exp70 JSON is byte-identical and still re-verifies at
+"full C1: 6/6").
+
+**C2 prototype, on the archived main-loop first leg** (``u = i*t`` along ``-e_x``): segment 1
+``[0, i*2^-25]`` and segment 2 ``[i*2^-25, i*2^-24]``, both exactly inside the first archived node
+interval.  The addendum's exact formula was used as specified -- ``f`` affine in lambda, ``Df``
+parameter-free, ``v(lambda(t)) = (1-t) v_A + t v_B`` verified exactly at the midpoint, and
+``eta_i = max(|v_A[i]|, |v_B[i]|)`` as the whole-segment residual bound -- with the C1 policy kept and
+never loosened (kappa < 1/2, margin >= r/4; root 13 is the tight one at r = 2^-19 / 2^-17, kappa
+0.11 / 0.44).  Per-root minimum row margins as a fraction of the tube radius, segment 1 / segment 2:
+root 1 41.0/40.9%, root 4 46.0/46.0%, root 6 50.4/50.4%, root 8 47.3/45.2%, root 10 48.6/48.0%, root 13
+29.8/26.4%; trace bounds <= 5.1e-3, min |z_j|^2 >= 0.276, det B != 0, ||I - B Df(c)|| <= 8e-14, all
+exact in the JSON.
+
+**The splice is by inclusion + uniqueness, not overlap:** the root box is strictly inside tube 1 (min
+margin 7.78e-7 ... 9.79e-8) and the exact Newton image ``E = c1 - B1 f(c1, lambda_A) + (I - B1 Df(X1))(X1
+- c1)`` is strictly inside tube 2 for all six roots (min inclusion margin 1.19e-7 ... 7.42e-6) -- so the
+root identity across the splice is proved, which is exactly what the spec demanded ("boxes intersecting
+is not enough").  **Negative controls:** gluing each root to a *different* root's valid tube is rejected
+6/6 with margins -1.73 ... -2.96, and six tamper negatives (empty roots, missing root, splice endpoint
+mismatch, z_j = 0 tube, tampered direction, tampered model sha256) are rejected on every ``--verify``.
+
+Boundary kept: no three-loop certification, no permutation claim, and zero ``path_certified`` tokens in
+either certificate.  C3 (three paths x six roots) and C4 (independent checker) remain.
