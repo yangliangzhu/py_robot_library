@@ -3051,3 +3051,46 @@ was committed as a result, no threshold was loosened, and the scratch (``_c3a_ck
 untracked on disk.  Resume recipe: re-read ``GPT_C3_EXECUTION_ADDENDUM_20261017.md``, finish the pilot's
 cost report (the interrupted agent had gathered the data and was writing it), then decide between the
 preconditioning/compression route and the long-interval global-bound route before running any full edge.
+
+### 3.77 C3a cost report: whole-loop certification is infeasible at the current representation, with the numbers
+
+``study/collab/T4-gate-c3a.md`` (accepted here: ruff clean, pytest 217 passed; the report used zero long
+runs -- every number comes from the on-disk pilot artifacts ``study/_c3a_ckpt/`` (13 files, 94 MB) and
+the two logs' mtimes/bytes).  Measured, not extrapolated-only:
+
+| quantity | measured |
+|---|---|
+| one root-chunk (400 segments) | 8.53 MB, ~870 s wall; 21.3 KB/segment; 2.76-2.86 s single-core interval evaluation |
+| one root's full chain (root 13: 4529 segments, 0 rejected) | 96.6 MB, 872.5 s with 12 processes |
+| one edge (6 roots, 6363 segments) | ~25 min wall (12 procs), ~135 MB |
+| three loops (~12.8M segments) | ~835 h ~ **35 days** wall (single core ~420 days), disk ~270-290 GB |
+
+**Conclusion: whole-loop certification is infeasible in the current representation, by ~50-150x**, and the
+cause is not interval overestimation: the accepted segments sit at kappa = 0.3965 and margin 25.0% of r,
+i.e. exactly against the policy floor (kappa < 1/2, margin >= r/4), and kappa(r) is a genuine linear
+slope (the W preconditioning already moved it from 5.74e4 to 2.59e4, segments /2.2).
+
+**Two routes, both engineering rather than mathematics:** (a) certificate compression -- store B/centres
+as exact float64 bit patterns (lossless, re-checkable via ``Fraction.from_float``), factor scalar rationals
+as shared-denominator pairs, chunk into binary blobs with a manifest: 2.75 MB/chunk -> **250-450 KB
+(6-11x)**, three loops 270 GB -> 27-43 GB (disk feasible, time unchanged); (b) interval-bound gains --
+the W preconditioning is already cashed, an analytic Lipschitz bound adds only 1.2-1.5x, the real lever is
+**per-coordinate diagonal boxes** (binding only one row: root 13's row 0 has rate 93.9 / kappa 0.397, the
+other rows <= 15.3), estimated 2-4x -> 6363 -> 1.6k-3.2k segments per edge, i.e. three loops ~2.5-8 days
+-- still not enough, so an exact-interval-kernel acceleration (C++/gmpy2, 5-20x) would be needed to reach
+<= 1 day.
+
+**Recommendation adopted: do NOT start C3b.**  Route if the strict statement is to be pursued: freeze the
+C3a machine and root 13's data as the baseline -> binary chunked certificate (small) -> exact interval
+kernel acceleration (decisive) -> diagonal-box proof + implementation -> retest small segments -> then
+re-evaluate C3b.
+
+**Instrument faults found while diagnosing the two dead runs** (logs had no traceback and no OOM trace;
+the processes simply vanished with the environment): (i) the chunk loop used the *grid slice length* as
+the full length, so each chunk certified only **one** segment; (ii) the planner estimated the step from the
+base-centre kappa instead of a first-segment trial -- both fixed, with the planner now refining on a trial
+segment.
+
+**Honest state:** root 13's 12/12 chunks are on disk (96.6 MB) but roots 1/4/6/8/10 have **no** certificate
+chunk, so the whole-edge certification is **incomplete and 未决**; no threshold was loosened, d/h were not
+touched, there is no permutation claim and no ``path_certified``.
