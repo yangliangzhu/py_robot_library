@@ -3094,3 +3094,34 @@ segment.
 **Honest state:** root 13's 12/12 chunks are on disk (96.6 MB) but roots 1/4/6/8/10 have **no** certificate
 chunk, so the whole-edge certification is **incomplete and 未决**; no threshold was loosened, d/h were not
 touched, there is no permutation claim and no ``path_certified``.
+
+### 3.78 Correction to the C3a reading: what was measured is the current implementation's cost, not a refutation of loop certification
+
+GPT reviewed the cost report and corrected three overclaims in 3.77 -- accepted, and the record is
+downgraded accordingly:
+
+1. **The ~35 days is an extrapolated budget, not a measurement of the three loops.**  At the time only
+   root 13's chain was measured; the whole-edge figure (6 roots, 6363 segments) combines root 13's
+   measured per-segment cost with the **planned** segment counts of the other five roots, and the
+   three-loop figure scales that up.
+2. **"kappa(r) is approximately linear" does not prove the bound is tight.**  The accepted segments sitting
+   at kappa = 0.3965 / margin = 25.0% of r, i.e. against the policy floor, is evidence that the *policy*
+   floor binds -- it does **not** exclude interval overestimation in the bound itself.
+3. **Root separation does not control the Jacobian condition number or the root-movement rate**, so the
+   first edge's cost cannot be assumed to represent the whole loop.
+
+So the honest statement is: **the current representation's batch-run cost is measured at pilot scale and
+is too high (~50-150x against a one-week budget at those settings); whether loop certification is feasible
+is not decided** -- it depends on representation improvements that have not been tried yet.
+
+**The mathematical candidate to try first (GPT's suggestion, before any low-level acceleration): moving
+centre tubes.**  A fixed-centre box must contain the *whole segment's* root displacement (an O(h) burden);
+a centre that moves along the tangent mainly has to contain the *prediction error*, which is O(h^2) --
+so this part of the burden can in principle drop by an order in h.  The Jacobian's whole-segment bound may
+still be the bottleneck, so **no speedup multiple is promised**; the doc's strict contraction criterion,
+prediction-error bound, endpoint-splice proof and a small finite-budget benchmark are the specification.
+
+**Resume plan:** first compare one small segment of root 13 under fixed vs moving centres (the benchmark in
+the doc), then decide the priority between the mathematical representation improvement and the exact
+kernel acceleration.  External wording stays: "numerical evidence supports the non-solvability of the
+fixed SR5; complete path certification is not yet done."
