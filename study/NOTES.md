@@ -3125,3 +3125,24 @@ prediction-error bound, endpoint-splice proof and a small finite-budget benchmar
 the doc), then decide the priority between the mathematical representation improvement and the exact
 kernel acceleration.  External wording stays: "numerical evidence supports the non-solvability of the
 fixed SR5; complete path certification is not yet done."
+
+### 2026-11-02 GPT independent exploration: exp73 moving tubes
+
+Implemented a fixed-rational affine predictor with an exact directional-Taylor
+residual bound and a centered Jacobian bound preserving the shared path parameter.
+On root 13 of the initial a-loop edge, four of five tested lengths pass unchanged
+contraction/comfort policies. The longest passing length is 2^-14, kappa <=
+0.164723, relative margin >= 0.658929, trace bound < 1.923, and the initial slice
+strictly contains the C1 root box. Natural W interval evaluation over the same
+swept box gives kappa >= 8.789 as an **upper-bound value**, not as a lower bound
+on the actual derivative norm. The 2^-12 candidate fails and is retained.
+
+The passing length is about 525 times the old first-tube step; local tube-evaluation
+throughput is roughly 45 times higher under nonidentical timing conditions.
+Neither figure is a full-chain/whole-loop speed claim. No permutations or full
+paths are certified. C1 re-verification, five exact bound recomputations, the
+reversed-predictor negative control, and all 223 tests pass; ruff is clean.
+The previous large untracked checkpoint directory was not changed.
+
+Proof, measurements, scope, and commands:
+[exp73 report](collab/GPT_EXP73_MOVING_TUBE_RESULTS_20261102.md).
