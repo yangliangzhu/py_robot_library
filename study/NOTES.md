@@ -3179,3 +3179,30 @@ path certification remains incomplete and unchanged.
 Commands: `python3 -m study.exp74_physical_cusp_unfolding --verify
 study/exp74_physical_cusp_unfolding.json`; 226 pytest tests passed, ruff clean.
 See [the theorem and explicit path](collab/GPT_PHYSICAL_CUSP_THEOREM_20261102.md).
+
+### 2026-11-03 GPT: minimal five-root transport witness (exp75)
+
+A changing five-root set reduces the fixed SR5 candidate certification target
+from 18 to 15 distinct base-loop/root lifts. Let T={4,6,8,10,13} and
+U={1,4,8,10,13}. Certify a:T→U, d:T→T and h:U→U. Reusing the reverse a lifts
+makes a^-1 h a act on T as (6 8)(4 10 13); d acts as (4 6). These generate S5,
+with derived subgroup A5. No a lift starting at 1 or d lift starting at 1 is
+needed, and no h lift starting at 6 is needed.
+
+This is optimal within the explicitly bounded model of constant-width five-root
+transport among the existing six labels using a,d,h and their inverses. Every
+used base loop needs at least five lifts; each pair of base actions generates a
+solvable group (orders 6,18,48). All 216 choices of one omitted input per base
+loop were checked by finite transport-graph holonomies. Exactly four choices
+force a nonsolvable image. None omit roots 8,10,13, so this minimum cannot avoid
+root 13's expensive lifts. The reduction is only 16.7% in distinct lift count,
+not an end-to-end runtime measurement.
+
+A six-point A4 action on tetrahedron edges provides a negative control: two
+observed length-three cycles can intersect in one label while the full action
+remains solvable (derived orders 12,4,1). Unobserved complementary actions must
+not be silently treated as fixed points.
+
+All statements about true monodromy remain conditional on the corresponding
+path certificates. The exact group calculation does not certify paths.
+See [proof, lower-bound model and full ledger](collab/GPT_MINIMAL_TRANSPORT_WITNESS_20261103.md).

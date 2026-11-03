@@ -1,0 +1,9471 @@
+{
+  "labels": [
+    1,
+    4,
+    6,
+    10,
+    13
+  ],
+  "archived_composite_cycles": {
+    "(a*d)^2": [
+      [
+        1,
+        4,
+        6
+      ]
+    ],
+    "h^2": [
+      [
+        4,
+        13,
+        10
+      ]
+    ]
+  },
+  "restricted_generators": [
+    [
+      1,
+      2,
+      0,
+      3,
+      4
+    ],
+    [
+      0,
+      4,
+      2,
+      1,
+      3
+    ]
+  ],
+  "group_order": 60,
+  "derived_order": 60,
+  "composite_execution_words": [
+    [
+      "d",
+      "a",
+      "d",
+      "a"
+    ],
+    [
+      "h",
+      "h"
+    ]
+  ],
+  "distinct_base_loop_lifts": {
+    "a": [
+      1,
+      4,
+      6,
+      10,
+      13
+    ],
+    "d": [
+      1,
+      4,
+      6,
+      10,
+      13
+    ],
+    "h": [
+      1,
+      4,
+      6,
+      8,
+      10,
+      13
+    ]
+  },
+  "distinct_base_loop_lift_count": 16,
+  "optimal_transport_witness": {
+    "chart_T": [
+      4,
+      6,
+      8,
+      10,
+      13
+    ],
+    "chart_U": [
+      1,
+      4,
+      8,
+      10,
+      13
+    ],
+    "a_input_labels": [
+      4,
+      6,
+      8,
+      10,
+      13
+    ],
+    "d_input_labels": [
+      4,
+      6,
+      8,
+      10,
+      13
+    ],
+    "h_input_labels": [
+      1,
+      4,
+      8,
+      10,
+      13
+    ],
+    "a_maps_T_onto_U": [
+      4,
+      1,
+      8,
+      10,
+      13
+    ],
+    "d_on_T": [
+      1,
+      0,
+      2,
+      3,
+      4
+    ],
+    "a_inverse_h_a_on_T": [
+      3,
+      2,
+      1,
+      4,
+      0
+    ],
+    "group_order": 120,
+    "derived_order": 60,
+    "base_pair_group_orders_ad_ah_dh": [
+      6,
+      18,
+      48
+    ]
+  },
+  "fifteen_lift_search": {
+    "case_count": 216,
+    "nonsolvable_cases": [
+      {
+        "omitted": [
+          1,
+          1,
+          6
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              120,
+              60
+            ],
+            "solvable": false,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          4,
+          4,
+          6
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              120,
+              60
+            ],
+            "solvable": false,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          4,
+          6,
+          6
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              120,
+              60
+            ],
+            "solvable": false,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          6,
+          1,
+          6
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              120,
+              60
+            ],
+            "solvable": false,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      }
+    ],
+    "largest_holonomy_order": 120,
+    "component_order_counts": {
+      "1": 676,
+      "2": 236,
+      "6": 56,
+      "120": 4
+    },
+    "cases": [
+      {
+        "omitted": [
+          1,
+          1,
+          1
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          1,
+          1,
+          4
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          1,
+          1,
+          6
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              120,
+              60
+            ],
+            "solvable": false,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          1,
+          1,
+          8
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          1,
+          1,
+          10
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          1,
+          1,
+          13
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          1,
+          4,
+          1
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          1,
+          4,
+          4
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          1,
+          4,
+          6
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              6,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          1,
+          4,
+          8
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          1,
+          4,
+          10
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          1,
+          4,
+          13
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          1,
+          6,
+          1
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          1,
+          6,
+          4
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          1,
+          6,
+          6
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              6,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          1,
+          6,
+          8
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          1,
+          6,
+          10
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          1,
+          6,
+          13
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          1,
+          8,
+          1
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          1,
+          8,
+          4
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          1,
+          8,
+          6
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              6,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          1,
+          8,
+          8
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          1,
+          8,
+          10
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          1,
+          8,
+          13
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          1,
+          10,
+          1
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          1,
+          10,
+          4
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          1,
+          10,
+          6
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              6,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          1,
+          10,
+          8
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          1,
+          10,
+          10
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          1,
+          10,
+          13
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          1,
+          13,
+          1
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          1,
+          13,
+          4
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          1,
+          13,
+          6
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              6,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          1,
+          13,
+          8
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          1,
+          13,
+          10
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          1,
+          13,
+          13
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          4,
+          1,
+          1
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          4,
+          1,
+          4
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          4,
+          1,
+          6
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              6,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          4,
+          1,
+          8
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          4,
+          1,
+          10
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          4,
+          1,
+          13
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          4,
+          4,
+          1
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          4,
+          4,
+          4
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          4,
+          4,
+          6
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              120,
+              60
+            ],
+            "solvable": false,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          4,
+          4,
+          8
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          4,
+          4,
+          10
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          4,
+          4,
+          13
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          4,
+          6,
+          1
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          4,
+          6,
+          4
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          4,
+          6,
+          6
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              120,
+              60
+            ],
+            "solvable": false,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          4,
+          6,
+          8
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          4,
+          6,
+          10
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          4,
+          6,
+          13
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          4,
+          8,
+          1
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          4,
+          8,
+          4
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          4,
+          8,
+          6
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              6,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          4,
+          8,
+          8
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          4,
+          8,
+          10
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          4,
+          8,
+          13
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          4,
+          10,
+          1
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          4,
+          10,
+          4
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              6,
+              3,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          4,
+          10,
+          6
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              6,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          4,
+          10,
+          8
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          4,
+          10,
+          10
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          4,
+          10,
+          13
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          4,
+          13,
+          1
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          4,
+          13,
+          4
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          4,
+          13,
+          6
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              6,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          4,
+          13,
+          8
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          4,
+          13,
+          10
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          4,
+          13,
+          13
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              6,
+              3,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          6,
+          1,
+          1
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          6,
+          1,
+          4
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          6,
+          1,
+          6
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              120,
+              60
+            ],
+            "solvable": false,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          6,
+          1,
+          8
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          6,
+          1,
+          10
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          6,
+          1,
+          13
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          6,
+          4,
+          1
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          6,
+          4,
+          4
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          6,
+          4,
+          6
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              6,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          6,
+          4,
+          8
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          6,
+          4,
+          10
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          6,
+          4,
+          13
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          6,
+          6,
+          1
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          6,
+          6,
+          4
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          6,
+          6,
+          6
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              6,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          6,
+          6,
+          8
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          6,
+          6,
+          10
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          6,
+          6,
+          13
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          6,
+          8,
+          1
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          6,
+          8,
+          4
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          6,
+          8,
+          6
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              6,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          6,
+          8,
+          8
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          6,
+          8,
+          10
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          6,
+          8,
+          13
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          6,
+          10,
+          1
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          6,
+          10,
+          4
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          6,
+          10,
+          6
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              6,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          6,
+          10,
+          8
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          6,
+          10,
+          10
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          6,
+          10,
+          13
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          6,
+          13,
+          1
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          6,
+          13,
+          4
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          6,
+          13,
+          6
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              6,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          6,
+          13,
+          8
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          6,
+          13,
+          10
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          6,
+          13,
+          13
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          8,
+          1,
+          1
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              6,
+              3,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          8,
+          1,
+          4
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          8,
+          1,
+          6
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              6,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          8,
+          1,
+          8
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              6,
+              3,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          8,
+          1,
+          10
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          8,
+          1,
+          13
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          8,
+          4,
+          1
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          8,
+          4,
+          4
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          8,
+          4,
+          6
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              6,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          8,
+          4,
+          8
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          8,
+          4,
+          10
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          8,
+          4,
+          13
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          8,
+          6,
+          1
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          8,
+          6,
+          4
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          8,
+          6,
+          6
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              6,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          8,
+          6,
+          8
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          8,
+          6,
+          10
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          8,
+          6,
+          13
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          8,
+          8,
+          1
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              6,
+              3,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          8,
+          8,
+          4
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              6,
+              3,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          8,
+          8,
+          6
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              6,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              6,
+              3,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          8,
+          8,
+          8
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              6,
+              3,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          8,
+          8,
+          10
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              6,
+              3,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          8,
+          8,
+          13
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              6,
+              3,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          8,
+          10,
+          1
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          8,
+          10,
+          4
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          8,
+          10,
+          6
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              6,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          8,
+          10,
+          8
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          8,
+          10,
+          10
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          8,
+          10,
+          13
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          8,
+          13,
+          1
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          8,
+          13,
+          4
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          8,
+          13,
+          6
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              6,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          8,
+          13,
+          8
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          8,
+          13,
+          10
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          8,
+          13,
+          13
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          10,
+          1,
+          1
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          10,
+          1,
+          4
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          10,
+          1,
+          6
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              6,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          10,
+          1,
+          8
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          10,
+          1,
+          10
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          10,
+          1,
+          13
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          10,
+          4,
+          1
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          10,
+          4,
+          4
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          10,
+          4,
+          6
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              6,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          10,
+          4,
+          8
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          10,
+          4,
+          10
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          10,
+          4,
+          13
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          10,
+          6,
+          1
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          10,
+          6,
+          4
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          10,
+          6,
+          6
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              6,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          10,
+          6,
+          8
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          10,
+          6,
+          10
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          10,
+          6,
+          13
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          10,
+          8,
+          1
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          10,
+          8,
+          4
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          10,
+          8,
+          6
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              6,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          10,
+          8,
+          8
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          10,
+          8,
+          10
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          10,
+          8,
+          13
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          10,
+          10,
+          1
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              6,
+              3,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          10,
+          10,
+          4
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              6,
+              3,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          10,
+          10,
+          6
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              6,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              6,
+              3,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          10,
+          10,
+          8
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              6,
+              3,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          10,
+          10,
+          10
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              6,
+              3,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          10,
+          10,
+          13
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              6,
+              3,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          10,
+          13,
+          1
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          10,
+          13,
+          4
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          10,
+          13,
+          6
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              6,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          10,
+          13,
+          8
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          10,
+          13,
+          10
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              6,
+              3,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          10,
+          13,
+          13
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          13,
+          1,
+          1
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          13,
+          1,
+          4
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          13,
+          1,
+          6
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              6,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          13,
+          1,
+          8
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          13,
+          1,
+          10
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          13,
+          1,
+          13
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          13,
+          4,
+          1
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          13,
+          4,
+          4
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          13,
+          4,
+          6
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              6,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          13,
+          4,
+          8
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          13,
+          4,
+          10
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          13,
+          4,
+          13
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          13,
+          6,
+          1
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          13,
+          6,
+          4
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          13,
+          6,
+          6
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              6,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          13,
+          6,
+          8
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          13,
+          6,
+          10
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          13,
+          6,
+          13
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          13,
+          8,
+          1
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          13,
+          8,
+          4
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          13,
+          8,
+          6
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              6,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          13,
+          8,
+          8
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          13,
+          8,
+          10
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          13,
+          8,
+          13
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          13,
+          10,
+          1
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          13,
+          10,
+          4
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          13,
+          10,
+          6
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              6,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          13,
+          10,
+          8
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          13,
+          10,
+          10
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              6,
+              3,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          13,
+          10,
+          13
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              2,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          13,
+          13,
+          1
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              6,
+              3,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          13,
+          13,
+          4
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              6,
+              3,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          13,
+          13,
+          6
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              6,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              6,
+              3,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          13,
+          13,
+          8
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          },
+          {
+            "series": [
+              6,
+              3,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 13
+          }
+        ]
+      },
+      {
+        "omitted": [
+          13,
+          13,
+          10
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              6,
+              3,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      },
+      {
+        "omitted": [
+          13,
+          13,
+          13
+        ],
+        "component_derived_series_orders": [
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 1
+          },
+          {
+            "series": [
+              6,
+              3,
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 4
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 6
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 8
+          },
+          {
+            "series": [
+              1
+            ],
+            "solvable": true,
+            "root_omitted": 10
+          }
+        ]
+      }
+    ]
+  },
+  "solvable_incomplete_cycle_counterexample": {
+    "permutations": [
+      [
+        3,
+        0,
+        4,
+        1,
+        5,
+        2
+      ],
+      [
+        4,
+        3,
+        0,
+        5,
+        2,
+        1
+      ]
+    ],
+    "cycles": [
+      [
+        [
+          0,
+          3,
+          1
+        ],
+        [
+          2,
+          4,
+          5
+        ]
+      ],
+      [
+        [
+          0,
+          4,
+          2
+        ],
+        [
+          1,
+          3,
+          5
+        ]
+      ]
+    ],
+    "observed_cycles": [
+      [
+        0,
+        3,
+        1
+      ],
+      [
+        0,
+        4,
+        2
+      ]
+    ],
+    "derived_series_orders": [
+      12,
+      4,
+      1
+    ]
+  },
+  "status": "Exact group inference from archived permutations; path certification incomplete."
+}
