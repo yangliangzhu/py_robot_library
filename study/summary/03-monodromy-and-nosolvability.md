@@ -1,5 +1,7 @@
 # 深潜 ③：这台臂的逆解**不可能用根号写出来**（以及这句话的确切含义）
 
+> **2026-11-03 新代数路线（GPT，待独立复核）**：`exp76` 给出固定 SR5 的 16 次消元、有理逆恢复、模 41/43 的算术 S16 证据，并以源几何不可约性及正规子群桥接证明几何群至少含 A16。详见[完整推导](../collab/GPT_SR5_ALGEBRAIC_NONSOLVABILITY_20261103.md)。下文保留原参数族实验的历史论证；新结果不意味着 Gate C 的具体路径已认证。
+
 > 零上下文可读。承接 [`README.md`](README.md) 的术语表。
 > 相关实验：`study/monodromy.py`、`exp37_complex_loop.py`、`exp38_monodromy_group.py`、
 > `exp40_complex_branches.py`、`exp44_group_from_edges.py`、`exp45_fold_loops.py`；

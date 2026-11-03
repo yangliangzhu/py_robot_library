@@ -3206,3 +3206,37 @@ not be silently treated as fixed points.
 All statements about true monodromy remain conditional on the corresponding
 path certificates. The exact group calculation does not certify paths.
 See [proof, lower-bound model and full ledger](collab/GPT_MINIMAL_TRANSPORT_WITNESS_20261103.md).
+
+### 2026-11-03 GPT: an algebraic proof for fixed SR5 (exp76)
+
+A new route bypasses the long-loop certification for the nonsolvability theorem.
+Exact wrist geometry reduces the fixed arm's general IK to one polynomial of
+degree at most 16 in t=tan(q1/2), with rational recovery of every joint. The
+universal degree bound follows from reduced polynomials f0,f1 having degrees
+4,3 in two rotating horizontal coordinates; their quadratic norm has degree 8.
+The generic shoulder/wrist formulas are checked against the exact YAML links.
+
+A legal rational pose R=[[2,1,2],[-2,2,1],[-1,-2,2]]/3,
+p=(369/1000,469/2000,469/1000) gives a separable degree-16 polynomial. All variable
+recovery divisors are coprime to it. Full FK reconstruction for all 16 algebraic
+roots passes both in Q[t]/P and in F41[t]/P: exact equality, no floating tolerance.
+Reduction mod 41 is irreducible degree 16; mod 43 factors into irreducibles of
+degrees 3 and 13. Independent Frobenius/Rabin checks validate the factor claims.
+Transitivity, a pure 13-cycle, block-size primitivity and Jordan's theorem give
+arithmetic S16 for this specialization.
+
+The crucial bridge is NOT "one arithmetic S16 fiber implies geometric S16".
+The same-degree separable rational specialization embeds its group into the
+universal arithmetic group, which is therefore S16. The generic FK source is
+geometrically irreducible and rational, and the recovery proves t primitive;
+thus the geometric group is transitive and normal in S16. It must be A16 or
+S16, both nonsolvable. This proves fixed-arm generic IK nonsolvability by an
+algebraic route, subject to independent review of this new derivation.
+
+Old Gate C actual-loop path certificates remain incomplete. No numerical loop
+has been relabeled as certified, and the exact geometric group (A16 or S16)
+is not distinguished here. The statement concerns generic algebraic IK, not
+every special pose or the real cuspidality question.
+
+Full proof and reproducibility:
+[fixed SR5 algebraic nonsolvability](collab/GPT_SR5_ALGEBRAIC_NONSOLVABILITY_20261103.md).
