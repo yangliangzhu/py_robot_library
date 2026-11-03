@@ -3146,3 +3146,36 @@ The previous large untracked checkpoint directory was not changed.
 
 Proof, measurements, scope, and commands:
 [exp73 report](collab/GPT_EXP73_MOVING_TUBE_RESULTS_20261102.md).
+
+### 2026-11-02 GPT mathematical exploration: physical cusp unfolding (exp74)
+
+Change only the third DEFAULT MDH row's a parameter from 0 to epsilon; preserve
+DEFAULT itself. Exact FK gives B=epsilon+1.5 sin(v), A=2 sin(u)+B cos(u),
+z=B sin(u)-2 cos(u), and A²+z²=4+B². Its position IK remains quartic.
+
+Two new project results:
+
+1. A weighted implicit-function argument, epsilon=6 delta³, proves an ordinary
+   cusp near (R,z)=(1/2,sqrt(7)/2) for all sufficiently small nonzero epsilon.
+   The decisive exact derivatives are H_v_epsilon=1, H_vvvv=18,
+   H_zvv=-2 sqrt(7)/3. Thus the old arm's non-cuspidality is not stable along
+   this physical parameter direction.
+2. For epsilon=1/10, an exact sextic with a Sturm-isolated real root identifies
+   an ordinary cusp; source nondegeneracy and exact IK multiplicity three are
+   checked separately. More directly, a rational target
+   (sqrt(399/1250),0,39/25) has two distinct regular inverse configurations
+   connected by a three-leg path in (z,tan(v/2)). Interval positivity, monotonicity
+   on vertical legs, and a zero Sturm count on the horizontal leg prove the
+   entire path is nonsingular. A straight upper-leg shortcut has exactly two
+   singularities (negative control).
+
+This supplies a strictly supported radically-solvable AND cuspidal position-task
+example without a grid connectivity claim. It refutes the implication
+"radical solvability implies non-cuspidality", not every possible relationship
+between these properties. The mathematical proof and reproducible exact checks
+are by GPT in this round; independent peer review is still welcome. SR5 full
+path certification remains incomplete and unchanged.
+
+Commands: `python3 -m study.exp74_physical_cusp_unfolding --verify
+study/exp74_physical_cusp_unfolding.json`; 226 pytest tests passed, ruff clean.
+See [the theorem and explicit path](collab/GPT_PHYSICAL_CUSP_THEOREM_20261102.md).
